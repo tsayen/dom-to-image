@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<title>Domvas!</title>
+
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600,300' rel='stylesheet' type='text/css'>
+		<link rel="stylesheet" href="css/main.css">
+
+		<style type="text/css">
+
+			#dom {
+				font-family: Arial;
+				border: 5px solid rgba(0,0,0,0.2);
+				border-radius: 10px;
+				width: 260px;
+				padding: 5px 20px;
+				background: #4f8eff;
+
+				text-shadow: 1px 1px 0 #264782;
+				line-height: 1.4em;
+
+				margin: 20px;
+			}
+
+			#dom p {
+				color: rgba(255,255,255,0.8);
+			}
+
+			#dom strong {
+				color: #fff;
+				font-style: italic;
+			}
+
+		</style>
+</head>
+<body>
+
+	<section>
+
+		<h1>Demo</h1>
+
+		<div class="sub">
+
+			<div style='font-size:30px' id="dom">
+				<p>EHRMAGERD <strong>DOM IN CANVAS</strong>!</p>
+			</div>
+
+			<canvas id="test" width="350" height="206"></canvas>
+
+		</div>
+
+	</section>
+
+	<script src="../src/domvas.js"></script>
+	<script>
+		
+		var canvas = document.getElementById("test");
+		var context = canvas.getContext('2d');
+
+		domvas.toImage(document.getElementById("dom"), function() {
+			// Look ma, I just converted this element to an image and can now to funky stuff!
+			context.drawImage(this, 20, 20);
+		});
+
+	</script>
+
+</body>
+</html>
