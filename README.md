@@ -30,7 +30,7 @@ I have written about this technique in 2008 [when I brought CSS transforms to br
 - For whatever reason, Opera is failing. I am not sure why. If a Opera pal is reading this, get in touch!
 - SVG's foreignObject is subject to strong security – meaning any external content will likely fail (i.e. iframes, web fonts)
 - The DOM object is __not linked, but copied__ – if you change the style of the DOM object, it will not automatically update in Canvas
-- Content outside the bounding box of the element will be cut of per default if painted to Canvas. Don't worry though, simply pass a more confortable offset to the toImage function (see above)
+- Content outside the bounding box of the element will be cut of per default if painted to Canvas. Don't worry though, simply pass a more comfortable offset to the toImage function (see above)
 
 ## Credits / License
 
