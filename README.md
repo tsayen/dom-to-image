@@ -5,17 +5,19 @@
 __Domvas implements the missing piece that connects the DOM and Canvas__. It gives to the ability to take arbitrary DOM content and paint it to a Canvas of your choice.
 
 ## Usage
+```js
+var canvas = document.getElementById("test");
+var context = canvas.getContext('2d');
 
-	var canvas = document.getElementById("test");
-	var context = canvas.getContext('2d');
+domvas.toImage(document.getElementById("dom"), function() {
+    context.drawImage(this, 20, 20);
+});
+```
 
-	domvas.toImage(document.getElementById("dom"), function() {
-  	context.drawImage(this, 20, 20);
-	});
-	
 ## Syntax
-
-	domvas.toImage(domElement, readyCallback, width, height, left, top);	
+```js
+domvas.toImage(domElement, readyCallback, width, height, left, top);
+```
 readyCallback's 'this' and first argument points to a valid, preloaded image node that you can simply draw to your canvas context.
 
 ## How it works
