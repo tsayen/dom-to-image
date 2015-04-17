@@ -1,0 +1,27 @@
+{
+  "name": "dom-to-image",
+  "version": "0.0.1",
+  "homepage": "https://github.com/tsayen/dom-to-image",
+  "authors": [
+    "tsayen <anatoly.sayenko@gmail.com>"
+  ],
+  "description": "generates an image from a DOM node using HTML5 canvas",
+  "main": "src/domvas.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "dom",
+    "raster",
+    "image",
+    "render"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
