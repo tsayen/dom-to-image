@@ -1,0 +1,29 @@
+{
+  "name": "dom-to-image",
+  "version": "0.0.1",
+  "description": "generates an image from a DOM node using HTML5 canvas",
+  "main": "src/domvas.js",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4.5"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tsayen/dom-to-image.git"
+  },
+  "keywords": [
+    "dom",
+    "render",
+    "raster",
+    "image"
+  ],
+  "author": "tsayen <anatoly.sayenko@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tsayen/dom-to-image/issues"
+  },
+  "homepage": "https://github.com/tsayen/dom-to-image#readme"
+}
