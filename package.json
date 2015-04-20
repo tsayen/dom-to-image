@@ -5,7 +5,19 @@
   "main": "src/domvas.js",
   "dependencies": {},
   "devDependencies": {
-    "grunt": "~0.4.5"
+    "chai": "^2.2.0",
+    "grunt": "~0.4.5",
+    "grunt-contrib-jshint": "^0.11.2",
+    "grunt-contrib-uglify": "^0.9.1",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-karma": "^0.10.1",
+    "karma": "^0.12.31",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^0.1.8",
+    "karma-firefox-launcher": "^0.1.4",
+    "karma-mocha": "^0.1.10",
+    "karma-mocha-reporter": "^1.0.2",
+    "mocha": "^2.2.4"
   },
   "scripts": {
     "test": "grunt test"
