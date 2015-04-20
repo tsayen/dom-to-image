@@ -1,6 +1,6 @@
 {
   "name": "dom-to-image",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "generates an image from a DOM node using HTML5 canvas",
   "main": "src/domvas.js",
   "dependencies": {},
