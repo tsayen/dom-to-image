@@ -2,12 +2,21 @@ module.exports = function (config) {
     config.set({
         basePath: '',
         frameworks: ['mocha', 'chai'],
-        
-        files: [
+
+        files: [{
+                pattern: 'spec/resources/regression-simple.html',
+                included: false,
+                served: true
+            },
+
+            'bower_components/jquery/dist/jquery.js',
+            'bower_components/bluebird/js/browser/bluebird.js',
+            'bower_components/js-imagediff/imagediff.js',
+
             'src/domvas.js',
-            'test/**/*spec.js'
+            'spec/**/*spec.js'
         ],
-        
+
         exclude: [],
         preprocessors: {},
         reporters: ['mocha'],
@@ -15,15 +24,7 @@ module.exports = function (config) {
         colors: true,
         logLevel: config.LOG_INFO,
         autoWatch: true,
-        browsers: ['chrome-small'],
-        customLaunchers: {
-            'chrome-small': {
-                base: 'Chrome',
-                flags: [
-                    '--window-size=300,200'
-                ]
-            }
-        },
+        browsers: ['Chrome', 'Firefox'],
         singleRun: true
     });
 };

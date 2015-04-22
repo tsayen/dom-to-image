@@ -1,14 +1,14 @@
-(function (global) {
+(function(global) {
     "use strict";
 
     function copyCss(source, target) {
-        var sourceStyle = global.window.getComputedStyle(source);
+        var sourceStyle = global.window.getComputedStyle(source);  
 
         if (sourceStyle.cssText) {
             target.style.cssText = sourceStyle.cssText;
             return;
         }
-        
+
         for (var i = 0; i < sourceStyle.length; i++) {
             var propertyName = sourceStyle[i];
             target.style.setProperty(
@@ -28,7 +28,7 @@
         copyCss(origElem, elem);
 
         // collect all nodes within the element, copy the current style to the clone
-        Array.prototype.forEach.call(children, function (child, i) {
+        Array.prototype.forEach.call(children, function(child, i) {
             copyCss(origChildren[i], child);
         });
 
@@ -39,7 +39,7 @@
 
     function init() {
         return {
-            toImage: function (origElem, callback, width, height, left, top) {
+            toImage: function(origElem, callback, width, height, left, top) {
 
                 left = (left || 0);
                 top = (top || 0);
@@ -68,7 +68,7 @@
                 img.src = dataUri;
 
                 // when loaded, fire onload callback with actual image node
-                img.onload = function () {
+                img.onload = function() {
                     if (callback) {
                         callback.call(img, img);
                     }
@@ -79,4 +79,3 @@
 
     global.domvas = init();
 })(this);
-
