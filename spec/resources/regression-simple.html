@@ -1,49 +1,37 @@
-<!DOCTYPE html>
-<html>
+<style>
+* {
+    box-sizing: border-box;
+}
 
-<head lang="en">
-    <meta charset="UTF-8">
-    <style>
-    * {
-        box-sizing: border-box;
-    }
-    
-    #dom-node {
-        border: 1px solid black;
-        height: 100px;
-        width: 100px;
-    }
-    
-    .red {
-        background-color: red;
-    }
-    
-    .green {
-        background-color: green;
-    }
-    
-    .blue {
-        background-color: blue;
-    }
-    
-    .red,
-    .green,
-    .blue {
-        height: 33.333333%;
-        width: 100%;
-        border: 1px solid lightgrey;
-        border-radius: 6px;
-    }
+#dom-node {
+    border: 1px solid black;
+    height: 100px;
+    width: 100px;
+}
 
-    </style>
-</head>
+.red {
+    background-color: red;
+}
 
-<body>
-    <div id="dom-node">
-        <div class="red"></div>
-        <div class="green"></div>
-        <div class="blue"></div>
-    </div>
-</body>
+.green {
+    background-color: green;
+}
 
-</html>
+.blue {
+    background-color: blue;
+}
+
+.red,
+.green,
+.blue {
+    height: 33.333333%;
+    width: 100%;
+    border: 1px solid lightgrey;
+    border-radius: 6px;
+}
+</style>
+<div id="dom-node">
+    <div class="red"></div>
+    <div class="green"></div>
+    <div class="blue"></div>
+</div>

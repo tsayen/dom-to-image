@@ -8,23 +8,30 @@ describe('domvas', function () {
     });
 
     it('should render simple css correctly', function (done) {
-        loadHtml('regression-simple.html').then(function (html) {
-            document.write(html);
+        loadHtml('regression-simple.html').then(function () {
             var dom_node = $('#dom-node')[0];
             console.log('hey! ' + dom_node);
             done();
         });
     });
 
-    function loadHtml(path) {
-        return new Promise(function (resolve) {
+    function loadHtml(fileName) {
+        return new Promise(function (resolve, reject) {
+            var url = '/base/spec/resources/' + fileName;
             var request = new XMLHttpRequest();
             console.log('request ' + request);
-            request.open('GET', '/base/spec/resources/' + path, true);
+            request.open('GET', url, true);
             request.responseType = 'text/html';
+
             request.onload = function () {
-                if (this.status == 200) resolve(request.response.toString());
+                if (this.status == 200) {
+                    var content = document.createElement('div');
+                    content.innerHTML = request.response.toString();
+                    $('body')[0].appendChild(content);
+                    resolve();
+                };
             };
+            
             request.send();
         });
     }
