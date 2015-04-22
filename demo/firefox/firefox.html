@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        #root {
+            height: 100px;
+            width: 100px;
+        }
+
+        #dom-content {
+            border: 1px solid black;
+            height: 100%;
+        }
+
+        .red {
+            background-color: red;
+        }
+
+        .green {
+            background-color: lightgreen;
+        }
+
+        .blue {
+            background-color: lightblue;
+        }
+
+        .red, .green, .blue {
+            height: 33.333333%;
+            width: 100%;
+        }
+
+        .image {
+            width: 100px;
+            height: 100px;
+        }
+    </style>
+    <script src="jquery.js"></script>
+    <script src="../../src/domvas.js"></script>
+</head>
+<body>
+<script>
+    exportToImage = function () {
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+
+        domvas.toImage(document.getElementById('root'), function (image) {
+            context.drawImage(image, 0, 0);
+        });
+    };
+</script>
+<div id="root">
+    <div id="dom-content">
+        <div class="red">red</div>
+        <div class="green">green</div>
+        <div class="blue">blue</div>
+    </div>
+</div>
+<button onclick="exportToImage()">draw</button>
+<div class="image">
+    <canvas id="canvas" width="100" height="100"></canvas>
+</div>
+</body>
+</html>

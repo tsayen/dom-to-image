@@ -1,21 +1,21 @@
 (function (global) {
     "use strict";
 
-    var supportsCSSText = getComputedStyle(document.body).cssText !== "";
+    function copyCss(source, target) {
+        var sourceStyle = global.window.getComputedStyle(source);
 
-    function copyCSS(elem, origElem, log) {
-
-        var computedStyle = getComputedStyle(origElem);
-
-        if (supportsCSSText) {
-            elem.style.cssText = computedStyle.cssText;
-        } else {
-            // Really, Firefox?
-            for (var prop in computedStyle) {
-                if (isNaN(parseInt(prop, 10)) && typeof computedStyle[prop] !== 'function' && !(/^(cssText|length|parentRule)$/).test(prop)) {
-                    elem.style[prop] = computedStyle[prop];
-                }
-            }
+        if (sourceStyle.cssText) {
+            target.style.cssText = sourceStyle.cssText;
+            return;
+        }
+        
+        for (var i = 0; i < sourceStyle.length; i++) {
+            var propertyName = sourceStyle[i];
+            target.style.setProperty(
+                propertyName,
+                sourceStyle.getPropertyValue(propertyName),
+                sourceStyle.getPropertyPriority(propertyName)
+            );
         }
     }
 
@@ -25,11 +25,11 @@
         var origChildren = origElem.querySelectorAll('*');
 
         // copy the current style to the clone
-        copyCSS(elem, origElem, 1);
+        copyCss(origElem, elem);
 
         // collect all nodes within the element, copy the current style to the clone
         Array.prototype.forEach.call(children, function (child, i) {
-            copyCSS(child, origChildren[i]);
+            copyCss(origChildren[i], child);
         });
 
         // strip margins from the outer element
@@ -70,7 +70,7 @@
                 // when loaded, fire onload callback with actual image node
                 img.onload = function () {
                     if (callback) {
-                        callback.call(this, this);
+                        callback.call(img, img);
                     }
                 };
             }
