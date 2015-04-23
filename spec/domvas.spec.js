@@ -13,7 +13,7 @@ describe('domvas', function () {
             domvas.toImage(dom_node, function (image) {
                 var canvas = $('#rendered-image')[0];
                 canvas.getContext('2d').drawImage(image, 0, 0);
-                var renderedImage = new Image();
+                var renderedImage = new Image(canvas.height, canvas.width);
                 renderedImage.src = canvas.toDataURL();
 
                 var controlImage = $('#control-image')[0];
