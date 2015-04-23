@@ -6,16 +6,14 @@ module.exports = function (grunt) {
             files: ['Gruntfile.js', 'src/**/*.js', 'spec/**/*.js'],
             options: {
                 globals: {
-                    console: true,
-                    module: true,
-                    document: true
+                    console: true
                 }
             }
         },
         karma: {
             unit: {
                 configFile: 'karma.conf.js',
-                background: true,
+                background: false,
                 autoWatch: false
             }
         },
@@ -41,5 +39,5 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
 
     grunt.registerTask('test', ['karma']);
-    grunt.registerTask('default', ['test', 'uglify']);
+    grunt.registerTask('default', ['jshint', 'test', 'uglify']);
 };
