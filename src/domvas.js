@@ -45,6 +45,8 @@
                 top = (top || 0);
 
                 var elem = origElem.cloneNode(true);
+                
+                //console.log('inlining styles ' + new Date().toString());
 
                 // inline all CSS (ugh..)
                 inlineStyles(elem, origElem);
@@ -52,8 +54,14 @@
                 // unfortunately, SVG can only eat well formed XHTML
                 elem.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
 
+                //console.log('serializing ' + new Date().toString());
                 // serialize the DOM node to a String
                 var serialized = new XMLSerializer().serializeToString(elem);
+                
+                //console.log('done');
+                //console.log('serialized ' + new Date().toString());
+                
+                //console.log(serialized.length);
 
                 // Create well formed data URL with our DOM string wrapped in SVG
                 var dataUri = "data:image/svg+xml," +
@@ -62,6 +70,7 @@
                     serialized +
                     "</foreignObject>" +
                     "</svg>";
+
 
                 // create new, actual image
                 var img = new Image();

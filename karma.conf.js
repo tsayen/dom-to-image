@@ -4,7 +4,7 @@ module.exports = function (config) {
         frameworks: ['mocha', 'chai'],
 
         files: [{
-                pattern: 'spec/resources/regression-simple.html',
+                pattern: 'spec/resources/*.html',
                 included: false,
                 served: true
             },
@@ -25,6 +25,7 @@ module.exports = function (config) {
         logLevel: config.LOG_INFO,
         autoWatch: true,
         browsers: ['Chrome', 'Firefox'],
-        singleRun: true
+        browserNoActivityTimeout: 60000,
+        singleRun: false
     });
 };
