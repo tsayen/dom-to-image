@@ -1,8 +1,12 @@
-(function(global) {
+(function (global) {
     "use strict";
 
     function copyCss(source, target) {
-        var sourceStyle = global.window.getComputedStyle(source);  
+        var sourceStyle = global.window.getComputedStyle(source);
+        
+        if(target.tagName === 'svg' || target.tagName === 'path'){
+            target.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        }
 
         if (sourceStyle.cssText) {
             target.style.cssText = sourceStyle.cssText;
@@ -28,7 +32,7 @@
         copyCss(origElem, elem);
 
         // collect all nodes within the element, copy the current style to the clone
-        Array.prototype.forEach.call(children, function(child, i) {
+        Array.prototype.forEach.call(children, function (child, i) {
             copyCss(origChildren[i], child);
         });
 
@@ -39,49 +43,56 @@
 
     function init() {
         return {
-            toImage: function(origElem, callback, width, height, left, top) {
+            toImage: function (origElem, callback, width, height, left, top) {
 
                 left = (left || 0);
                 top = (top || 0);
 
+                width = ((width || origElem.offsetWidth) + left);
+                height = ((height || origElem.offsetHeight) + top);
+
                 var elem = origElem.cloneNode(true);
-                
+
                 //console.log('inlining styles ' + new Date().toString());
 
                 // inline all CSS (ugh..)
                 inlineStyles(elem, origElem);
 
                 // unfortunately, SVG can only eat well formed XHTML
-                elem.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+                elem.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
                 //console.log('serializing ' + new Date().toString());
                 // serialize the DOM node to a String
                 var serialized = new XMLSerializer().serializeToString(elem);
-                
+
                 //console.log('done');
                 //console.log('serialized ' + new Date().toString());
-                
-                //console.log(serialized.length);
 
-                // Create well formed data URL with our DOM string wrapped in SVG
-                var dataUri = "data:image/svg+xml," +
-                    "<svg xmlns='http://www.w3.org/2000/svg' width='" + ((width || origElem.offsetWidth) + left) + "' height='" + ((height || origElem.offsetHeight) + top) + "'>" +
-                    "<foreignObject width='100%' height='100%' x='" + left + "' y='" + top + "'>" +
-                    serialized +
+                //console.log(serialized.length);
+                //console.log(serialized);
+
+                var dataUri = "data:image/svg+xml;charset=utf-8," +
+                    "<svg xmlns='http://www.w3.org/2000/svg' " +
+                    "width='" + width + "' height='" + height + "'>" +
+                    "<foreignObject width='100%' height='100%' x='" + left + "' y='" + top + "'>"
+                    + serialized +
                     "</foreignObject>" +
                     "</svg>";
+                
+                dataUri = dataUri.replace(/#/g,'%23');
 
+                console.log(dataUri);
 
-                // create new, actual image
                 var img = new Image();
-                img.src = dataUri;
+                //document.body.appendChild(img);
 
                 // when loaded, fire onload callback with actual image node
-                img.onload = function() {
+                img.onload = function () {
                     if (callback) {
                         callback.call(img, img);
                     }
                 };
+                img.src = dataUri;
             }
         };
     }

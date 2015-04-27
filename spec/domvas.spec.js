@@ -13,8 +13,16 @@
         });
 
         it('should render simple css', function (done) {
+            //this.timeout(20000);
             loadTestDocument('regression.html').then(function () {
                 checkRendering('control-image-small', done);
+            });
+        });
+
+        it.only('should render nested svg', function (done) {
+            this.timeout(60000);
+            loadTestDocument('nested-svg.html').then(function () {
+                checkRendering('control-image', done);
             });
         });
 
@@ -29,21 +37,23 @@
             });
         });
 
-        function checkRendering(controlImgId, done) {
+        function checkRendering(controlImageId, done) {
             var domNode = $('#dom-node')[0];
             var canvas = $('#rendered-image')[0];
             canvas.height = domNode.offsetHeight.toString();
             canvas.width = domNode.offsetWidth.toString();
-            domtoimage.toImage(domNode, function (image) {
-                canvas.getContext('2d').drawImage(image, 0, 0);
-
-                var img = new Image(canvas.width, canvas.height);
-                img.onload = function () {
-                    var controlImg = $('#' + controlImgId)[0];
-                    assert.ok(imagediff.equal(img, controlImg), 'rendered and control images should be equal');
-                    done();
+            domtoimage.toImage(domNode, function (result) {
+                canvas.getContext('2d').drawImage(result, 0, 0);
+                //console.log(canvas.toDataURL());
+                var image = new Image(canvas.width, canvas.height);
+                image.onload = function () {
+                    var controlImage = $('#' + controlImageId)[0];
+                    setTimeout(function(){
+                        assert.ok(imagediff.equal(image, controlImage), 'rendered and control images should be equal');
+                        done();
+                    }, 10000);
                 };
-                img.src = canvas.toDataURL();
+                image.src = canvas.toDataURL();
             });
         }
 

@@ -13,8 +13,8 @@ module.exports = function (grunt) {
         karma: {
             unit: {
                 configFile: 'karma.conf.js',
-                background: false,
-                autoWatch: false
+                background: false/*,
+                singleRun: true*/
             }
         },
         uglify: {

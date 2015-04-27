@@ -4,10 +4,10 @@ module.exports = function (config) {
         frameworks: ['mocha', 'chai'],
 
         files: [{
-                pattern: 'spec/resources/*.html',
-                included: false,
-                served: true
-            },
+            pattern: 'spec/resources/*.html',
+            included: false,
+            served: true
+        },
 
             'bower_components/jquery/dist/jquery.js',
             'bower_components/bluebird/js/browser/bluebird.js',
@@ -24,7 +24,9 @@ module.exports = function (config) {
         colors: true,
         logLevel: config.LOG_INFO,
         autoWatch: true,
-        browsers: ['Chrome', 'Firefox'],
+        //browsers: ['Chrome', 'Firefox'],
+        //browsers: ['Firefox'],
+        browsers: ['Chrome'],
         browserNoActivityTimeout: 60000,
         singleRun: false
     });
