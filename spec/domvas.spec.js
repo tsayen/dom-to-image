@@ -25,7 +25,7 @@
                 });
         });
 
-        it.skip('should render big node', function (done) {
+        it('should render big node', function (done) {
             this.timeout(60000);
             loadTestPage(
                 'big/dom-node.html',
@@ -51,7 +51,8 @@
                 });
         });
 
-        it('should render nested svg', function (done) {
+        it('should render nested svg with broken namespace', function (done) {
+            this.timeout(60000);
             loadTestPage(
                 'svg/dom-node.html',
                 'svg/style.css',
@@ -120,7 +121,7 @@
             var request = new XMLHttpRequest();
             request.open('GET', url, true);
             request.responseType = 'text/plain';
-            
+
             return new Promise(function (resolve, reject) {
                 request.onload = function () {
                     if (this.status == 200)

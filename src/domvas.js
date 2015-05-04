@@ -19,6 +19,11 @@
         }
     }
 
+    function fixNamespace(element) {
+        if (element instanceof SVGElement)
+            element.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    }
+
     function inlineStyles(elem, origElem) {
 
         var children = elem.querySelectorAll('*');
@@ -29,6 +34,7 @@
 
         // collect all nodes within the element, copy the current style to the clone
         Array.prototype.forEach.call(children, function (child, i) {
+            fixNamespace(child);
             copyCss(origChildren[i], child);
         });
 
@@ -65,8 +71,8 @@
                     + serialized +
                     "</foreignObject>" +
                     "</svg>";
-                
-                dataUri = dataUri.replace(/#/g,'%23');
+
+                dataUri = dataUri.replace(/#/g, '%23');
 
                 var img = new Image();
 
