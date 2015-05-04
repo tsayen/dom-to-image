@@ -13,7 +13,7 @@
             assert.ok(domtoimage);
         });
 
-        it('should render simple node correctly', function (done) {
+        it('should render simple node', function (done) {
             loadTestPage(
                 'simple/dom-node.html',
                 'simple/style.css',
@@ -23,14 +23,7 @@
                 });
         });
 
-        //it('should render nested svg', function (done) {
-        //    this.timeout(60000);
-        //    loadTestDocument('nested-svg.html').then(function () {
-        //        checkRendering('control-image', done);
-        //    });
-        //});
-
-        it('should handle big node', function (done) {
+        it('should render big node', function (done) {
             this.timeout(60000);
             loadTestPage(
                 'big/dom-node.html',
@@ -45,6 +38,23 @@
                     checkRendering(done);
                 });
         });
+
+        it('should handle "#" in colors and attributes', function (done) {
+            loadTestPage(
+                'hash/dom-node.html',
+                'hash/style.css',
+                'simple/control-image'
+            ).then(function () {
+                    checkRendering(done);
+                });
+        });
+
+        //it('should render nested svg', function (done) {
+        //    this.timeout(60000);
+        //    loadTestDocument('nested-svg.html').then(function () {
+        //        checkRendering('control-image', done);
+        //    });
+        //});
 
         function checkRendering(done) {
             var domNode = $('#dom-node')[0];

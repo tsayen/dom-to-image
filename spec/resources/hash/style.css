@@ -1,0 +1,29 @@
+* {
+    box-sizing: border-box;
+}
+
+#dom-node {
+    border: 1px solid black;
+    height: auto;
+    width: 100px;
+}
+
+.red {
+    background-color: #ff0000;
+}
+
+.green {
+    background-color: green;
+}
+
+.blue {
+    background-color: #0000ff;
+}
+
+.red,
+.green,
+.blue {
+    height: 3px;
+    width: 100%;
+    border: 1px solid lightgrey;
+}

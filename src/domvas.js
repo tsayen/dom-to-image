@@ -79,7 +79,7 @@
                     "</foreignObject>" +
                     "</svg>";
                 
-                //dataUri = dataUri.replace(/#/g,'%23');
+                dataUri = dataUri.replace(/#/g,'%23');
 
                 //console.log(dataUri);
 
