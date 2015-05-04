@@ -3,13 +3,14 @@
 
     var assert = global.chai.assert;
     var imagediff = global.imagediff;
+    var domtoimage = global.domvas;
 
     describe('domvas', function () {
 
         afterEach(purgePage);
 
         it('should load', function () {
-            assert.ok(domvas);
+            assert.ok(domtoimage);
         });
 
         it('should render simple node correctly', function (done) {
@@ -28,7 +29,7 @@
             var controlImg = $('#control-image')[0];
             canvas.height = domNode.offsetHeight.toString();
             canvas.width = domNode.offsetWidth.toString();
-            domvas.toImage(domNode, function (image) {
+            domtoimage.toImage(domNode, function (image) {
                 canvas.getContext('2d').drawImage(image, 0, 0);
                 compare(canvas, controlImg, done);
             });
