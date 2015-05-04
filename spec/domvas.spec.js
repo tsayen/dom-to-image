@@ -19,7 +19,7 @@
             });
         });
 
-        it.only('should render nested svg', function (done) {
+        it('should render nested svg', function (done) {
             this.timeout(60000);
             loadTestDocument('nested-svg.html').then(function () {
                 checkRendering('control-image', done);
@@ -48,10 +48,10 @@
                 var image = new Image(canvas.width, canvas.height);
                 image.onload = function () {
                     var controlImage = $('#' + controlImageId)[0];
-                    setTimeout(function(){
+                    //setTimeout(function(){
                         assert.ok(imagediff.equal(image, controlImage), 'rendered and control images should be equal');
                         done();
-                    }, 10000);
+                    //}, 10000);
                 };
                 image.src = canvas.toDataURL();
             });

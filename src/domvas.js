@@ -79,9 +79,9 @@
                     "</foreignObject>" +
                     "</svg>";
                 
-                dataUri = dataUri.replace(/#/g,'%23');
+                //dataUri = dataUri.replace(/#/g,'%23');
 
-                console.log(dataUri);
+                //console.log(dataUri);
 
                 var img = new Image();
                 //document.body.appendChild(img);
