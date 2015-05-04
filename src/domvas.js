@@ -24,33 +24,34 @@
             element.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     }
 
-    function inlineStyles(node, clone) {
-        
-        copyCss(node, clone);
-
-        var cloneChildren = clone.querySelectorAll('*');
-        var children = node.querySelectorAll('*');
-        
-        for (var i = 0; i < cloneChildren.length; i++) {
-            fixNamespace(cloneChildren[i]);
-            copyCss(children[i], cloneChildren[i]);
-        }
-        
-        clone.style.margin = clone.style.marginLeft = clone.style.marginTop = clone.style.marginBottom = clone.style.marginRight = '';
+    function processClone(clone, original) {
+        fixNamespace(clone);
+        copyCss(original, clone);
     }
 
+    function deepClone(node) {
+        var clone = node.cloneNode(false);
+        processClone(clone, node);
+        var children = node.children;
+        for (var i = 0; i < children.length; i++) {
+            clone.appendChild(deepClone(children[i]));
+        }
+        return clone;
+    }
+
+    function stripMargin(elem) {
+        elem.style.margin = elem.style.marginLeft = elem.style.marginTop = elem.style.marginBottom = elem.style.marginRight = '';
+    }
 
     function toImage(domNode, callback, width, height, left, top) {
-
         left = (left || 0);
         top = (top || 0);
 
         width = ((width || domNode.offsetWidth) + left);
         height = ((height || domNode.offsetHeight) + top);
-
-        var elem = domNode.cloneNode(true);
-
-        inlineStyles(domNode, elem);
+        
+        var elem = deepClone(domNode);
+        stripMargin(elem);
 
         elem.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
