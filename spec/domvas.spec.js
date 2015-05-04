@@ -6,84 +6,116 @@
     var domtoimage = global.domvas;
 
     describe('domtoimage', function () {
-        afterEach(cleanup);
+
+        afterEach(purgePage);
 
         it('should load', function () {
             assert.ok(domtoimage);
         });
 
-        it('should render simple css', function (done) {
-            //this.timeout(20000);
-            loadTestDocument('regression.html').then(function () {
-                checkRendering('control-image-small', done);
-            });
+        it('should render simple node correctly', function (done) {
+            loadTestPage(
+                'simple/dom-node.html',
+                'simple/style.css',
+                'simple/control-image'
+            ).then(function () {
+                    checkRendering(done);
+                });
         });
 
-        it('should render nested svg', function (done) {
-            this.timeout(60000);
-            loadTestDocument('nested-svg.html').then(function () {
-                checkRendering('control-image', done);
-            });
-        });
+        //it('should render nested svg', function (done) {
+        //    this.timeout(60000);
+        //    loadTestDocument('nested-svg.html').then(function () {
+        //        checkRendering('control-image', done);
+        //    });
+        //});
 
         it('should handle big node', function (done) {
             this.timeout(60000);
-            loadTestDocument('regression.html').then(function () {
-                var child = $('.dom-child-node')[0];
-                for (var i = 0; i < 1000; i++) {
-                    $('#dom-node')[0].appendChild(child.cloneNode(true));
-                }
-                checkRendering('control-image-big', done);
-            });
+            loadTestPage(
+                'big/dom-node.html',
+                'big/style.css',
+                'big/control-image'
+            ).then(function () {
+                    var domNode = $('#dom-node')[0];
+                    var child = $('.dom-child-node')[0];
+                    for (var i = 0; i < 1000; i++) {
+                        domNode.appendChild(child.cloneNode(true));
+                    }
+                    checkRendering(done);
+                });
         });
 
-        function checkRendering(controlImageId, done) {
+        function checkRendering(done) {
             var domNode = $('#dom-node')[0];
-            var canvas = $('#rendered-image')[0];
+            var canvas = $('#canvas')[0];
+            var controlImg = $('#control-image')[0];
             canvas.height = domNode.offsetHeight.toString();
             canvas.width = domNode.offsetWidth.toString();
-            domtoimage.toImage(domNode, function (result) {
-                canvas.getContext('2d').drawImage(result, 0, 0);
-                //console.log(canvas.toDataURL());
-                var image = new Image(canvas.width, canvas.height);
-                image.onload = function () {
-                    var controlImage = $('#' + controlImageId)[0];
-                    //setTimeout(function(){
-                        assert.ok(imagediff.equal(image, controlImage), 'rendered and control images should be equal');
-                        done();
-                    //}, 10000);
-                };
-                image.src = canvas.toDataURL();
+            domtoimage.toImage(domNode, function (image) {
+                canvas.getContext('2d').drawImage(image, 0, 0);
+                compare(canvas, controlImg, done);
             });
         }
 
-        function loadTestDocument(fileName) {
-            var BASE_URL = '/base/spec/resources/';
+        function compare(canvas, controlImg, done) {
+            var img = new Image(canvas.width, canvas.height);
+            img.onload = function () {
+                assert.ok(imagediff.equal(img, controlImg), 'rendered and control images should be equal');
+                done();
+            };
+            img.src = canvas.toDataURL();
+        }
+
+        function loadTestPage(domFile, cssFile, controlImageFile) {
+            return loadPage()
+                .then(function () {
+                    return loadText(domFile).then(function (domHtml) {
+                        document.getElementById('dom-node').innerHTML = domHtml;
+                    });
+                })
+                .then(function () {
+                    return loadText(cssFile).then(function (cssText) {
+                        document.getElementById('style').appendChild(document.createTextNode(cssText));
+                    });
+                })
+                .then(function () {
+                    return loadText(controlImageFile).then(function (imageHtml) {
+                        document.getElementById('control-image').src = imageHtml;
+                    });
+                })
+        }
+
+        function loadPage() {
+            return loadText('page.html').then(function (text) {
+                var root = document.createElement('div');
+                root.id = 'test-root';
+                root.innerHTML = text;
+                document.body.appendChild(root);
+            });
+        }
+
+        function purgePage() {
+            var root = document.getElementById('test-root');
+            if (root) root.remove();
+        }
+
+        function loadText(fileName) {
             return new Promise(function (resolve, reject) {
+                var url = '/base/spec/resources/' + fileName;
                 var request = new XMLHttpRequest();
-                request.open('GET', BASE_URL + fileName, true);
-                request.responseType = 'text/html';
+                request.open('GET', url, true);
+                request.responseType = 'text/plain';
 
                 request.onload = function () {
-                    if (this.status == 200) {
-                        load(request.response.toString());
-                        resolve();
-                    }
+                    if (this.status == 200)
+                        resolve(request.response.toString());
+                    else
+                        reject(new Error('cannot load ' + url));
                 };
+
                 request.send();
             });
-        }
-
-        function load(response) {
-            var content = document.createElement('div');
-            content.id = 'test-data-root';
-            content.innerHTML = response;
-            document.body.appendChild(content);
-        }
-
-        function cleanup() {
-            var testData = $('#test-data-root')[0];
-            if (testData) testData.remove();
         }
     });
 })(this);
