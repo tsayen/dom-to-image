@@ -1,0 +1,34 @@
+* {
+    box-sizing: border-box;
+}
+
+#dom-node {
+    border: 1px solid black;
+    height: auto;
+    width: 100px;
+}
+
+.dom-child-node {
+    height: auto;
+    width: 100%;
+}
+
+.red {
+    background-color: red;
+}
+
+.green {
+    background-color: green;
+}
+
+.blue {
+    background-color: blue;
+}
+
+.red,
+.green,
+.blue {
+    height: 3px;
+    width: 100%;
+    border: 1px solid lightgrey;
+}
