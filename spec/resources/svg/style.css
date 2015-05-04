@@ -1,0 +1,16 @@
+* {
+    box-sizing: border-box;
+}
+
+#dom-node {
+    border: 1px solid red;
+    position: relative;
+    height: 100px;
+    width: 100px
+}
+
+svg {
+    position: absolute;
+    left: 10px;
+    top: 10px
+}

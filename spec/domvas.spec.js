@@ -25,7 +25,7 @@
                 });
         });
 
-        it('should render big node', function (done) {
+        it.skip('should render big node', function (done) {
             this.timeout(60000);
             loadTestPage(
                 'big/dom-node.html',
@@ -51,6 +51,16 @@
                 });
         });
 
+        it('should render nested svg', function (done) {
+            loadTestPage(
+                'svg/dom-node.html',
+                'svg/style.css',
+                'svg/control-image'
+            ).then(function () {
+                    checkRendering(done);
+                });
+        });
+
         function checkRendering(done) {
             var domNode = $('#dom-node')[0];
             var canvas = $('#canvas')[0];
@@ -63,10 +73,10 @@
             });
         }
 
-        function compare(canvas, controlImg, done) {
+        function compare(canvas, ctrlImg, done) {
             var img = new Image(canvas.width, canvas.height);
             img.onload = function () {
-                assert.ok(imagediff.equal(img, controlImg), 'rendered and control images should be equal');
+                assert.ok(imagediff.equal(img, ctrlImg), 'rendered and control images should be equal');
                 done();
             };
             img.src = canvas.toDataURL();
