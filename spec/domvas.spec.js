@@ -52,7 +52,6 @@
         });
 
         it('should render nested svg with broken namespace', function (done) {
-            this.timeout(60000);
             loadTestPage(
                 'svg/dom-node.html',
                 'svg/style.css',

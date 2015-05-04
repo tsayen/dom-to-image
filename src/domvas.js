@@ -40,17 +40,17 @@
     }
 
 
-    function toImage(origElem, callback, width, height, left, top) {
+    function toImage(domNode, callback, width, height, left, top) {
 
         left = (left || 0);
         top = (top || 0);
 
-        width = ((width || origElem.offsetWidth) + left);
-        height = ((height || origElem.offsetHeight) + top);
+        width = ((width || domNode.offsetWidth) + left);
+        height = ((height || domNode.offsetHeight) + top);
 
-        var elem = origElem.cloneNode(true);
+        var elem = domNode.cloneNode(true);
 
-        inlineStyles(elem, origElem);
+        inlineStyles(elem, domNode);
 
         elem.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
