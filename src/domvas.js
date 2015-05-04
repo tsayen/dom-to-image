@@ -37,11 +37,13 @@
         var clonedChildren = 0;
         for (var i = 0; i < children.length; i++) {
             (function (child) {
-                deepClone(child, function (childClone) {
-                    clone.appendChild(childClone);
-                    clonedChildren++;
-                    if (clonedChildren === children.length) done(clone);
-                });
+                setTimeout(function() {
+                    deepClone(child, function (childClone) {
+                        clone.appendChild(childClone);
+                        clonedChildren++;
+                        if (clonedChildren === children.length) done(clone);
+                    });
+                }, 0);
             })(children[i])
         }
     }
