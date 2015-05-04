@@ -3,11 +3,8 @@ module.exports = function (config) {
         basePath: '',
         frameworks: ['mocha', 'chai'],
 
-        files: [{
-                pattern: 'spec/resources/regression-simple.html',
-                included: false,
-                served: true
-            },
+        files: [
+            {pattern: 'spec/resources/**/*', included: false, served: true},
 
             'bower_components/jquery/dist/jquery.js',
             'bower_components/bluebird/js/browser/bluebird.js',
@@ -25,6 +22,7 @@ module.exports = function (config) {
         logLevel: config.LOG_INFO,
         autoWatch: true,
         browsers: ['Chrome', 'Firefox'],
-        singleRun: true
+        singleRun: true,
+        browserNoActivityTimeout: 60000
     });
 };
