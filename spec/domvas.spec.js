@@ -5,6 +5,8 @@
     var imagediff = global.imagediff;
     var domtoimage = global.domvas;
 
+    var BASE_URL = '/base/spec/resources/';
+
     describe('domtoimage', function () {
 
         afterEach(purgePage);
@@ -104,19 +106,18 @@
         }
 
         function loadText(fileName) {
+            var url = BASE_URL + fileName;
+            var request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.responseType = 'text/plain';
+            
             return new Promise(function (resolve, reject) {
-                var url = '/base/spec/resources/' + fileName;
-                var request = new XMLHttpRequest();
-                request.open('GET', url, true);
-                request.responseType = 'text/plain';
-
                 request.onload = function () {
                     if (this.status == 200)
                         resolve(request.response.toString());
                     else
                         reject(new Error('cannot load ' + url));
                 };
-
                 request.send();
             });
         }
