@@ -49,13 +49,6 @@
                 });
         });
 
-        //it('should render nested svg', function (done) {
-        //    this.timeout(60000);
-        //    loadTestDocument('nested-svg.html').then(function () {
-        //        checkRendering('control-image', done);
-        //    });
-        //});
-
         function checkRendering(done) {
             var domNode = $('#dom-node')[0];
             var canvas = $('#canvas')[0];
