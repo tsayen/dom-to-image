@@ -24,19 +24,19 @@
             element.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     }
 
-    function inlineStyles(elem, origElem) {
+    function inlineStyles(node, clone) {
+        
+        copyCss(node, clone);
 
-        var children = elem.querySelectorAll('*');
-        var origChildren = origElem.querySelectorAll('*');
-
-        copyCss(origElem, elem);
-
-        Array.prototype.forEach.call(children, function (child, i) {
-            fixNamespace(child);
-            copyCss(origChildren[i], child);
-        });
-
-        elem.style.margin = elem.style.marginLeft = elem.style.marginTop = elem.style.marginBottom = elem.style.marginRight = '';
+        var cloneChildren = clone.querySelectorAll('*');
+        var children = node.querySelectorAll('*');
+        
+        for (var i = 0; i < cloneChildren.length; i++) {
+            fixNamespace(cloneChildren[i]);
+            copyCss(children[i], cloneChildren[i]);
+        }
+        
+        clone.style.margin = clone.style.marginLeft = clone.style.marginTop = clone.style.marginBottom = clone.style.marginRight = '';
     }
 
 
@@ -50,7 +50,7 @@
 
         var elem = domNode.cloneNode(true);
 
-        inlineStyles(elem, domNode);
+        inlineStyles(domNode, elem);
 
         elem.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
