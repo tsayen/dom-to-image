@@ -29,63 +29,54 @@
         var children = elem.querySelectorAll('*');
         var origChildren = origElem.querySelectorAll('*');
 
-        // copy the current style to the clone
         copyCss(origElem, elem);
 
-        // collect all nodes within the element, copy the current style to the clone
         Array.prototype.forEach.call(children, function (child, i) {
             fixNamespace(child);
             copyCss(origChildren[i], child);
         });
 
-        // strip margins from the outer element
         elem.style.margin = elem.style.marginLeft = elem.style.marginTop = elem.style.marginBottom = elem.style.marginRight = '';
-
     }
 
-    function init() {
-        return {
-            toImage: function (origElem, callback, width, height, left, top) {
 
-                left = (left || 0);
-                top = (top || 0);
+    function toImage(origElem, callback, width, height, left, top) {
 
-                width = ((width || origElem.offsetWidth) + left);
-                height = ((height || origElem.offsetHeight) + top);
+        left = (left || 0);
+        top = (top || 0);
 
-                var elem = origElem.cloneNode(true);
+        width = ((width || origElem.offsetWidth) + left);
+        height = ((height || origElem.offsetHeight) + top);
 
-                // inline all CSS (ugh..)
-                inlineStyles(elem, origElem);
+        var elem = origElem.cloneNode(true);
 
-                // unfortunately, SVG can only eat well formed XHTML
-                elem.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+        inlineStyles(elem, origElem);
 
-                // serialize the DOM node to a String
-                var serialized = new XMLSerializer().serializeToString(elem);
+        elem.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
-                var dataUri = "data:image/svg+xml;charset=utf-8," +
-                    "<svg xmlns='http://www.w3.org/2000/svg' " +
-                    "width='" + width + "' height='" + height + "'>" +
-                    "<foreignObject width='100%' height='100%' x='" + left + "' y='" + top + "'>"
-                    + serialized +
-                    "</foreignObject>" +
-                    "</svg>";
+        var serialized = new XMLSerializer().serializeToString(elem);
 
-                dataUri = dataUri.replace(/#/g, '%23');
+        var dataUri = "data:image/svg+xml;charset=utf-8," +
+            "<svg xmlns='http://www.w3.org/2000/svg' " +
+            "width='" + width + "' height='" + height + "'>" +
+            "<foreignObject width='100%' height='100%' x='" + left + "' y='" + top + "'>"
+            + serialized +
+            "</foreignObject>" +
+            "</svg>";
 
-                var img = new Image();
+        dataUri = dataUri.replace(/#/g, '%23');
 
-                // when loaded, fire onload callback with actual image node
-                img.onload = function () {
-                    if (callback) {
-                        callback.call(img, img);
-                    }
-                };
-                img.src = dataUri;
+        var img = new Image();
+
+        img.onload = function () {
+            if (callback) {
+                callback.call(img, img);
             }
         };
+        img.src = dataUri;
     }
 
-    global.domvas = init();
+    global.domvas = {
+        toImage: toImage
+    };
 })(this);

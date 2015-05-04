@@ -23,7 +23,7 @@ module.exports = function (config) {
         logLevel: config.LOG_INFO,
         autoWatch: true,
         browsers: ['Chrome', 'Firefox'],
-        singleRun: true,
+        singleRun: false,
         browserNoActivityTimeout: 60000
     });
 };
