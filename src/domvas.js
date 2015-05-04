@@ -29,14 +29,21 @@
         copyCss(original, clone);
     }
 
-    function deepClone(node) {
+    function deepClone(node, done) {
         var clone = node.cloneNode(false);
         processClone(clone, node);
         var children = node.children;
+        if (children.length === 0) done(clone);
+        var clonedChildren = 0;
         for (var i = 0; i < children.length; i++) {
-            clone.appendChild(deepClone(children[i]));
+            (function (child) {
+                deepClone(child, function (childClone) {
+                    clone.appendChild(childClone);
+                    clonedChildren++;
+                    if (clonedChildren === children.length) done(clone);
+                });
+            })(children[i])
         }
-        return clone;
     }
 
     function stripMargin(elem) {
@@ -49,32 +56,32 @@
 
         width = ((width || domNode.offsetWidth) + left);
         height = ((height || domNode.offsetHeight) + top);
-        
-        var elem = deepClone(domNode);
-        stripMargin(elem);
 
-        elem.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+        deepClone(domNode, function (elem) {
+            stripMargin(elem);
+            elem.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
-        var serialized = new XMLSerializer().serializeToString(elem);
+            var serialized = new XMLSerializer().serializeToString(elem);
 
-        var dataUri = "data:image/svg+xml;charset=utf-8," +
-            "<svg xmlns='http://www.w3.org/2000/svg' " +
-            "width='" + width + "' height='" + height + "'>" +
-            "<foreignObject width='100%' height='100%' x='" + left + "' y='" + top + "'>"
-            + serialized +
-            "</foreignObject>" +
-            "</svg>";
+            var dataUri = "data:image/svg+xml;charset=utf-8," +
+                "<svg xmlns='http://www.w3.org/2000/svg' " +
+                "width='" + width + "' height='" + height + "'>" +
+                "<foreignObject width='100%' height='100%' x='" + left + "' y='" + top + "'>"
+                + serialized +
+                "</foreignObject>" +
+                "</svg>";
 
-        dataUri = dataUri.replace(/#/g, '%23');
+            dataUri = dataUri.replace(/#/g, '%23');
 
-        var img = new Image();
+            var img = new Image();
 
-        img.onload = function () {
-            if (callback) {
-                callback.call(img, img);
-            }
-        };
-        img.src = dataUri;
+            img.onload = function () {
+                if (callback) {
+                    callback.call(img, img);
+                }
+            };
+            img.src = dataUri;
+        });
     }
 
     global.domvas = {
