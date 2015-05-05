@@ -26,7 +26,7 @@
         });
 
         it('should render big node', function (done) {
-            this.timeout(60000);
+            this.timeout(30000);
             loadTestPage(
                 'big/dom-node.html',
                 'big/style.css',
