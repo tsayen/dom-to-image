@@ -3,7 +3,7 @@
 
     var assert = global.chai.assert;
     var imagediff = global.imagediff;
-    var domtoimage = global.domvas;
+    var domtoimage = global.domtoimage;
 
     var BASE_URL = '/base/spec/resources/';
 

@@ -6,7 +6,7 @@
     "tsayen <anatoly.sayenko@gmail.com>"
   ],
   "description": "generates an image from a DOM node using HTML5 canvas",
-  "main": "src/domvas.js",
+  "main": "src/domtoimage.js",
   "moduleType": [
     "globals"
   ],

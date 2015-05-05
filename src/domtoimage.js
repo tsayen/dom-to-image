@@ -14,12 +14,10 @@
 
     function copyStyle(source, target) {
         var sourceStyle = global.window.getComputedStyle(source);
-
         if (sourceStyle.cssText) {
             target.style.cssText = sourceStyle.cssText;
             return;
         }
-        
         copyProperties(sourceStyle, target);
     }
 
@@ -100,7 +98,7 @@
         });
     }
 
-    global.domvas = {
+    global.domtoimage = {
         toImage: toImage
     };
 })(this);

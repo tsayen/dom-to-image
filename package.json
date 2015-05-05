@@ -2,7 +2,7 @@
   "name": "dom-to-image",
   "version": "0.0.5",
   "description": "generates an image from a DOM node using HTML5 canvas",
-  "main": "src/domvas.js",
+  "main": "src/domtoimage.js",
   "dependencies": {},
   "devDependencies": {
     "chai": "^2.2.0",

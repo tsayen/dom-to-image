@@ -11,8 +11,8 @@ module.exports = function (config) {
             'bower_components/bluebird/js/browser/bluebird.js',
             'bower_components/js-imagediff/imagediff.js',
 
-            'src/domvas.js',
-            'spec/**/*spec.js'
+            'src/domtoimage.js',
+            'spec/domtoimage.spec.js'
         ],
 
         exclude: [],
