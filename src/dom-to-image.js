@@ -75,9 +75,8 @@
     }
 
     function toSvg(node, width, height) {
-        return "<svg xmlns='http://www.w3.org/2000/svg' width='" + width + "' height='" + height + "'>"
-            + asForeignObject(node) +
-            "</svg>";
+        return "<svg xmlns='http://www.w3.org/2000/svg' width='" + width + "' height='" + height + "'>" +
+            asForeignObject(node) + "</svg>";
     }
 
     function makeDataUri(node, width, height) {

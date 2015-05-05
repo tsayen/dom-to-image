@@ -98,7 +98,7 @@
                     return loadText(controlImageFile).then(function (imageHtml) {
                         document.getElementById('control-image').src = imageHtml;
                     });
-                })
+                });
         }
 
         function loadPage() {

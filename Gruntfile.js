@@ -13,8 +13,8 @@ module.exports = function (grunt) {
         karma: {
             unit: {
                 configFile: 'karma.conf.js',
-                background: false/*,
-                singleRun: true*/
+                background: false,
+                singleRun: true
             }
         },
         uglify: {
@@ -23,7 +23,7 @@ module.exports = function (grunt) {
             },
             dist: {
                 files: {
-                    'dist/<%= pkg.name %>.min.js': ['src/domvas.js']
+                    'dist/<%= pkg.name %>.min.js': ['src/dom-to-image.js']
                 }
             }
         },
