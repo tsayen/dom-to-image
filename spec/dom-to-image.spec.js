@@ -75,6 +75,26 @@
                 });
         });
 
+        it('should render to blob', function (done) {
+            loadTestPage(
+                'simple/dom-node.html',
+                'simple/style.css',
+                'simple/control-image'
+            ).then(function () {
+                    var domNode = $('#dom-node')[0];
+                    var controlImg = $('#control-image')[0];
+                    domtoimage.toBlob(domNode, function (blob) {
+                        var img = new Image();
+                        img.onload = function () {
+                            drawRenderedImage(img, domNode);
+                            assert.ok(imagediff.equal(img, controlImg), 'rendered and control images should be equal');
+                            done();
+                        };
+                        img.src = URL.createObjectURL(blob);
+                    });
+                });
+        });
+
         function checkRendering(done) {
             var domNode = $('#dom-node')[0];
             var controlImg = $('#control-image')[0];

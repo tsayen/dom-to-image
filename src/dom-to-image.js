@@ -96,18 +96,41 @@
         });
     }
 
-    function toDataUrl(domNode, done) {
+    function drawOffScreen(domNode, done) {
         toImage(domNode, function (image) {
             var canvas = document.createElement('canvas');
             canvas.width = domNode.offsetWidth;
             canvas.height = domNode.offsetHeight;
             canvas.getContext('2d').drawImage(image, 0, 0);
+            done(canvas);
+        });
+    }
+
+    function toBlob(domNode, done) {
+        drawOffScreen(domNode, function (canvas) {
+            if (canvas.toBlob) {
+                canvas.toBlob(done);
+                return;
+            }
+            /* canvas.toBlob() method is not available in Chrome 40 */
+            var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
+            var binaryArray = new Uint8Array(binaryString.length);
+            for (var i = 0; i < binaryString.length; i++) {
+                binaryArray[i] = binaryString.charCodeAt(i);
+            }
+            done(new Blob([binaryArray], {type: 'image/png'}));
+        });
+    }
+
+    function toDataUrl(domNode, done) {
+        drawOffScreen(domNode, function (canvas) {
             done(canvas.toDataURL());
         });
     }
 
     global.domtoimage = {
         toImage: toImage,
-        toDataUrl: toDataUrl
+        toDataUrl: toDataUrl,
+        toBlob: toBlob
     };
 })(this);
