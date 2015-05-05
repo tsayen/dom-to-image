@@ -33,7 +33,7 @@
         copyStyle(original, clone);
     }
 
-    function deepClone(node, done) {
+    function cloneNode(node, done) {
         var clone = node.cloneNode(false);
         processClone(clone, node);
 
@@ -47,7 +47,7 @@
 
         function cloneChild(child) {
             setTimeout(function () {
-                deepClone(child, function (childClone) {
+                cloneNode(child, function (childClone) {
                     clone.appendChild(childClone);
                     cloned++;
                     if (cloned === children.length) done(clone);
@@ -92,12 +92,23 @@
     }
 
     function toImage(domNode, done) {
-        deepClone(domNode, function (clone) {
+        cloneNode(domNode, function (clone) {
             makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
         });
     }
 
+    function toDataUrl(domNode, done) {
+        toImage(domNode, function(image){
+            var canvas = document.createElement('canvas');
+            canvas.width = domNode.offsetWidth;
+            canvas.height = domNode.offsetHeight;
+            canvas.getContext('2d').drawImage(image, 0, 0);
+            done(canvas.toDataURL());
+        });
+    }
+
     global.domtoimage = {
-        toImage: toImage
+        toImage: toImage,
+        toDataUrl: toDataUrl
     };
 })(this);

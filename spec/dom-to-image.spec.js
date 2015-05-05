@@ -63,23 +63,27 @@
 
         function checkRendering(done) {
             var domNode = $('#dom-node')[0];
-            var canvas = $('#canvas')[0];
             var controlImg = $('#control-image')[0];
-            canvas.height = domNode.offsetHeight.toString();
-            canvas.width = domNode.offsetWidth.toString();
-            domtoimage.toImage(domNode, function (image) {
-                canvas.getContext('2d').drawImage(image, 0, 0);
-                compare(canvas, controlImg, done);
+            domtoimage.toDataUrl(domNode, function (dataUrl) {
+                compare(dataUrl, controlImg, domNode, done);
             });
         }
 
-        function compare(canvas, ctrlImg, done) {
-            var img = new Image(canvas.width, canvas.height);
+        function compare(imgUrl, ctrlImg, node, done) {
+            var img = new Image();
             img.onload = function () {
+                drawRenderedImage(img, node);
                 assert.ok(imagediff.equal(img, ctrlImg), 'rendered and control images should be equal');
                 done();
             };
-            img.src = canvas.toDataURL();
+            img.src = imgUrl;
+        }
+
+        function drawRenderedImage(image, node) {
+            var canvas = $('#canvas')[0];
+            canvas.height = node.offsetHeight.toString();
+            canvas.width = node.offsetWidth.toString();
+            canvas.getContext('2d').drawImage(image, 0, 0);
         }
 
         function loadTestPage(domFile, cssFile, controlImageFile) {
