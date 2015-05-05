@@ -61,6 +61,20 @@
                 });
         });
 
+        it('should render nested text nodes', function (done) {
+            loadTestPage(
+                'text/dom-node.html'
+            ).then(function () {
+                    var domNode = $('#dom-node')[0];
+                    domtoimage.toImage(domNode, function (image) {
+                        drawRenderedImage(image, domNode);
+                        assert.include(image.src, 'someText', 'text should be preserved');
+                        assert.include(image.src, 'someMoreText', 'text should be preserved');
+                        done();
+                    });
+                });
+        });
+
         function checkRendering(done) {
             var domNode = $('#dom-node')[0];
             var controlImg = $('#control-image')[0];
@@ -94,14 +108,16 @@
                     });
                 })
                 .then(function () {
-                    return loadText(cssFile).then(function (cssText) {
-                        document.getElementById('style').appendChild(document.createTextNode(cssText));
-                    });
+                    if (cssFile)
+                        return loadText(cssFile).then(function (cssText) {
+                            document.getElementById('style').appendChild(document.createTextNode(cssText));
+                        });
                 })
                 .then(function () {
-                    return loadText(controlImageFile).then(function (imageHtml) {
-                        document.getElementById('control-image').src = imageHtml;
-                    });
+                    if (controlImageFile)
+                        return loadText(controlImageFile).then(function (imageHtml) {
+                            document.getElementById('control-image').src = imageHtml;
+                        });
                 });
         }
 

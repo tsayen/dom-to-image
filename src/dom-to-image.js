@@ -21,23 +21,23 @@
         copyProperties(sourceStyle, target);
     }
 
-    function fixNamespace(element) {
-        if (element instanceof SVGElement)
-            element.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        else
-            element.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    function fixNamespace(node) {
+        if (node instanceof SVGElement)
+            node.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     }
 
     function processClone(clone, original) {
         fixNamespace(clone);
-        copyStyle(original, clone);
+        if (clone instanceof Element)
+            copyStyle(original, clone);
     }
 
     function cloneNode(node, done) {
         var clone = node.cloneNode(false);
+
         processClone(clone, node);
 
-        var children = node.children;
+        var children = node.childNodes;
         if (children.length === 0) done(clone);
 
         var cloned = 0;
@@ -66,8 +66,9 @@
         return xmlString.replace(/#/g, '%23');
     }
 
-    function serialize(element) {
-        return escape(new XMLSerializer().serializeToString(element));
+    function serialize(node) {
+        node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+        return escape(new XMLSerializer().serializeToString(node));
     }
 
     function asForeignObject(node) {
@@ -98,7 +99,7 @@
     }
 
     function toDataUrl(domNode, done) {
-        toImage(domNode, function(image){
+        toImage(domNode, function (image) {
             var canvas = document.createElement('canvas');
             canvas.width = domNode.offsetWidth;
             canvas.height = domNode.offsetHeight;
