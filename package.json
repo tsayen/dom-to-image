@@ -28,9 +28,9 @@
   },
   "keywords": [
     "dom",
-    "render",
+    "image",
     "raster",
-    "image"
+    "render"
   ],
   "author": "tsayen <anatoly.sayenko@gmail.com>",
   "license": "MIT",
