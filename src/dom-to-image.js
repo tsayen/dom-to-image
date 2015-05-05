@@ -46,13 +46,11 @@
         }
 
         function cloneChild(child) {
-            setTimeout(function () {
-                cloneNode(child, function (childClone) {
-                    clone.appendChild(childClone);
-                    cloned++;
-                    if (cloned === children.length) done(clone);
-                });
-            }, 0);
+            cloneNode(child, function (childClone) {
+                clone.appendChild(childClone);
+                cloned++;
+                if (cloned === children.length) done(clone);
+            });
         }
     }
 
