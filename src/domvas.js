@@ -87,11 +87,11 @@
     }
 
     function makeImage(node, width, height, done) {
-        var img = new Image();
-        img.onload = function () {
-            done(img);
+        var image = new Image();
+        image.onload = function () {
+            done(image);
         };
-        img.src = makeDataUri(stripMargin(node), width, height);
+        image.src = makeDataUri(stripMargin(node), width, height);
     }
 
     function toImage(domNode, done) {
