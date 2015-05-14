@@ -21,7 +21,7 @@
                 'simple/style.css',
                 'simple/control-image'
             ).then(function () {
-                    render(domtoimage.toDataUrl, done);
+                    checkRendering(domtoimage.toDataUrl, done);
                 });
         });
 
@@ -37,7 +37,7 @@
                     for (var i = 0; i < 1000; i++) {
                         domNode.appendChild(child.cloneNode(true));
                     }
-                    render(domtoimage.toDataUrl, done);
+                    checkRendering(domtoimage.toDataUrl, done);
                 });
         });
 
@@ -47,7 +47,7 @@
                 'hash/style.css',
                 'simple/control-image'
             ).then(function () {
-                    render(domtoimage.toDataUrl, done);
+                    checkRendering(domtoimage.toDataUrl, done);
                 });
         });
 
@@ -57,7 +57,7 @@
                 'svg/style.css',
                 'svg/control-image'
             ).then(function () {
-                    render(domtoimage.toDataUrl, done);
+                    checkRendering(domtoimage.toDataUrl, done);
                 });
         });
 
@@ -81,15 +81,15 @@
                 'simple/style.css',
                 'simple/control-image'
             ).then(function () {
-                    render(function (domNode, callback) {
+                    checkRendering(function (domNode, callback) {
                         domtoimage.toBlob(domNode, function (blob) {
-                            callback(URL.createObjectURL(blob));
+                            callback(global.URL.createObjectURL(blob));
                         });
                     }, done);
                 });
         });
 
-        function render(makeDataUrl, done) {
+        function checkRendering(makeDataUrl, done) {
             var domNode = $('#dom-node')[0];
             var canvas = $('#canvas')[0];
             canvas.height = domNode.offsetHeight.toString();
