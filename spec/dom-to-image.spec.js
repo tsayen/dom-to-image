@@ -21,7 +21,7 @@
                 'simple/style.css',
                 'simple/control-image'
             ).then(function () {
-                    checkRendering(done);
+                    render(domtoimage.toDataUrl, done);
                 });
         });
 
@@ -37,7 +37,7 @@
                     for (var i = 0; i < 1000; i++) {
                         domNode.appendChild(child.cloneNode(true));
                     }
-                    checkRendering(done);
+                    render(domtoimage.toDataUrl, done);
                 });
         });
 
@@ -47,7 +47,7 @@
                 'hash/style.css',
                 'simple/control-image'
             ).then(function () {
-                    checkRendering(done);
+                    render(domtoimage.toDataUrl, done);
                 });
         });
 
@@ -57,7 +57,7 @@
                 'svg/style.css',
                 'svg/control-image'
             ).then(function () {
-                    checkRendering(done);
+                    render(domtoimage.toDataUrl, done);
                 });
         });
 
@@ -67,7 +67,7 @@
             ).then(function () {
                     var domNode = $('#dom-node')[0];
                     domtoimage.toImage(domNode, function (image) {
-                        drawRenderedImage(image, domNode);
+                        $('#canvas')[0].getContext('2d').drawImage(image, 0, 0);
                         assert.include(image.src, 'someText', 'text should be preserved');
                         assert.include(image.src, 'someMoreText', 'text should be preserved');
                         done();
@@ -81,43 +81,33 @@
                 'simple/style.css',
                 'simple/control-image'
             ).then(function () {
-                    var domNode = $('#dom-node')[0];
-                    var controlImg = $('#control-image')[0];
-                    domtoimage.toBlob(domNode, function (blob) {
-                        var img = new Image();
-                        img.onload = function () {
-                            drawRenderedImage(img, domNode);
-                            assert.ok(imagediff.equal(img, controlImg), 'rendered and control images should be equal');
-                            done();
-                        };
-                        img.src = URL.createObjectURL(blob);
-                    });
+                    render(function (domNode, callback) {
+                        domtoimage.toBlob(domNode, function (blob) {
+                            callback(URL.createObjectURL(blob));
+                        });
+                    }, done);
                 });
         });
 
-        function checkRendering(done) {
+        function render(makeDataUrl, done) {
             var domNode = $('#dom-node')[0];
-            var controlImg = $('#control-image')[0];
-            domtoimage.toDataUrl(domNode, function (dataUrl) {
-                compare(dataUrl, controlImg, domNode, done);
+            var canvas = $('#canvas')[0];
+            canvas.height = domNode.offsetHeight.toString();
+            canvas.width = domNode.offsetWidth.toString();
+            makeDataUrl(domNode, function (dataUrl) {
+                checkDataUrl(dataUrl, done);
             });
         }
 
-        function compare(imgUrl, ctrlImg, node, done) {
-            var img = new Image();
-            img.onload = function () {
-                drawRenderedImage(img, node);
-                assert.ok(imagediff.equal(img, ctrlImg), 'rendered and control images should be equal');
+        function checkDataUrl(imageDataUrl, done) {
+            var control = $('#control-image')[0];
+            var rendered = new Image();
+            rendered.onload = function () {
+                $('#canvas')[0].getContext('2d').drawImage(rendered, 0, 0);
+                assert.ok(imagediff.equal(rendered, control), 'rendered and control images should be equal');
                 done();
             };
-            img.src = imgUrl;
-        }
-
-        function drawRenderedImage(image, node) {
-            var canvas = $('#canvas')[0];
-            canvas.height = node.offsetHeight.toString();
-            canvas.width = node.offsetWidth.toString();
-            canvas.getContext('2d').drawImage(image, 0, 0);
+            rendered.src = imageDataUrl;
         }
 
         function loadTestPage(domFile, cssFile, controlImageFile) {
