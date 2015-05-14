@@ -1,0 +1,9 @@
+* {
+    box-sizing: border-box;
+}
+
+#dom-node {
+    border: 1px solid black;
+    padding: 1em;
+    width: 100px;
+}

@@ -90,8 +90,51 @@
         image.src = makeDataUri(stripMargin(node), width, height);
     }
 
+    function extractSources(rule) {
+        var sources = [];
+        var propertyValue = rule.style.getPropertyValue('src');
+        propertyValue.split(/,\s*/).forEach(function (src) {
+            var url = /url\((.*?)\)\s+format\((.*?)\)/.exec(src);
+            if (!url) return;
+            sources.push({
+                url: url[1].replace(/"/g, ''),
+                format: url[2].replace(/"/g, '')
+            });
+        });
+        return sources;
+    }
+
+    function getFontFaceUrls() {
+        var styleSheets = document.styleSheets;
+        var result = {};
+        for (var i = 0; i < styleSheets.length; i++) {
+            var rules = styleSheets[i].cssRules;
+            for (var r = 0; r < rules.length; r++) {
+                var rule = rules[r];
+                if (rule.type !== CSSRule.FONT_FACE_RULE) continue;
+                var sources = extractSources(rule);
+                if (sources.length > 0) {
+                    var family = rule.style.getPropertyValue('font-family').replace(/"/g, '');
+                    result[family] = sources;
+                }
+            }
+        }
+        return result;
+    }
+
+    function createStyle() {
+        var style = document.createElement('style');
+        style.type = "text/css";
+        //style.cssText = "#dom-node {background-color: red;}";
+        //style.appendChild(document.createTextNode("#dom-node {background-color: red !important;}"));
+        return style;
+    }
+
     function toImage(domNode, done) {
+        //getFontFaceUrls();
+        //var style = createStyle();
         cloneNode(domNode, function (clone) {
+            //clone.appendChild(style);
             makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
         });
     }
@@ -118,7 +161,9 @@
             for (var i = 0; i < binaryString.length; i++) {
                 binaryArray[i] = binaryString.charCodeAt(i);
             }
-            done(new Blob([binaryArray], {type: 'image/png'}));
+            done(new Blob([binaryArray], {
+                type: 'image/png'
+            }));
         });
     }
 
@@ -131,6 +176,9 @@
     global.domtoimage = {
         toImage: toImage,
         toDataUrl: toDataUrl,
-        toBlob: toBlob
+        toBlob: toBlob,
+        impl: {
+            getFontFaceUrls: getFontFaceUrls
+        }
     };
 })(this);

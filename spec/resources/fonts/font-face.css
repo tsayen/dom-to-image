@@ -1,0 +1,20 @@
+@font-face {
+    font-family: 'Font1';
+    src: url('http://fonts.com/font1.woff') format('woff'), local('Arial');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Font2';
+    src: url('http://fonts.com/font2.ttf') format('truetype'), local('Ubuntu');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Font3';
+    src: local('Comic Sans');
+    font-weight: normal;
+    font-style: normal;
+}

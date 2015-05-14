@@ -25,7 +25,7 @@
                 });
         });
 
-        it('should render big node', function (done) {
+        it.skip('should render big node', function (done) {
             this.timeout(30000);
             loadTestPage(
                 'big/dom-node.html',
@@ -61,13 +61,17 @@
                 });
         });
 
+        function drawControlImage(image) {
+            $('#canvas')[0].getContext('2d').drawImage(image, 0, 0);
+        }
+
         it('should render nested text nodes', function (done) {
             loadTestPage(
                 'text/dom-node.html'
             ).then(function () {
                     var domNode = $('#dom-node')[0];
                     domtoimage.toImage(domNode, function (image) {
-                        $('#canvas')[0].getContext('2d').drawImage(image, 0, 0);
+                        drawControlImage(image);
                         assert.include(image.src, 'someText', 'text should be preserved');
                         assert.include(image.src, 'someMoreText', 'text should be preserved');
                         done();
@@ -89,6 +93,34 @@
                 });
         });
 
+        it.only('should find font face urls', function (done) {
+            loadTestPage(
+                'fonts/font-face.html',
+                'fonts/font-face.css'
+            ).then(function () {
+                    var urls = domtoimage.impl.getFontFaceUrls();
+                    assert.deepEqual(urls['Font1'], [{url: 'http://fonts.com/font1.woff', format: 'woff'}]);
+                    assert.deepEqual(urls['Font2'], [{url: 'http://fonts.com/font2.ttf', format: 'truetype'}]);
+                    assert.isUndefined(urls['Font3']);
+                    done();
+                });
+        });
+
+        it.skip('should render external fonts', function (done) {
+            //this.timeout(60000);
+            loadTestPage(
+                'fonts/dom-node.html',
+                'fonts/style.css'
+            ).then(function () {
+                    var domNode = $('#dom-node')[0];
+                    domtoimage.toImage(domNode, function (image) {
+                        drawControlImage(image);
+                        // console.log(image.src);
+                        //done();
+                    });
+                });
+        });
+
         function checkRendering(makeDataUrl, done) {
             var domNode = $('#dom-node')[0];
             var canvas = $('#canvas')[0];
@@ -103,7 +135,7 @@
             var control = $('#control-image')[0];
             var rendered = new Image();
             rendered.onload = function () {
-                $('#canvas')[0].getContext('2d').drawImage(rendered, 0, 0);
+                drawControlImage(rendered);
                 assert.ok(imagediff.equal(rendered, control), 'rendered and control images should be equal');
                 done();
             };
