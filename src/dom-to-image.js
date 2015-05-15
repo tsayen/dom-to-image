@@ -96,10 +96,9 @@
         propertyValue.split(/,\s*/).forEach(function (src) {
             var url = /url\("?(.*?)"?\)\s+format\("?(.*?)"?\)/.exec(src);
             if (!url) return;
-            sources.push({
-                url: url[1],
-                format: url[2]
-            });
+            var source = {};
+            source[url[1]] = url[2];
+            sources.push(source);
         });
         return sources;
     }
@@ -137,16 +136,20 @@
         request.send();
     }
 
-    function createFontFaceRule() {
+    function createFontFaceRule(webFontRule, fontByUrl) {
+        var result = webFontRule.cssText;
+        Object.keys(fontByUrl).forEach(function (url) {
+            var urlRegex = new RegExp('url\\("?' + escape(url) + '"?\\)', 'g');
+            var encodedFont = fontByUrl[url];
+            var fontType  = webFontRule.sources[url];
+            var dataUrl = 'url("data:font/' + fontType + ';base64,' + encodedFont + '")';
+            result = result.replace(urlRegex, dataUrl);
+        });
+        return '@font-face {' + result + '}';
 
-    }
-
-    function createStyle() {
-        var style = document.createElement('style');
-        style.type = "text/css";
-        //style.cssText = "#dom-node {background-color: red;}";
-        //style.appendChild(document.createTextNode("#dom-node {background-color: red !important;}"));
-        return style;
+        function escape(string){
+            return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
+        }
     }
 
     function toImage(domNode, done) {

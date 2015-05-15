@@ -93,15 +93,15 @@
                 });
         });
 
-        it('should find font face declarations', function (done) {
+        it('should find web font declarations', function (done) {
             loadTestPage(
                 'fonts/urls.html',
                 'fonts/urls.css'
             ).then(function () {
                     var urls = domtoimage.impl.getWebFontRules(document);
-                    assert.deepEqual(urls['Font1'].sources, [{url: 'http://fonts.com/font1.woff', format: 'woff'}]);
+                    assert.deepEqual(urls['Font1'].sources, [{'http://fonts.com/font1.woff': 'woff'}]);
                     assert.include(urls['Font1'].cssText, "Font1");
-                    assert.deepEqual(urls['Font2'].sources, [{url: 'http://fonts.com/font2.ttf', format: 'truetype'}]);
+                    assert.deepEqual(urls['Font2'].sources, [{'http://fonts.com/font2.ttf': 'truetype'}]);
                     assert.include(urls['Font2'].cssText, "Font2");
                     assert.isUndefined(urls['Font3']);
                     done();
@@ -118,20 +118,42 @@
             });
         });
 
-        it.skip('should render external fonts', function (done) {
-            //this.timeout(60000);
-            loadTestPage(
-                'fonts/dom-node.html',
-                'fonts/style.css'
-            ).then(function () {
-                    var domNode = $('#dom-node')[0];
-                    domtoimage.toImage(domNode, function (image) {
-                        drawControlImage(image);
-                        // console.log(image.src);
-                        //done();
-                    });
-                });
+        it('should create font face rule', function (done) {
+            loadText('fonts/cssText').then(function (cssText) {
+                var ruleString = domtoimage.impl.createFontFaceRule(
+                    {
+                        cssText: cssText,
+                        sources: {
+                            "http://fonts.com/font1.woff2": "woff2",
+                            "font1.woff": "woff"
+                        }
+                    },
+                    {
+                        "http://fonts.com/font1.woff2": "AAA",
+                        "font1.woff": "BBB"
+                    }
+                );
+                loadText('fonts/font-face.css').then(function (controlString) {
+                    assert.equal(ruleString, controlString);
+                    done();
+                })
+            });
         });
+
+        //it.skip('should render external fonts', function (done) {
+        //    //this.timeout(60000);
+        //    loadTestPage(
+        //        'fonts/dom-node.html',
+        //        'fonts/style.css'
+        //    ).then(function () {
+        //            var domNode = $('#dom-node')[0];
+        //            domtoimage.toImage(domNode, function (image) {
+        //                drawControlImage(image);
+        //                // console.log(image.src);
+        //                //done();
+        //            });
+        //        });
+        //});
 
         function checkRendering(makeDataUrl, done) {
             var domNode = $('#dom-node')[0];
