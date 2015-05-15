@@ -93,17 +93,26 @@
                 });
         });
 
-        it.only('should find font face urls', function (done) {
+        it('should find font face urls', function (done) {
             loadTestPage(
-                'fonts/font-face.html',
-                'fonts/font-face.css'
+                'fonts/urls.html',
+                'fonts/urls.css'
             ).then(function () {
-                    var urls = domtoimage.impl.getFontFaceUrls();
+                    var urls = domtoimage.impl.getWebFontUrls(document);
                     assert.deepEqual(urls['Font1'], [{url: 'http://fonts.com/font1.woff', format: 'woff'}]);
                     assert.deepEqual(urls['Font2'], [{url: 'http://fonts.com/font2.ttf', format: 'truetype'}]);
                     assert.isUndefined(urls['Font3']);
                     done();
                 });
+        });
+
+        it('should get encoded web font file', function (done) {
+            domtoimage.impl.getWebFont(BASE_URL + 'fonts/fontawesome.woff2', function (content) {
+                loadText('fonts/fontawesome.base64').then(function (testContent) {
+                    assert.equal(content, testContent);
+                    done();
+                });
+            });
         });
 
         it.skip('should render external fonts', function (done) {
@@ -186,7 +195,7 @@
             return new Promise(function (resolve, reject) {
                 request.onload = function () {
                     if (this.status == 200)
-                        resolve(request.response.toString());
+                        resolve(request.response.toString().trim());
                     else
                         reject(new Error('cannot load ' + url));
                 };

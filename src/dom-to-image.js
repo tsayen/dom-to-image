@@ -104,7 +104,7 @@
         return sources;
     }
 
-    function getFontFaceUrls() {
+    function getWebFontUrls(document) {
         var styleSheets = document.styleSheets;
         var result = {};
         for (var i = 0; i < styleSheets.length; i++) {
@@ -122,6 +122,21 @@
         return result;
     }
 
+    function getWebFont(url, done) {
+        var request = new XMLHttpRequest();
+        request.open('GET', url, true);
+        request.responseType = 'blob';
+        request.onload = function () {
+            if (this.status != 200) return;
+            var encoder = new FileReader();
+            encoder.onloadend = function () {
+                done(encoder.result.split(/,/)[1]);
+            };
+            encoder.readAsDataURL(request.response);
+        };
+        request.send();
+    }
+
     function createStyle() {
         var style = document.createElement('style');
         style.type = "text/css";
@@ -131,7 +146,7 @@
     }
 
     function toImage(domNode, done) {
-        //getFontFaceUrls();
+        //getWebFontUrls();
         //var style = createStyle();
         cloneNode(domNode, function (clone) {
             //clone.appendChild(style);
@@ -178,7 +193,8 @@
         toDataUrl: toDataUrl,
         toBlob: toBlob,
         impl: {
-            getFontFaceUrls: getFontFaceUrls
+            getWebFontUrls: getWebFontUrls,
+            getWebFont: getWebFont
         }
     };
 })(this);
