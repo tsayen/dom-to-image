@@ -91,14 +91,11 @@
     }
 
     function extractSources(rule) {
-        var sources = [];
+        var sources = {};
         var propertyValue = rule.style.getPropertyValue('src');
         propertyValue.split(/,\s*/).forEach(function (src) {
             var url = /url\("?(.*?)"?\)\s+format\("?(.*?)"?\)/.exec(src);
-            if (!url) return;
-            var source = {};
-            source[url[1]] = url[2];
-            sources.push(source);
+            if (url) sources[url[1]] = url[2];
         });
         return sources;
     }
@@ -112,9 +109,12 @@
                 var rule = rules[r];
                 if (rule.type !== CSSRule.FONT_FACE_RULE) continue;
                 var sources = extractSources(rule);
-                if (sources.length > 0) {
+                if (Object.keys(sources).length > 0) {
                     var family = rule.style.getPropertyValue('font-family').replace(/"/g, '');
-                    result[family] = {cssText: rule.style.cssText, sources: sources};
+                    result[family] = {
+                        cssText: rule.style.cssText,
+                        sources: sources
+                    };
                 }
             }
         }
@@ -141,23 +141,58 @@
         Object.keys(fontByUrl).forEach(function (url) {
             var urlRegex = new RegExp('url\\("?' + escape(url) + '"?\\)', 'g');
             var encodedFont = fontByUrl[url];
-            var fontType  = webFontRule.sources[url];
+            var fontType = webFontRule.sources[url];
             var dataUrl = 'url("data:font/' + fontType + ';base64,' + encodedFont + '")';
             result = result.replace(urlRegex, dataUrl);
         });
         return '@font-face {' + result + '}';
 
-        function escape(string){
+        function escape(string) {
             return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
         }
     }
 
+    function fetchFonts(family, done) {
+        var fontByUrl = {};
+        var urls = family.sources;
+        var fetched = 0;
+        urls.forEach(function (url) {
+            getWebFont(url, function (font) {
+                fontByUrl[url] = font;
+                fetched++;
+                if (fetched === urls.length) done(fontByUrl);
+            })
+        });
+    }
+
+    function embedFonts(node, done) {
+        var style = '';
+        var webFontRules = getWebFontRules(document);
+        console.log(JSON.stringify(webFontRules));
+        var families = Object.keys(webFontRules);
+        if (families.length === 0) done();
+        var fetched = 0;
+        console.log(families);
+        families.forEach(function (family) {
+            fetchFonts(webFontRules[family], function (fontByUrl) {
+                fetched++;
+                style += createFontFaceRule(webFontRules[family], fontByUrl);
+                if (fetched === families.length) {
+                    var styleNode = document.createElement('style');
+                    styleNode.type = 'text/css';
+                    styleNode.appendChild(document.createTextNode(style));
+                    node.appendChild(styleNode);
+                    done();
+                }
+            });
+        });
+    }
+
     function toImage(domNode, done) {
-        //getWebFontRules();
-        //var style = createStyle();
         cloneNode(domNode, function (clone) {
-            //clone.appendChild(style);
+            // embedFonts(clone, function () {
             makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
+            // });
         });
     }
 
@@ -183,7 +218,9 @@
             for (var i = 0; i < binaryString.length; i++) {
                 binaryArray[i] = binaryString.charCodeAt(i);
             }
-            done(new Blob([binaryArray], {type: 'image/png'}));
+            done(new Blob([binaryArray], {
+                type: 'image/png'
+            }));
         });
     }
 
@@ -193,6 +230,30 @@
         });
     }
 
+    var resourceLoader = {
+        load: function (url) {
+            var request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.responseType = 'blob';
+
+            return new Promise(function (resolve, reject) {
+                request.onload = function () {
+                    if (this.status != 200) {
+                        reject(new Error('Cannot fetch resource "' + url + '": ' + this.status));
+                        return;
+                    }
+                    var encoder = new FileReader();
+                    encoder.onloadend = function () {
+                        resolve(encoder.result.split(/,/)[1]);
+                    };
+                    encoder.readAsDataURL(request.response);
+                };
+                request.send();
+            });
+        }
+    }
+
+
     global.domtoimage = {
         toImage: toImage,
         toDataUrl: toDataUrl,
@@ -200,7 +261,8 @@
         impl: {
             getWebFontRules: getWebFontRules,
             getWebFont: getWebFont,
-            createFontFaceRule: createFontFaceRule
+            createFontFaceRule: createFontFaceRule,
+            resourceLoader: resourceLoader
         }
     };
 })(this);
