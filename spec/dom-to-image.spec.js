@@ -93,14 +93,16 @@
                 });
         });
 
-        it('should find font face urls', function (done) {
+        it('should find font face declarations', function (done) {
             loadTestPage(
                 'fonts/urls.html',
                 'fonts/urls.css'
             ).then(function () {
-                    var urls = domtoimage.impl.getWebFontUrls(document);
-                    assert.deepEqual(urls['Font1'], [{url: 'http://fonts.com/font1.woff', format: 'woff'}]);
-                    assert.deepEqual(urls['Font2'], [{url: 'http://fonts.com/font2.ttf', format: 'truetype'}]);
+                    var urls = domtoimage.impl.getWebFontRules(document);
+                    assert.deepEqual(urls['Font1'].sources, [{url: 'http://fonts.com/font1.woff', format: 'woff'}]);
+                    assert.include(urls['Font1'].cssText, "Font1");
+                    assert.deepEqual(urls['Font2'].sources, [{url: 'http://fonts.com/font2.ttf', format: 'truetype'}]);
+                    assert.include(urls['Font2'].cssText, "Font2");
                     assert.isUndefined(urls['Font3']);
                     done();
                 });
@@ -108,10 +110,11 @@
 
         it('should get encoded web font file', function (done) {
             domtoimage.impl.getWebFont(BASE_URL + 'fonts/fontawesome.woff2', function (content) {
-                loadText('fonts/fontawesome.base64').then(function (testContent) {
-                    assert.equal(content, testContent);
-                    done();
-                });
+                loadText('fonts/fontawesome.base64')
+                    .then(function (testContent) {
+                        assert.equal(content, testContent);
+                        done();
+                    });
             });
         });
 

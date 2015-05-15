@@ -94,17 +94,17 @@
         var sources = [];
         var propertyValue = rule.style.getPropertyValue('src');
         propertyValue.split(/,\s*/).forEach(function (src) {
-            var url = /url\((.*?)\)\s+format\((.*?)\)/.exec(src);
+            var url = /url\("?(.*?)"?\)\s+format\("?(.*?)"?\)/.exec(src);
             if (!url) return;
             sources.push({
-                url: url[1].replace(/"/g, ''),
-                format: url[2].replace(/"/g, '')
+                url: url[1],
+                format: url[2]
             });
         });
         return sources;
     }
 
-    function getWebFontUrls(document) {
+    function getWebFontRules(document) {
         var styleSheets = document.styleSheets;
         var result = {};
         for (var i = 0; i < styleSheets.length; i++) {
@@ -115,7 +115,7 @@
                 var sources = extractSources(rule);
                 if (sources.length > 0) {
                     var family = rule.style.getPropertyValue('font-family').replace(/"/g, '');
-                    result[family] = sources;
+                    result[family] = {cssText: rule.style.cssText, sources: sources};
                 }
             }
         }
@@ -137,6 +137,10 @@
         request.send();
     }
 
+    function createFontFaceRule() {
+
+    }
+
     function createStyle() {
         var style = document.createElement('style');
         style.type = "text/css";
@@ -146,7 +150,7 @@
     }
 
     function toImage(domNode, done) {
-        //getWebFontUrls();
+        //getWebFontRules();
         //var style = createStyle();
         cloneNode(domNode, function (clone) {
             //clone.appendChild(style);
@@ -176,9 +180,7 @@
             for (var i = 0; i < binaryString.length; i++) {
                 binaryArray[i] = binaryString.charCodeAt(i);
             }
-            done(new Blob([binaryArray], {
-                type: 'image/png'
-            }));
+            done(new Blob([binaryArray], {type: 'image/png'}));
         });
     }
 
@@ -193,8 +195,9 @@
         toDataUrl: toDataUrl,
         toBlob: toBlob,
         impl: {
-            getWebFontUrls: getWebFontUrls,
-            getWebFont: getWebFont
+            getWebFontRules: getWebFontRules,
+            getWebFont: getWebFont,
+            createFontFaceRule: createFontFaceRule
         }
     };
 })(this);
