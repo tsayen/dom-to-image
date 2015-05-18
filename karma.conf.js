@@ -12,7 +12,7 @@ module.exports = function (config) {
             'bower_components/jquery/dist/jquery.js',
             'bower_components/bluebird/js/browser/bluebird.js',
             'bower_components/js-imagediff/imagediff.js',
-            'bower_components/fontawesome/css/font-awesome.css',
+            //'bower_components/fontawesome/css/font-awesome.css',
 
             'src/dom-to-image.js',
             'spec/dom-to-image.spec.js'

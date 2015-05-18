@@ -251,23 +251,58 @@
                 request.send();
             });
         }
-    }
+    };
 
-    var fontFaceRule = {
-        tryParse: function (cssRule) {
-            return {
-                embed: function (resourseLoader) {
+    var webFontRule = (function () {
 
-                },
-                urls: function () {
-                    return {}
-                },
-                name: function () {
-                    return "";
+        function extractUrls(cssRule) {
+            var sources = {};
+            var propertyValue = cssRule.style.getPropertyValue('src');
+            propertyValue.split(/,\s*/).forEach(function (src) {
+                var url = /url\("?(.*?)"?\)\s+format\("?(.*?)"?\)/.exec(src);
+                if (url) sources[url[1]] = url[2];
+            });
+            return sources;
+        }
+
+        function readAll(document) {
+            var styleSheets = document.styleSheets;
+            var result = {};
+            for (var i = 0; i < styleSheets.length; i++) {
+                var rules = styleSheets[i].cssRules;
+                for (var r = 0; r < rules.length; r++) {
+                    var fontFaceRule = tryRead(rules[r]);
+                    if (fontFaceRule) result[fontFaceRule.name()] = fontFaceRule;
                 }
             }
-        },
-    }
+            return result;
+        }
+
+        function tryRead(cssRule) {
+            if (cssRule.type !== CSSRule.FONT_FACE_RULE) return null;
+            var urls = extractUrls(cssRule);
+            if (Object.keys(urls).length === 0) return null;
+
+            return {
+                embed: function (resourceLoader) {
+                    return '';
+                },
+                urls: function () {
+                    return urls;
+                },
+                name: function () {
+                    return cssRule.style.getPropertyValue('font-family').replace(/"/g, '');
+                },
+                cssText: function () {
+                    return cssRule.style.cssText;
+                }
+            }
+        }
+
+        return {
+            readAll: readAll
+        }
+    })();
 
 
     global.domtoimage = {
@@ -279,7 +314,7 @@
             getWebFont: getWebFont,
             createFontFaceRule: createFontFaceRule,
             resourceLoader: resourceLoader,
-            fontFaceRule: fontFaceRule
+            webFontRule: webFontRule
         }
     };
 })(this);
