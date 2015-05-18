@@ -172,7 +172,7 @@
             var sources = {};
             var propertyValue = cssRule.style.getPropertyValue('src');
             propertyValue.split(/,\s*/).forEach(function (src) {
-                var url = /url\("?(.*?)"?\)\s+format\("?(.*?)"?\)/.exec(src);
+                var url = /url\(['"]?([^\?"]+)\??.*?['"]?\)\s+format\(['"]?(.*?)['"]?\)/.exec(src);
                 if (url) sources[url[1]] = url[2];
             });
             return sources;
@@ -195,7 +195,6 @@
                 }
             });
         }
-        
 
         function readAll(document) {
             var styleSheets = document.styleSheets;
@@ -214,10 +213,9 @@
                     var jobs = [];
                     names.forEach(function (name) {
                         jobs.push(
-                            webFontRules[name].embed(resourceProvider || resourceLoader)
-                                .then(function (cssText) {
-                                    result.push(cssText);
-                                })
+                            webFontRules[name].embed(resourceProvider || resourceLoader).then(function (cssText) {
+                                result.push(cssText);
+                            })
                         );
                     });
                     Promise.all(jobs)
@@ -245,7 +243,7 @@
                     return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
                 }
 
-                return new RegExp('url\\("?' + escape(url) + '"?\\)', 'g');
+                return new RegExp('url\\([\'"]?' + escape(url) + '\??.*?[\'"]?\\)', 'g');
             }
 
             function asDataUrl(fontType, encodedFont) {
@@ -264,12 +262,12 @@
                         Object.keys(fontUrls).forEach(function (url) {
                             jobs.push(
                                 resourceLoader.load(url)
-                                    .then(function (encodedFont) {
-                                        result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont))
-                                    })
-                                    .catch(function (error) {
-                                        reject(error);
-                                    })
+                                .then(function (encodedFont) {
+                                    result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont))
+                                })
+                                .catch(function (error) {
+                                    reject(error);
+                                })
                             );
                         });
 

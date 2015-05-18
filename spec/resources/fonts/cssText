@@ -1,4 +1,4 @@
 font-family: "Font1";
 font-style: normal;
 font-weight: normal;
-src: url("http://fonts.com/font1.woff2") format(woff2), url(font1.woff) format("woff"), local(Arial);
+src: url("http://fonts.com/font1.woff2?v1.2.3") format(woff2), url(font1.woff) format("woff"), local(Arial);
