@@ -253,6 +253,22 @@
         }
     }
 
+    var fontFaceRule = {
+        tryParse: function (cssRule) {
+            return {
+                embed: function (resourseLoader) {
+
+                },
+                urls: function () {
+                    return {}
+                },
+                name: function () {
+                    return "";
+                }
+            }
+        },
+    }
+
 
     global.domtoimage = {
         toImage: toImage,
@@ -262,7 +278,8 @@
             getWebFontRules: getWebFontRules,
             getWebFont: getWebFont,
             createFontFaceRule: createFontFaceRule,
-            resourceLoader: resourceLoader
+            resourceLoader: resourceLoader,
+            fontFaceRule: fontFaceRule
         }
     };
 })(this);

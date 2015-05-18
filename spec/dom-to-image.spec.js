@@ -254,7 +254,7 @@
 
         function mockResourceLoader(content) {
             return {
-                load: function (url) {
+                load: function () {
                     return new Promise(function (resolve, reject) {
                         resolve(content);
                     });
