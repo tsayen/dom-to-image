@@ -127,10 +127,10 @@
 
             it('should find all web font rules in document', function (done) {
                 loadTestPage(
-                    'fonts/urls.html',
-                    'fonts/urls.css'
+                    'fonts/rules.html',
+                    'fonts/rules.css'
                 ).then(function () {
-                        var rules = domtoimage.impl.webFontRule.readAll(global.document);
+                        var rules = domtoimage.impl.webFontRule.readAll(global.document).rules();
                         assert.deepEqual(Object.keys(rules), ['Font1', 'Font2']);
 
                         assert.deepEqual(
@@ -153,14 +153,12 @@
                 var cssText, controlString;
                 Promise.all(
                     [
-                        loadText('fonts/cssText')
-                            .then(function (text) {
-                                cssText = text;
-                            }),
-                        loadText('fonts/font-face.css')
-                            .then(function (text) {
-                                controlString = text;
-                            })
+                        loadText('fonts/cssText').then(function (text) {
+                            cssText = text;
+                        }),
+                        loadText('fonts/font-face.css').then(function (text) {
+                            controlString = text;
+                        })
                     ])
                     .then(function () {
                         // when
@@ -170,14 +168,14 @@
                             },
                             urls: function () {
                                 return {
-                                    "http://fonts.com/font1.woff2": "woff2",
-                                    "font1.woff": "woff"
+                                    'http://fonts.com/font1.woff2': 'woff2',
+                                    'font1.woff': 'woff'
                                 };
                             }
                         });
                         return fontFaceRule.embed(mockResourceLoader({
-                            "http://fonts.com/font1.woff2": "AAA",
-                            "font1.woff": "BBB"
+                            'http://fonts.com/font1.woff2': 'AAA',
+                            'font1.woff': 'BBB'
                         }));
                     })
                     .then(function (cssRuleString) {
@@ -187,6 +185,26 @@
                     .then(done)
                     .catch(log);
             });
+        });
+
+        it('should create style with web font rules', function (done) {
+            // given
+            loadTestPage(
+                'fonts/rules.html',
+                'fonts/style.css'
+            ).then(function () {
+                    var webFontRules = domtoimage.impl.webFontRule.readAll(global.document);
+                    return webFontRules.embed(Object.keys(webFontRules.rules()), mockResourceLoader({
+                        'http://fonts.com/font1.woff2': 'AAA',
+                        'http://fonts.com/font2.ttf': 'CCC'
+                    }));
+                })
+                .then(function (cssText) {
+                    assert.include(cssText, 'url("data:font/woff2;base64,AAA")');
+                    assert.include(cssText, 'url("data:font/truetype;base64,CCC")');
+                })
+                .then(done)
+                .catch(log);
         });
 
         it.skip('should render external fonts', function (done) {

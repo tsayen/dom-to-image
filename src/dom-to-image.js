@@ -210,17 +210,44 @@
 
         function readAll(document) {
             var styleSheets = document.styleSheets;
-            var result = {};
+            var webFontRules = {};
             for (var i = 0; i < styleSheets.length; i++) {
-                var rules = styleSheets[i].cssRules;
-                for (var r = 0; r < rules.length; r++) {
-                    var webFontRule = tryRead(rules[r]);
-                    if (webFontRule) result[webFontRule.data().name()] = webFontRule;
+                var cssRules = styleSheets[i].cssRules;
+                for (var r = 0; r < cssRules.length; r++) {
+                    var webFontRule = tryRead(cssRules[r]);
+                    if (webFontRule) webFontRules[webFontRule.data().name()] = webFontRule;
                 }
             }
-            return result;
+
+            var embed = function (names, resourceProvider) {
+                return new Promise(function (resolve, reject) {
+                    var result = [];
+                    var jobs = [];
+                    names.forEach(function (name) {
+                        jobs.push(
+                            webFontRules[name].embed(resourceProvider || resourceLoader)
+                                .then(function (cssText) {
+                                    result.push(cssText);
+                                })
+                        );
+                    });
+                    Promise.all(jobs)
+                        .then(function () {
+                            resolve(result.join('\n'));
+                        }).catch(function (error) {
+                            reject(error);
+                        });
+                });
+            };
+
+            return {
+                embed: embed,
+                rules: function () {
+                    return webFontRules;
+                }
+            };
         }
-        
+
 
         function createRule(data) {
 
