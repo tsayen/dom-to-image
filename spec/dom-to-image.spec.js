@@ -4,6 +4,7 @@
     var assert = global.chai.assert;
     var imagediff = global.imagediff;
     var domtoimage = global.domtoimage;
+    var Promise = global.Promise;
 
     var BASE_URL = '/base/spec/resources/';
 
@@ -99,35 +100,6 @@
                 .catch(log);
         });
 
-        it('should find web font declarations', function (done) {
-            loadTestPage(
-                'fonts/urls.html',
-                'fonts/urls.css'
-            ).then(function () {
-                    var urls = domtoimage.impl.getWebFontRules(document);
-                    assert.deepEqual(urls['Font1'].sources, {
-                        'http://fonts.com/font1.woff': 'woff'
-                    });
-                    assert.include(urls['Font1'].cssText, "Font1");
-                    assert.deepEqual(urls['Font2'].sources, {
-                        'http://fonts.com/font2.ttf': 'truetype'
-                    });
-                    assert.include(urls['Font2'].cssText, "Font2");
-                    assert.isUndefined(urls['Font3']);
-                    done();
-                });
-        });
-
-        it('should get encoded web font file', function (done) {
-            domtoimage.impl.getWebFont(BASE_URL + 'fonts/fontawesome.woff2', function (content) {
-                loadText('fonts/fontawesome.base64')
-                    .then(function (testContent) {
-                        assert.equal(content, testContent);
-                        done();
-                    });
-            });
-        });
-
         describe('resource loader', function () {
 
             it('should get and encode resource', function (done) {
@@ -137,7 +109,8 @@
                             .then(function (content) {
                                 assert.equal(content, testContent);
                             })
-                            .then(done);
+                            .then(done)
+                            .catch(log);
                     });
             });
 
@@ -159,37 +132,63 @@
                 ).then(function () {
                         var rules = domtoimage.impl.webFontRule.readAll(global.document);
                         assert.deepEqual(Object.keys(rules), ['Font1', 'Font2']);
-                        assert.deepEqual({'http://fonts.com/font1.woff': 'woff'}, rules['Font1'].urls());
-                        assert.deepEqual({'http://fonts.com/font2.ttf': 'truetype'}, rules['Font2'].urls());
+
+                        assert.deepEqual(
+                            {
+                                'http://fonts.com/font1.woff': 'woff',
+                                'http://fonts.com/font1.woff2': 'woff2'
+                            },
+                            rules['Font1'].data().urls());
+                        assert.deepEqual({'http://fonts.com/font2.ttf': 'truetype'}, rules['Font2'].data().urls());
+
+                        assert.include(rules['Font1'].data().cssText(), 'Font1');
+                        assert.include(rules['Font2'].data().cssText(), 'Font2');
+                    })
+                    .then(done)
+                    .catch(log);
+            });
+
+            it('should embed web font', function (done) {
+                // given
+                var cssText, controlString;
+                Promise.all(
+                    [
+                        loadText('fonts/cssText')
+                            .then(function (text) {
+                                cssText = text;
+                            }),
+                        loadText('fonts/font-face.css')
+                            .then(function (text) {
+                                controlString = text;
+                            })
+                    ])
+                    .then(function () {
+                        // when
+                        var fontFaceRule = domtoimage.impl.webFontRule.createRule({
+                            cssText: function () {
+                                return cssText;
+                            },
+                            urls: function () {
+                                return {
+                                    "http://fonts.com/font1.woff2": "woff2",
+                                    "font1.woff": "woff"
+                                };
+                            }
+                        });
+                        return fontFaceRule.embed(mockResourceLoader({
+                            "http://fonts.com/font1.woff2": "AAA",
+                            "font1.woff": "BBB"
+                        }));
+                    })
+                    .then(function (cssRuleString) {
+                        // then
+                        assert.equal(cssRuleString, controlString);
                     })
                     .then(done)
                     .catch(log);
             });
         });
 
-        it('should create font face rule', function (done) {
-            loadText('fonts/cssText')
-                .then(function (cssText) {
-                    var ruleString = domtoimage.impl.createFontFaceRule({
-                        cssText: cssText,
-                        sources: {
-                            "http://fonts.com/font1.woff2": "woff2",
-                            "font1.woff": "woff"
-                        }
-                    }, {
-                        "http://fonts.com/font1.woff2": "AAA",
-                        "font1.woff": "BBB"
-                    });
-
-                    loadText('fonts/font-face.css')
-                        .then(function (controlString) {
-                            assert.equal(ruleString, controlString);
-                        })
-                        .then(done)
-                        .catch(log);
-                });
-        });
-        //"/home/asaienko/projects/infomodel/dom-to-image/bower_components/fontawesome/css/font-awesome.css"
         it.skip('should render external fonts', function (done) {
             //this.timeout(60000);
             loadTestPage(
@@ -209,8 +208,8 @@
             ;
         });
 
-        function log(error) {
-            console.log(error.toString())
+        function log(e) {
+            console.error(e.toString() + '\n' + e.stack);
         }
 
         function checkRendering(makeDataUrl, done) {
@@ -288,12 +287,13 @@
 
         function mockResourceLoader(content) {
             return {
-                load: function () {
+                load: function (url) {
                     return new Promise(function (resolve, reject) {
-                        resolve(content);
+                        resolve(content[url]);
                     });
                 }
             };
         }
     });
-})(this);
+})
+(this);

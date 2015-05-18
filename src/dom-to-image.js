@@ -271,11 +271,54 @@
             for (var i = 0; i < styleSheets.length; i++) {
                 var rules = styleSheets[i].cssRules;
                 for (var r = 0; r < rules.length; r++) {
-                    var fontFaceRule = tryRead(rules[r]);
-                    if (fontFaceRule) result[fontFaceRule.name()] = fontFaceRule;
+                    var webFontRule = tryRead(rules[r]);
+                    if (webFontRule) result[webFontRule.data().name()] = webFontRule;
                 }
             }
             return result;
+        }
+
+        function createRule(data) {
+
+            function asRegex(url) {
+                function escape(string) {
+                    return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
+                }
+
+                return new RegExp('url\\("?' + escape(url) + '"?\\)', 'g');
+            }
+
+            function asDataUrl(fontType, encodedFont) {
+                return 'url("data:font/' + fontType + ';base64,' + encodedFont + '")';
+            }
+
+            return {
+                data: function () {
+                    return data;
+                },
+                embed: function (resourceLoader) {
+                    return new Promise(function (resolve, reject) {
+                        var result = data.cssText();
+                        var jobs = [];
+                        var fontUrls = data.urls();
+                        Object.keys(fontUrls).forEach(function (url) {
+                            jobs.push(
+                                resourceLoader.load(url)
+                                    .then(function (encodedFont) {
+                                        result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont))
+                                    })
+                                    .catch(function (error) {
+                                        reject(error);
+                                    })
+                            );
+                        });
+
+                        Promise.all(jobs).then(function () {
+                            resolve('@font-face {' + result + '}');
+                        });
+                    });
+                }
+            }
         }
 
         function tryRead(cssRule) {
@@ -283,24 +326,22 @@
             var urls = extractUrls(cssRule);
             if (Object.keys(urls).length === 0) return null;
 
-            return {
-                embed: function (resourceLoader) {
-                    return '';
+            return createRule({
+                name: function () {
+                    return cssRule.style.getPropertyValue('font-family').replace(/"/g, '');
                 },
                 urls: function () {
                     return urls;
                 },
-                name: function () {
-                    return cssRule.style.getPropertyValue('font-family').replace(/"/g, '');
-                },
                 cssText: function () {
                     return cssRule.style.cssText;
                 }
-            }
+            });
         }
 
         return {
-            readAll: readAll
+            readAll: readAll,
+            createRule: createRule
         }
     })();
 
@@ -317,4 +358,5 @@
             webFontRule: webFontRule
         }
     };
-})(this);
+})
+(this);

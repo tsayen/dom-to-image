@@ -24,8 +24,11 @@ module.exports = function (config) {
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,
+        client: {
+            captureConsole: true
+        },
         autoWatch: true,
-        browsers: ['Chrome'/*, 'Firefox'*/],
+        browsers: ['Chrome', 'Firefox'],
         singleRun: false,
         browserNoActivityTimeout: 60000
     });
