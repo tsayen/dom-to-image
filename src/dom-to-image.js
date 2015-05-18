@@ -91,33 +91,21 @@
     }
 
     function embedFonts(node, done) {
-        var style = '';
-        var webFontRules = getWebFontRules(document);
-        console.log(JSON.stringify(webFontRules));
-        var families = Object.keys(webFontRules);
-        if (families.length === 0) done();
-        var fetched = 0;
-        console.log(families);
-        families.forEach(function (family) {
-            fetchFonts(webFontRules[family], function (fontByUrl) {
-                fetched++;
-                style += createFontFaceRule(webFontRules[family], fontByUrl);
-                if (fetched === families.length) {
-                    var styleNode = document.createElement('style');
-                    styleNode.type = 'text/css';
-                    styleNode.appendChild(document.createTextNode(style));
-                    node.appendChild(styleNode);
-                    done();
-                }
-            });
+        var cssRules = webFontRule.readAll(document);
+        cssRules.embed(Object.keys(cssRules.rules())).then(function (cssText) {
+            var styleNode = document.createElement('style');
+            styleNode.type = 'text/css';
+            styleNode.appendChild(document.createTextNode(cssText));
+            node.appendChild(styleNode);
+            done();
         });
     }
 
     function toImage(domNode, done) {
         cloneNode(domNode, function (clone) {
-            // embedFonts(clone, function () {
-            makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
-            // });
+            embedFonts(clone, function () {
+                makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
+            });
         });
     }
 
@@ -207,6 +195,7 @@
                 }
             });
         }
+        
 
         function readAll(document) {
             var styleSheets = document.styleSheets;

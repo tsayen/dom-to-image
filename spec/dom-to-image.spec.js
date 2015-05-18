@@ -207,8 +207,8 @@
                 .catch(log);
         });
 
-        it.skip('should render external fonts', function (done) {
-            //this.timeout(60000);
+        it('should render web fonts', function (done) {
+            this.timeout(5000);
             loadTestPage(
                 'fonts/regression.html',
                 'fonts/regression.css'
@@ -220,9 +220,10 @@
                         //done();
                     });
                 })
-                /*.catch(function(e){
-                 console.error(e);
-                 })*/
+                .catch(log);
+            /*.catch(function(e){
+             console.error(e);
+             })*/
             ;
         });
 

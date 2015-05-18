@@ -7,7 +7,7 @@ module.exports = function (config) {
         files: [
             {pattern: 'spec/resources/**/*', included: false, served: true},
             {pattern: 'bower_components/fontawesome/fonts/*', included: false, served: true},
-            {pattern: 'bower_components/fontawesome/css', included: false, served: true},
+            {pattern: 'bower_components/fontawesome/css/*', included: false, served: true},
 
             'bower_components/jquery/dist/jquery.js',
             'bower_components/bluebird/js/browser/bluebird.js',
