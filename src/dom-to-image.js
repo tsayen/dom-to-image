@@ -168,19 +168,30 @@
 
     var webFontRule = (function () {
 
-        function extractUrls(cssRule) {
+        function resolve(url, baseUrl) {
+            var doc = global.document.implementation.createHTMLDocument();
+            var base = doc.createElement('base');
+            doc.head.appendChild(base);
+            var a = doc.createElement('a');
+            doc.body.appendChild(a);
+            base.href = baseUrl;
+            a.href = url;
+            return a.href;
+        }
+
+        function extractUrls(cssRule, baseUrl) {
             var sources = {};
             var propertyValue = cssRule.style.getPropertyValue('src');
             propertyValue.split(/,\s*/).forEach(function (src) {
                 var url = /url\(['"]?([^\?"]+)\??.*?['"]?\)\s+format\(['"]?(.*?)['"]?\)/.exec(src);
-                if (url) sources[url[1]] = url[2];
+                if (url) sources[resolve(url[1], baseUrl)] = url[2];
             });
             return sources;
         }
 
-        function tryRead(cssRule, baseHref) {
+        function tryRead(cssRule, baseUrl) {
             if (cssRule.type !== CSSRule.FONT_FACE_RULE) return null;
-            var urls = extractUrls(cssRule);
+            var urls = extractUrls(cssRule, baseUrl);
             if (Object.keys(urls).length === 0) return null;
 
             return createRule({
@@ -200,11 +211,11 @@
             var sheets = document.querySelectorAll('link[rel=stylesheet]');
             var loaded = [];
             for (var s = 0; s < sheets.length; s++) {
-                (function (s) {
+                (function (sheet) {
                     loaded.push(new Promise(function (resolve) {
-                        sheets[s].addEventListener('load', resolve);
+                        sheet.addEventListener('load', resolve);
                     }));
-                })(s);
+                })(sheets[s]);
             }
             return Promise.all(loaded);
         }
@@ -223,7 +234,7 @@
 
                 return {
                     embedAll: function (names, resourceProvider) {
-                        var jobs = names.map(function(name){
+                        var jobs = names.map(function (name) {
                             return webFontRules[name].embed(resourceProvider || resourceLoader);
                         });
                         return Promise.all(jobs).then(function (results) {
@@ -260,12 +271,12 @@
                     Object.keys(fontUrls).forEach(function (url) {
                         jobs.push(
                             resourceLoader.load(url)
-                                .then(function (encodedFont) {
-                                    result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont))
-                                })
-                                .catch(function (error) {
-                                    reject(error);
-                                })
+                            .then(function (encodedFont) {
+                                result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont))
+                            })
+                            .catch(function (error) {
+                                reject(error);
+                            })
                         );
                     });
 
@@ -285,7 +296,10 @@
 
         return {
             readAll: readAll,
-            createRule: createRule
+            impl: {
+                createRule: createRule,
+                extractUrls: extractUrls
+            }
         }
     })();
 
