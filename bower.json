@@ -31,6 +31,7 @@
     "fontawesome": "~4.3.0"
   },
   "dependencies": {
-    "bluebird": "~2.9.25"
+    "bluebird": "~2.9.25",
+    "jquery": "~2.1.4"
   }
 }

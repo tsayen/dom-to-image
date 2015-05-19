@@ -220,7 +220,7 @@
                                 'http://fonts.com/font2.ttf': 'CCC'
                             }));
                         });
-                    
+
                 })
                 .then(function (cssText) {
                     assert.include(cssText, 'url("data:font/woff2;base64,AAA")');

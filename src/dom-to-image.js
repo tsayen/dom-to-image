@@ -104,7 +104,7 @@
     function toImage(domNode, done) {
         cloneNode(domNode, function (clone) {
             //embedFonts(clone, function () {
-                makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
+            makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
             //});
         });
     }
@@ -255,32 +255,34 @@
                 return 'url("data:font/' + fontType + ';base64,' + encodedFont + '")';
             }
 
+            function embed(resourceLoader) {
+                return new Promise(function (resolve, reject) {
+                    var result = data.cssText();
+                    var jobs = [];
+                    var fontUrls = data.urls();
+                    Object.keys(fontUrls).forEach(function (url) {
+                        jobs.push(
+                            resourceLoader.load(url)
+                                .then(function (encodedFont) {
+                                    result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont))
+                                })
+                                .catch(function (error) {
+                                    reject(error);
+                                })
+                        );
+                    });
+
+                    Promise.all(jobs).then(function () {
+                        resolve('@font-face {' + result + '}');
+                    });
+                });
+            }
+
             return {
                 data: function () {
                     return data;
                 },
-                embed: function (resourceLoader) {
-                    return new Promise(function (resolve, reject) {
-                        var result = data.cssText();
-                        var jobs = [];
-                        var fontUrls = data.urls();
-                        Object.keys(fontUrls).forEach(function (url) {
-                            jobs.push(
-                                resourceLoader.load(url)
-                                    .then(function (encodedFont) {
-                                        result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont))
-                                    })
-                                    .catch(function (error) {
-                                        reject(error);
-                                    })
-                            );
-                        });
-
-                        Promise.all(jobs).then(function () {
-                            resolve('@font-face {' + result + '}');
-                        });
-                    });
-                }
+                embed: embed
             }
         }
 
