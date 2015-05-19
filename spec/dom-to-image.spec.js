@@ -153,13 +153,14 @@
                     .catch(log);
             });
 
-            it.skip('should resolve relative font urls', function (done) {
-                // this.timeout(10000);
+            it('should resolve relative font urls', function (done) {
                 loadTestPage(
                     'fonts/rules-relative.html'
                 ).then(function () {
-                        var rules = domtoimage.impl.webFontRule.readAll(global.document).rules();
-                        console.log(JSON.stringify(rules));
+                        return domtoimage.impl.webFontRule.readAll(global.document);
+                    })
+                    .then(function (fontRules) {
+                        var rules = fontRules.rules();
                         assert.include(Object.keys(rules['Font1'].data().urls())[0], '/base/spec/font1.woff');
                         assert.include(Object.keys(rules['Font2'].data().urls())[0], '/base/spec/fonts/font2.woff2');
                     })
@@ -215,7 +216,7 @@
             ).then(function () {
                     return domtoimage.impl.webFontRule.readAll(global.document)
                         .then(function (webFontRules) {
-                            return webFontRules.embed(Object.keys(webFontRules.rules()), mockResourceLoader({
+                            return webFontRules.embedAll(Object.keys(webFontRules.rules()), mockResourceLoader({
                                 'http://fonts.com/font1.woff2': 'AAA',
                                 'http://fonts.com/font2.ttf': 'CCC'
                             }));
@@ -296,23 +297,6 @@
                             document.getElementById('control-image').src = imageHtml;
                         });
                 })
-                .then(function () {
-                    var elements = document.querySelectorAll('link[rel=stylesheet]');
-                    for (var i = 0; i < elements.lehgth; i++) {
-                        elements[i].addEventListener('load', function () {
-                            console.log('ELOADED');
-                        });
-                    }
-                    return new Promise(function (resolve) {
-                        if ($('link[rel=stylesheet]').length === 0) resolve();
-                        console.log("LINKS " + $('link[rel=stylesheet]').length);
-                        $('link[rel=stylesheet]').load(function () {
-                            console.log('LOADED');
-                            resolve();
-                        });
-                    });
-                });
-            ;
         }
 
 

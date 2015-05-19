@@ -92,7 +92,7 @@
 
     function embedFonts(node, done) {
         var cssRules = webFontRule.readAll(document);
-        cssRules.embed(Object.keys(cssRules.rules())).then(function (cssText) {
+        cssRules.embedAll(Object.keys(cssRules.rules())).then(function (cssText) {
             var styleNode = document.createElement('style');
             styleNode.type = 'text/css';
             styleNode.appendChild(document.createTextNode(cssText));
@@ -178,7 +178,7 @@
             return sources;
         }
 
-        function tryRead(cssRule) {
+        function tryRead(cssRule, baseHref) {
             if (cssRule.type !== CSSRule.FONT_FACE_RULE) return null;
             var urls = extractUrls(cssRule);
             if (Object.keys(urls).length === 0) return null;
@@ -196,50 +196,47 @@
             });
         }
 
+        function verifyStylesLoaded() {
+            var sheets = document.querySelectorAll('link[rel=stylesheet]');
+            var loaded = [];
+            for (var s = 0; s < sheets.length; s++) {
+                (function (s) {
+                    loaded.push(new Promise(function (resolve) {
+                        sheets[s].addEventListener('load', resolve);
+                    }));
+                })(s);
+            }
+            return Promise.all(loaded);
+        }
+
         function readAll(document) {
-            return new Promise(function (resolve, reject) {
+            return verifyStylesLoaded().then(function () {
                 var styleSheets = document.styleSheets;
                 var webFontRules = {};
                 for (var i = 0; i < styleSheets.length; i++) {
-                    console.log('HREF: ' + styleSheets[i].href);
-                    var ss = styleSheets[i];
-                    var cssRules = ss.cssRules;
+                    var cssRules = styleSheets[i].cssRules;
                     for (var r = 0; r < cssRules.length; r++) {
-                        var webFontRule = tryRead(cssRules[r]);
+                        var webFontRule = tryRead(cssRules[r], styleSheets[i].href);
                         if (webFontRule) webFontRules[webFontRule.data().name()] = webFontRule;
                     }
                 }
 
-                var embed = function (names, resourceProvider) {
-                    return new Promise(function (resolve, reject) {
-                        var result = [];
-                        var jobs = [];
-                        names.forEach(function (name) {
-                            jobs.push(
-                                webFontRules[name].embed(resourceProvider || resourceLoader).then(function (cssText) {
-                                    result.push(cssText);
-                                })
-                            );
+                return {
+                    embedAll: function (names, resourceProvider) {
+                        var jobs = names.map(function(name){
+                            return webFontRules[name].embed(resourceProvider || resourceLoader);
                         });
-                        Promise.all(jobs)
-                            .then(function () {
-                                resolve(result.join('\n'));
-                            }).catch(function (error) {
-                                reject(error);
-                            });
-                    });
-                };
-
-                resolve({
-                    embed: embed,
+                        return Promise.all(jobs).then(function (results) {
+                            return results.join('\n');
+                        });
+                    },
                     rules: function () {
                         return webFontRules;
                     }
-                });
+                };
             });
 
         }
-
 
         function createRule(data) {
 
