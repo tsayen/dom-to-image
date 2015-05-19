@@ -1,4 +1,4 @@
-(function (global) {
+(function(global) {
     "use strict";
 
     function copyProperties(style, node) {
@@ -46,7 +46,7 @@
         }
 
         function cloneChild(child) {
-            cloneNode(child, function (childClone) {
+            cloneNode(child, function(childClone) {
                 clone.appendChild(childClone);
                 cloned++;
                 if (cloned === children.length) done(clone);
@@ -84,33 +84,37 @@
 
     function makeImage(node, width, height, done) {
         var image = new Image();
-        image.onload = function () {
+        image.onload = function() {
             done(image);
         };
         image.src = makeDataUri(stripMargin(node), width, height);
     }
 
     function embedFonts(node, done) {
-        var cssRules = webFontRule.readAll(document);
-        cssRules.embedAll(Object.keys(cssRules.rules())).then(function (cssText) {
+        webFontRule.readAll(document).then(function(cssRules) {
+            console.log('css rules');
+            return cssRules.embedAll(Object.keys(cssRules.rules()));
+        }).then(function(cssText) {
             var styleNode = document.createElement('style');
             styleNode.type = 'text/css';
             styleNode.appendChild(document.createTextNode(cssText));
             node.appendChild(styleNode);
+            console.log('cssText');
             done();
         });
     }
 
     function toImage(domNode, done) {
-        cloneNode(domNode, function (clone) {
-            //embedFonts(clone, function () {
-            makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
-            //});
+        cloneNode(domNode, function(clone) {
+                        console.log('to image');
+            embedFonts(clone, function() {
+                makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
+            });
         });
     }
 
     function drawOffScreen(domNode, done) {
-        toImage(domNode, function (image) {
+        toImage(domNode, function(image) {
             var canvas = document.createElement('canvas');
             canvas.width = domNode.offsetWidth;
             canvas.height = domNode.offsetHeight;
@@ -120,7 +124,7 @@
     }
 
     function toBlob(domNode, done) {
-        drawOffScreen(domNode, function (canvas) {
+        drawOffScreen(domNode, function(canvas) {
             if (canvas.toBlob) {
                 canvas.toBlob(done);
                 return;
@@ -138,25 +142,25 @@
     }
 
     function toDataUrl(domNode, done) {
-        drawOffScreen(domNode, function (canvas) {
+        drawOffScreen(domNode, function(canvas) {
             done(canvas.toDataURL());
         });
     }
 
     var resourceLoader = {
-        load: function (url) {
+        load: function(url) {
             var request = new XMLHttpRequest();
             request.open('GET', url, true);
             request.responseType = 'blob';
 
-            return new Promise(function (resolve, reject) {
-                request.onload = function () {
+            return new Promise(function(resolve, reject) {
+                request.onload = function() {
                     if (this.status != 200) {
                         reject(new Error('Cannot fetch resource "' + url + '": ' + this.status));
                         return;
                     }
                     var encoder = new FileReader();
-                    encoder.onloadend = function () {
+                    encoder.onloadend = function() {
                         resolve(encoder.result.split(/,/)[1]);
                     };
                     encoder.readAsDataURL(request.response);
@@ -166,7 +170,7 @@
         }
     };
 
-    var webFontRule = (function () {
+    var webFontRule = (function() {
 
         function resolve(url, baseUrl) {
             var doc = global.document.implementation.createHTMLDocument();
@@ -182,7 +186,7 @@
         function extractUrls(cssRule, baseUrl) {
             var sources = {};
             var propertyValue = cssRule.style.getPropertyValue('src');
-            propertyValue.split(/,\s*/).forEach(function (src) {
+            propertyValue.split(/,\s*/).forEach(function(src) {
                 var url = /url\(['"]?([^\?"]+)\??.*?['"]?\)\s+format\(['"]?(.*?)['"]?\)/.exec(src);
                 if (url) sources[resolve(url[1], baseUrl)] = url[2];
             });
@@ -195,13 +199,13 @@
             if (Object.keys(urls).length === 0) return null;
 
             return createRule({
-                name: function () {
+                name: function() {
                     return cssRule.style.getPropertyValue('font-family').replace(/"/g, '');
                 },
-                urls: function () {
+                urls: function() {
                     return urls;
                 },
-                cssText: function () {
+                cssText: function() {
                     return cssRule.style.cssText;
                 }
             });
@@ -211,17 +215,20 @@
             var sheets = document.querySelectorAll('link[rel=stylesheet]');
             var loaded = [];
             for (var s = 0; s < sheets.length; s++) {
-                (function (sheet) {
-                    loaded.push(new Promise(function (resolve) {
-                        sheet.addEventListener('load', resolve);
+                (function(sheet) {
+                    console.log('sheet' + sheet);
+                    loaded.push(new Promise(function(resolve) {
+                        sheet.onload = resolve;
                     }));
                 })(sheets[s]);
             }
+            console.log('loaded ' + loaded);
             return Promise.all(loaded);
         }
 
         function readAll(document) {
-            return verifyStylesLoaded().then(function () {
+            return verifyStylesLoaded().then(function() {
+                console.log('read all');
                 var styleSheets = document.styleSheets;
                 var webFontRules = {};
                 for (var i = 0; i < styleSheets.length; i++) {
@@ -233,20 +240,19 @@
                 }
 
                 return {
-                    embedAll: function (names, resourceProvider) {
-                        var jobs = names.map(function (name) {
+                    embedAll: function(names, resourceProvider) {
+                        var jobs = names.map(function(name) {
                             return webFontRules[name].embed(resourceProvider || resourceLoader);
                         });
-                        return Promise.all(jobs).then(function (results) {
+                        return Promise.all(jobs).then(function(results) {
                             return results.join('\n');
                         });
                     },
-                    rules: function () {
+                    rules: function() {
                         return webFontRules;
                     }
                 };
             });
-
         }
 
         function createRule(data) {
@@ -264,30 +270,30 @@
             }
 
             function embed(resourceLoader) {
-                return new Promise(function (resolve, reject) {
+                return new Promise(function(resolve, reject) {
                     var result = data.cssText();
                     var jobs = [];
                     var fontUrls = data.urls();
-                    Object.keys(fontUrls).forEach(function (url) {
+                    Object.keys(fontUrls).forEach(function(url) {
                         jobs.push(
                             resourceLoader.load(url)
-                            .then(function (encodedFont) {
+                            .then(function(encodedFont) {
                                 result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont))
                             })
-                            .catch(function (error) {
+                            .catch(function(error) {
                                 reject(error);
                             })
                         );
                     });
 
-                    Promise.all(jobs).then(function () {
+                    Promise.all(jobs).then(function() {
                         resolve('@font-face {' + result + '}');
                     });
                 });
             }
 
             return {
-                data: function () {
+                data: function() {
                     return data;
                 },
                 embed: embed

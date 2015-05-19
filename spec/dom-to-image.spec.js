@@ -222,7 +222,6 @@
                                     'http://fonts.com/font2.ttf': 'CCC'
                                 }));
                             });
-
                     })
                     .then(function (cssText) {
                         assert.include(cssText, 'url("data:font/woff2;base64,AAA")');
@@ -232,8 +231,9 @@
                     .catch(error);
             });
 
+
             it('should render web fonts', function (done) {
-                this.timeout(10000);
+                // this.timeout(60000);
                 loadTestPage(
                         'fonts/regression.html',
                         'fonts/regression.css'
@@ -241,7 +241,8 @@
                         var domNode = $('#dom-node')[0];
                         domtoimage.toImage(domNode, function (image) {
                             drawControlImage(image);
-                            // console.error(image.src);
+                            document.body.appendChild(image);
+                            // console.log(image.src);
                             //done();
                         });
                     })
