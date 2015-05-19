@@ -200,7 +200,9 @@
             var styleSheets = document.styleSheets;
             var webFontRules = {};
             for (var i = 0; i < styleSheets.length; i++) {
-                var cssRules = styleSheets[i].cssRules;
+                console.log('HREF: ' + styleSheets[i].href);
+                var ss = styleSheets[i];
+                var cssRules = ss.cssRules;
                 for (var r = 0; r < cssRules.length; r++) {
                     var webFontRule = tryRead(cssRules[r]);
                     if (webFontRule) webFontRules[webFontRule.data().name()] = webFontRule;

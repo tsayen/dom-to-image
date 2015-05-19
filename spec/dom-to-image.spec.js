@@ -18,10 +18,10 @@
 
         it('should render simple node', function (done) {
             loadTestPage(
-                'simple/dom-node.html',
-                'simple/style.css',
-                'simple/control-image'
-            ).then(function () {
+                    'simple/dom-node.html',
+                    'simple/style.css',
+                    'simple/control-image'
+                ).then(function () {
                     checkRendering(domtoimage.toDataUrl, done);
                 })
                 .catch(log);
@@ -30,10 +30,10 @@
         it.skip('should render big node', function (done) {
             this.timeout(30000);
             loadTestPage(
-                'big/dom-node.html',
-                'big/style.css',
-                'big/control-image'
-            ).then(function () {
+                    'big/dom-node.html',
+                    'big/style.css',
+                    'big/control-image'
+                ).then(function () {
                     var domNode = $('#dom-node')[0];
                     var child = $('.dom-child-node')[0];
                     for (var i = 0; i < 1000; i++) {
@@ -46,10 +46,10 @@
 
         it('should handle "#" in colors and attributes', function (done) {
             loadTestPage(
-                'hash/dom-node.html',
-                'hash/style.css',
-                'simple/control-image'
-            ).then(function () {
+                    'hash/dom-node.html',
+                    'hash/style.css',
+                    'simple/control-image'
+                ).then(function () {
                     checkRendering(domtoimage.toDataUrl, done);
                 })
                 .catch(log);
@@ -57,10 +57,10 @@
 
         it('should render nested svg with broken namespace', function (done) {
             loadTestPage(
-                'svg/dom-node.html',
-                'svg/style.css',
-                'svg/control-image'
-            ).then(function () {
+                    'svg/dom-node.html',
+                    'svg/style.css',
+                    'svg/control-image'
+                ).then(function () {
                     checkRendering(domtoimage.toDataUrl, done);
                 })
                 .catch(log);
@@ -72,8 +72,8 @@
 
         it('should render text nodes', function (done) {
             loadTestPage(
-                'text/dom-node.html'
-            ).then(function () {
+                    'text/dom-node.html'
+                ).then(function () {
                     var domNode = $('#dom-node')[0];
                     domtoimage.toImage(domNode, function (image) {
                         drawControlImage(image);
@@ -87,10 +87,10 @@
 
         it('should render to blob', function (done) {
             loadTestPage(
-                'simple/dom-node.html',
-                'simple/style.css',
-                'simple/control-image'
-            ).then(function () {
+                    'simple/dom-node.html',
+                    'simple/style.css',
+                    'simple/control-image'
+                ).then(function () {
                     checkRendering(function (domNode, callback) {
                         domtoimage.toBlob(domNode, function (blob) {
                             callback(global.URL.createObjectURL(blob));
@@ -127,19 +127,20 @@
 
             it('should find all web font rules in document', function (done) {
                 loadTestPage(
-                    'fonts/rules.html',
-                    'fonts/rules.css'
-                ).then(function () {
+                        'fonts/empty.html',
+                        'fonts/rules.css'
+                    ).then(function () {
                         var rules = domtoimage.impl.webFontRule.readAll(global.document).rules();
                         assert.deepEqual(Object.keys(rules), ['Font1', 'Font2']);
 
-                        assert.deepEqual(
-                            {
+                        assert.deepEqual({
                                 'http://fonts.com/font1.woff': 'woff',
                                 'http://fonts.com/font1.woff2': 'woff2'
                             },
                             rules['Font1'].data().urls());
-                        assert.deepEqual({'http://fonts.com/font2.ttf': 'truetype'}, rules['Font2'].data().urls());
+                        assert.deepEqual({
+                            'http://fonts.com/font2.ttf': 'truetype'
+                        }, rules['Font2'].data().urls());
 
                         assert.include(rules['Font1'].data().cssText(), 'Font1');
                         assert.include(rules['Font2'].data().cssText(), 'Font2');
@@ -148,18 +149,33 @@
                     .catch(log);
             });
 
+            it('should resolve relative font urls', function (done) {
+                // this.timeout(10000);
+                loadTestPage(
+                        'fonts/rules-relative.html'
+                    ).then(function () {
+                        var rules = domtoimage.impl.webFontRule.readAll(global.document).rules();
+                        console.log(JSON.stringify(rules));
+                        assert.include(Object.keys(rules['Font1'].data().urls())[0], '/base/spec/font1.woff');
+                        assert.include(Object.keys(rules['Font2'].data().urls())[0], '/base/spec/fonts/font2.woff2');
+                    })
+                    .then(done)
+                    .catch(log);
+            });
+
+
             it('should embed web font', function (done) {
                 // given
                 var cssText, controlString;
                 Promise.all(
-                    [
-                        loadText('fonts/cssText').then(function (text) {
-                            cssText = text;
-                        }),
-                        loadText('fonts/font-face.css').then(function (text) {
-                            controlString = text;
-                        })
-                    ])
+                        [
+                            loadText('fonts/cssText').then(function (text) {
+                                cssText = text;
+                            }),
+                            loadText('fonts/font-face.css').then(function (text) {
+                                controlString = text;
+                            })
+                        ])
                     .then(function () {
                         // when
                         var fontFaceRule = domtoimage.impl.webFontRule.createRule({
@@ -190,9 +206,9 @@
         it('should create style with web font rules', function (done) {
             // given
             loadTestPage(
-                'fonts/rules.html',
-                'fonts/style.css'
-            ).then(function () {
+                    'fonts/empty.html',
+                    'fonts/style.css'
+                ).then(function () {
                     var webFontRules = domtoimage.impl.webFontRule.readAll(global.document);
                     return webFontRules.embed(Object.keys(webFontRules.rules()), mockResourceLoader({
                         'http://fonts.com/font1.woff2': 'AAA',
@@ -210,9 +226,11 @@
         it('should render web fonts', function (done) {
             this.timeout(5000);
             loadTestPage(
-                'fonts/regression.html',
-                'fonts/regression.css'
-            ).then(function () {
+                    'fonts/regression.html',
+                    'fonts/regression.css'
+                ).then(function () {
+                    console.log(window.location.pathname);
+                    console.log(window.location.href);
                     var domNode = $('#dom-node')[0];
                     domtoimage.toImage(domNode, function (image) {
                         drawControlImage(image);
@@ -270,8 +288,25 @@
                         return loadText(controlImageFile).then(function (imageHtml) {
                             document.getElementById('control-image').src = imageHtml;
                         });
-                });
+                })
+                .then(function () {
+                    var elements = document.querySelectorAll('link[rel=stylesheet]');
+                    for (var i = 0; i < elements.lehgth; i++) {
+                        elements[i].addEventListener('load', function () {
+                            console.log('ELOADED');
+                        });
+                    }
+                    return new Promise(function (resolve) {
+                        if ($('link[rel=stylesheet]').length === 0) resolve();
+                        console.log("LINKS " + $('link[rel=stylesheet]').length);
+                        $('link[rel=stylesheet]').load(function () {
+                            console.log('LOADED');
+                            resolve();
+                        });
+                    });
+                });;
         }
+
 
         function loadPage() {
             return loadText('page.html').then(function (text) {
