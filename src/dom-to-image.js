@@ -32,13 +32,21 @@
             copyStyle(original, clone);
     }
 
-    function cloneNode(node, done) {
+    function cloneNode(node, done, filter) {
+        if (filter && !filter(node)) {
+            done(null);
+            return;
+        }
+
         var clone = node.cloneNode(false);
 
         processClone(clone, node);
 
         var children = node.childNodes;
-        if (children.length === 0) done(clone);
+        if (children.length === 0) {
+            done(clone);
+            return;
+        }
 
         var cloned = 0;
         for (var i = 0; i < children.length; i++) {
@@ -47,10 +55,11 @@
 
         function cloneChild(child) {
             cloneNode(child, function (childClone) {
-                clone.appendChild(childClone);
+                if (childClone)
+                    clone.appendChild(childClone);
                 cloned++;
                 if (cloned === children.length) done(clone);
-            });
+            }, filter);
         }
     }
 
@@ -90,23 +99,24 @@
         image.src = makeDataUri(stripMargin(node), width, height);
     }
 
-    function toImage(domNode, done) {
+    function toImage(domNode, done, options) {
+        options = options || {};
         cloneNode(domNode, function (clone) {
             makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
-        });
+        }, options.filter);
     }
 
-    function drawOffScreen(domNode, done) {
+    function drawOffScreen(domNode, done, options) {
         toImage(domNode, function (image) {
             var canvas = document.createElement('canvas');
             canvas.width = domNode.offsetWidth;
             canvas.height = domNode.offsetHeight;
             canvas.getContext('2d').drawImage(image, 0, 0);
             done(canvas);
-        });
+        }, options);
     }
 
-    function toBlob(domNode, done) {
+    function toBlob(domNode, done, options) {
         drawOffScreen(domNode, function (canvas) {
             if (canvas.toBlob) {
                 canvas.toBlob(done);
@@ -119,13 +129,13 @@
                 binaryArray[i] = binaryString.charCodeAt(i);
             }
             done(new Blob([binaryArray], {type: 'image/png'}));
-        });
+        }, options);
     }
 
-    function toDataUrl(domNode, done) {
+    function toDataUrl(domNode, done, options) {
         drawOffScreen(domNode, function (canvas) {
             done(canvas.toDataURL());
-        });
+        }, options);
     }
 
     global.domtoimage = {

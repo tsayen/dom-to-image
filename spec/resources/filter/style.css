@@ -1,0 +1,19 @@
+* {
+    box-sizing: border-box;
+}
+
+#dom-node {
+    border: 1px solid black;
+    height: auto;
+    width: 100px;
+}
+
+.include {
+    height: 50px;
+    background-color: blue;
+}
+
+.omit {
+    height: 50px;
+    background-color: red;
+}

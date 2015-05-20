@@ -95,6 +95,26 @@
                 });
         });
 
+        it('should use node filter', function (done) {
+            loadTestPage(
+                'filter/dom-node.html',
+                'filter/style.css',
+                'filter/control-image'
+            ).then(function () {
+                    var domNode = $('#dom-node')[0];
+                    var controlImg = $('#control-image')[0];
+                    domtoimage.toDataUrl(domNode, function (dataUrl) {
+                        compare(dataUrl, controlImg, domNode, done);
+                    }, {
+                        filter: function (node) {
+                            if (node.classList)
+                                return !node.classList.contains('omit');
+                            return true;
+                        }
+                    });
+                });
+        });
+
         function checkRendering(done) {
             var domNode = $('#dom-node')[0];
             var controlImg = $('#control-image')[0];
