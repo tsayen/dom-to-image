@@ -90,25 +90,28 @@
         image.src = makeDataUri(stripMargin(node), width, height);
     }
 
-    function embedFonts(node, done) {
-        webFontRule.readAll(document).then(function(cssRules) {
-            console.log('css rules');
+    function embedFonts(node) {
+        return webFontRule.readAll(document).then(function(cssRules) {
+            // console.log('css rules');
             return cssRules.embedAll(Object.keys(cssRules.rules()));
         }).then(function(cssText) {
+            var root = document.createElement('div');
+
             var styleNode = document.createElement('style');
             styleNode.type = 'text/css';
             styleNode.appendChild(document.createTextNode(cssText));
-            node.appendChild(styleNode);
-            console.log('cssText');
-            done();
+            root.appendChild(styleNode);
+            root.appendChild(node);
+            // console.log(cssText);
+            return root;
         });
     }
 
     function toImage(domNode, done) {
         cloneNode(domNode, function(clone) {
-                        console.log('to image');
-            embedFonts(clone, function() {
-                makeImage(clone, domNode.offsetWidth, domNode.offsetHeight, done);
+            // console.log('to image');
+            embedFonts(clone).then(function(node) {
+                makeImage(node, domNode.offsetWidth, domNode.offsetHeight, done);
             });
         });
     }
@@ -216,19 +219,19 @@
             var loaded = [];
             for (var s = 0; s < sheets.length; s++) {
                 (function(sheet) {
-                    console.log('sheet' + sheet);
+                    // console.log('sheet' + sheet);
                     loaded.push(new Promise(function(resolve) {
                         sheet.onload = resolve;
                     }));
                 })(sheets[s]);
             }
-            console.log('loaded ' + loaded);
+            // console.log('loaded ' + loaded);
             return Promise.all(loaded);
         }
 
         function readAll(document) {
             return verifyStylesLoaded().then(function() {
-                console.log('read all');
+                // console.log('read all');
                 var styleSheets = document.styleSheets;
                 var webFontRules = {};
                 for (var i = 0; i < styleSheets.length; i++) {
