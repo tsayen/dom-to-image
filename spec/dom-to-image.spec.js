@@ -32,7 +32,7 @@
                 'big/style.css',
                 'big/control-image'
             ).then(function () {
-                    var domNode = $('#dom-node')[0];
+                    var domNode = $('#root')[0];
                     var child = $('.dom-child-node')[0];
                     for (var i = 0; i < 1000; i++) {
                         domNode.appendChild(child.cloneNode(true));
@@ -58,6 +58,20 @@
                 'svg/control-image'
             ).then(function () {
                     checkRendering(done);
+                });
+        });
+
+        it('should render correctly when the node is bigger than container', function (done) {
+            loadTestPage(
+                'scroll/dom-node.html',
+                'scroll/style.css',
+                'scroll/control-image'
+            ).then(function () {
+                    var domNode = $('#root')[0];
+                    var controlImg = $('#control-image')[0];
+                    domtoimage.toDataUrl(domNode, function (dataUrl) {
+                        compare(dataUrl, controlImg, domNode, done);
+                    });
                 });
         });
 
@@ -135,8 +149,8 @@
 
         function drawRenderedImage(image, node) {
             var canvas = $('#canvas')[0];
-            canvas.height = node.offsetHeight.toString();
-            canvas.width = node.offsetWidth.toString();
+            canvas.height = node.scrollHeight.toString();
+            canvas.width = node.scrollWidth.toString();
             canvas.getContext('2d').drawImage(image, 0, 0);
         }
 
@@ -144,7 +158,7 @@
             return loadPage()
                 .then(function () {
                     return loadText(domFile).then(function (domHtml) {
-                        document.getElementById('dom-node').innerHTML = domHtml;
+                        document.getElementById('root').innerHTML = domHtml;
                     });
                 })
                 .then(function () {

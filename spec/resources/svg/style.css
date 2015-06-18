@@ -1,11 +1,13 @@
-* {
-    box-sizing: border-box;
+#dom-node {
+    height: 100px !important;
+    width: 100px;
+    overflow: hidden;
 }
 
-#dom-node {
-    border: 1px solid red;
+#root {
+    border: 1px solid red !important;
     position: relative;
-    height: 100px;
+    height: 100px !important;
     width: 100px
 }
 
