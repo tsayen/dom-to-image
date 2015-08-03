@@ -2,8 +2,8 @@
     "use strict";
 
     function copyProperties(style, node) {
-        for (var i = 0; i < style.length; i++) {
             var propertyName = style[i];
+        for (var i = 0; i < style.length; i++) {
             node.style.setProperty(
                 propertyName,
                 style.getPropertyValue(propertyName),

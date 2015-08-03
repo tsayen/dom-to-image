@@ -233,7 +233,7 @@
 
 
             it('should render web fonts', function (done) {
-                // this.timeout(60000);
+                this.timeout(60000);
                 loadTestPage(
                         'fonts/regression.html',
                         'fonts/regression.css'
@@ -242,7 +242,7 @@
                         domtoimage.toImage(domNode, function (image) {
                             drawControlImage(image);
                             document.body.appendChild(image);
-                            // console.log(image.src);
+                            console.log(image.src);
                             //done();
                         });
                     })
