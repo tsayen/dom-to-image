@@ -28,7 +28,9 @@ module.exports = function (config) {
             captureConsole: true
         },
         autoWatch: true,
-        browsers: ['Chrome'/*, 'Firefox'*/],
+        browsers: ['Chrome', 'Firefox'],
+        // browsers: ['Chrome'/*, 'Firefox'*/],
+        // browsers: [/*'Chrome'*/, 'Firefox'],
         singleRun: false,
         browserNoActivityTimeout: 60000
     });

@@ -2,8 +2,8 @@
     "use strict";
 
     function copyProperties(style, node) {
-        var propertyName = style[i];
         for (var i = 0; i < style.length; i++) {
+            var propertyName = style[i];
             node.style.setProperty(
                 propertyName,
                 style.getPropertyValue(propertyName),
@@ -259,8 +259,8 @@
                         var cssRules = styleSheets[i].cssRules;
                         for (var r = 0; r < cssRules.length; r++) {
                             var webFontRule = tryRead(cssRules[r], styleSheets[i].href);
-                            if (webFontRule) webFontRules[webFontRule.data()
-                                .name()] = webFontRule;
+                            if (webFontRule)
+                                webFontRules[webFontRule.data().name()] = webFontRule;
                         }
                     }
 
