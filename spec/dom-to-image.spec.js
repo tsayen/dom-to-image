@@ -16,16 +16,41 @@
             assert.ok(domtoimage);
         });
 
-        it('should render simple node', function(done) {
-            loadTestPage(
-                    'simple/dom-node.html',
-                    'simple/style.css',
-                    'simple/control-image'
-                )
+        function makeImage(src) {
+            debugger;
+            return new Promise(function(resolve) {
+                var image = new Image();
+                image.onload = function() {
+                    resolve(image);
+                };
+                image.src = src;
+            });
+        }
+
+        function getControlImage() {
+            return $('#control-image')[0];
+        }
+
+        function drawImage(image) {
+            debugger;
+            var domNode = $('#dom-node')[0];
+            var canvas = $('#canvas')[0];
+            canvas.height = domNode.offsetHeight.toString();
+            canvas.width = domNode.offsetWidth.toString();
+            canvas.getContext('2d').drawImage(image, 0, 0);
+            return image;
+        }
+
+        it.only('should render simple node', function(done) {
+            loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
                 .then(function() {
-                    checkRendering(domtoimage.toDataUrl, done);
+                    return domtoimage.toDataUrl($('#dom-node')[0], function() {});
                 })
-                .catch(error);
+                .then(makeImage).then(drawImage)
+                .then(function(image) {
+                    debugger;
+                    assert.ok(imagediff.equal(image, getControlImage()), 'rendered and control images should be equal');
+                }).then(done).catch(error);
         });
 
         it('should render big node', function(done) {
@@ -124,23 +149,18 @@
         describe('resource loader', function() {
 
             it('should get and encode resource', function(done) {
-                getResource('fonts/fontawesome.base64')
-                    .then(function(testContent) {
-                        domtoimage.impl.resourceLoader.load(BASE_URL + 'fonts/fontawesome.woff2')
-                            .then(function(content) {
-                                assert.equal(content, testContent);
-                            })
-                            .then(done)
-                            .catch(error);
-                    });
+                getResource('fonts/fontawesome.base64').then(function(testContent) {
+                    domtoimage.impl.resourceLoader.load(BASE_URL + 'fonts/fontawesome.woff2')
+                        .then(function(content) {
+                            assert.equal(content, testContent);
+                        }).then(done).catch(error);
+                });
             });
 
             it('should reject when resource not available', function(done) {
-                domtoimage.impl.resourceLoader.load('nonexistent file')
-                    .catch(function(error) {
-                        assert.ok(error.message);
-                    })
-                    .then(done);
+                domtoimage.impl.resourceLoader.load('nonexistent file').catch(function(error) {
+                    assert.ok(error.message);
+                }).then(done);
             });
         });
 
@@ -164,39 +184,25 @@
                                 'http://fonts.com/font1.woff': 'woff',
                                 'http://fonts.com/font1.woff2': 'woff2'
                             },
-                            rules['Font1'].data()
-                            .urls());
+                            rules['Font1'].data().urls());
 
                         assert.deepEqual({
-                                'http://fonts.com/font2.ttf': 'truetype'
-                            }, rules['Font2'].data()
-                            .urls());
+                            'http://fonts.com/font2.ttf': 'truetype'
+                        }, rules['Font2'].data().urls());
 
-                        assert.include(rules['Font1'].data()
-                            .cssText(), 'Font1');
-                        assert.include(rules['Font2'].data()
-                            .cssText(), 'Font2');
-                    })
-                    .then(done)
-                    .catch(error);
+                        assert.include(rules['Font1'].data().cssText(), 'Font1');
+                        assert.include(rules['Font2'].data().cssText(), 'Font2');
+                    }).then(done).catch(error);
             });
 
             it('should resolve relative font urls', function(done) {
-                loadTestPage(
-                        'fonts/rules-relative.html'
-                    )
-                    .then(function() {
-                        return webFontRule.readAll(global.document);
-                    })
-                    .then(function(fontRules) {
-                        var rules = fontRules.rules();
-                        assert.include(Object.keys(rules['Font1'].data()
-                            .urls())[0], '/base/spec/resources/font1.woff');
-                        assert.include(Object.keys(rules['Font2'].data()
-                            .urls())[0], '/base/spec/resources/fonts/font2.woff2');
-                    })
-                    .then(done)
-                    .catch(error);
+                loadTestPage('fonts/rules-relative.html').then(function() {
+                    return webFontRule.readAll(global.document);
+                }).then(function(fontRules) {
+                    var rules = fontRules.rules();
+                    assert.include(Object.keys(rules['Font1'].data().urls())[0], '/base/spec/resources/font1.woff');
+                    assert.include(Object.keys(rules['Font2'].data().urls())[0], '/base/spec/resources/fonts/font2.woff2');
+                }).then(done).catch(error);
             });
 
 
@@ -205,12 +211,10 @@
                 var cssText, controlString;
                 Promise.all(
                         [
-                            getResource('fonts/cssText')
-                            .then(function(text) {
+                            getResource('fonts/cssText').then(function(text) {
                                 cssText = text;
                             }),
-                            getResource('fonts/font-face.css')
-                            .then(function(text) {
+                            getResource('fonts/font-face.css').then(function(text) {
                                 controlString = text;
                             })
                         ])
