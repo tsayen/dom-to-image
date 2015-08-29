@@ -291,12 +291,21 @@
 
     function toImage(domNode, done, options) {
         options = options || {};
-        cloneNode(domNode, function(clone) {
-            embedFonts(clone)
-                .then(function(node) {
-                    makeImage(node, domNode.scrollWidth, domNode.scrollHeight, done);
-                });
-        }, options.filter);
+
+        return new Promise(function(resolve, reject) {
+
+            function complete(result) {
+                done(result);
+                resolve(result);
+            }
+
+            cloneNode(domNode, function(clone) {
+                embedFonts(clone)
+                    .then(function(node) {
+                        makeImage(node, domNode.scrollWidth, domNode.scrollHeight, complete);
+                    });
+            }, options.filter);
+        });
     }
 
     function drawOffScreen(domNode, done, options) {
@@ -312,29 +321,40 @@
 
 
     function toBlob(domNode, done, options) {
-        drawOffScreen(domNode, function(canvas) {
-            if (canvas.toBlob) {
-                canvas.toBlob(done);
-                return;
-            }
-            /* canvas.toBlob() method is not available in Chrome 40 */
-            var binaryString = window.atob(canvas.toDataURL()
-                .split(',')[1]);
-            var binaryArray = new Uint8Array(binaryString.length);
-            for (var i = 0; i < binaryString.length; i++) {
-                binaryArray[i] = binaryString.charCodeAt(i);
+        return new Promise(function(resolve, reject) {
+
+            function complete(result) {
+                done(result);
+                resolve(result);
             }
 
-            done(new Blob([binaryArray], {
-                type: 'image/png'
-            }));
-        }, options);
+            drawOffScreen(domNode, function(canvas) {
+                if (canvas.toBlob) {
+                    canvas.toBlob(complete);
+                    return;
+                }
+                /* canvas.toBlob() method is not available in Chrome 40 */
+                var binaryString = window.atob(canvas.toDataURL()
+                    .split(',')[1]);
+                var binaryArray = new Uint8Array(binaryString.length);
+                for (var i = 0; i < binaryString.length; i++) {
+                    binaryArray[i] = binaryString.charCodeAt(i);
+                }
+
+                complete(new Blob([binaryArray], {
+                    type: 'image/png'
+                }));
+            }, options);
+        });
     }
 
     function toDataUrl(domNode, done, options) {
-        drawOffScreen(domNode, function(canvas) {
-            done(canvas.toDataURL());
-        }, options);
+        return new Promise(function(resolve) {
+            drawOffScreen(domNode, function(canvas) {
+                done(canvas.toDataURL());
+                resolve(canvas.toDataURL());
+            }, options);
+        });
     }
 
     global.domtoimage = {
