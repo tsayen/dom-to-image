@@ -71,8 +71,7 @@
         });
 
         function drawControlImage(image) {
-            $('#canvas')[0].getContext('2d')
-                .drawImage(image, 0, 0);
+            $('#canvas')[0].getContext('2d').drawImage(image, 0, 0);
         }
 
         it('should render correctly when the node is bigger than container', function(done) {
@@ -125,7 +124,7 @@
         describe('resource loader', function() {
 
             it('should get and encode resource', function(done) {
-                loadText('fonts/fontawesome.base64')
+                getResource('fonts/fontawesome.base64')
                     .then(function(testContent) {
                         domtoimage.impl.resourceLoader.load(BASE_URL + 'fonts/fontawesome.woff2')
                             .then(function(content) {
@@ -206,11 +205,11 @@
                 var cssText, controlString;
                 Promise.all(
                         [
-                            loadText('fonts/cssText')
+                            getResource('fonts/cssText')
                             .then(function(text) {
                                 cssText = text;
                             }),
-                            loadText('fonts/font-face.css')
+                            getResource('fonts/font-face.css')
                             .then(function(text) {
                                 controlString = text;
                             })
@@ -325,8 +324,7 @@
                 var canvas = $('#canvas')[0];
                 canvas.height = node.scrollHeight.toString();
                 canvas.width = node.scrollWidth.toString();
-                canvas.getContext('2d')
-                    .drawImage(image, 0, 0);
+                canvas.getContext('2d').drawImage(image, 0, 0);
             }
         }
 
@@ -355,46 +353,32 @@
             var canvas = $('#canvas')[0];
             canvas.height = node.scrollHeight.toString();
             canvas.width = node.scrollWidth.toString();
-            canvas.getContext('2d')
-                .drawImage(image, 0, 0);
+            canvas.getContext('2d').drawImage(image, 0, 0);
         }
 
-        function loadTestPage(domFile, cssFile, controlImageFile) {
-            return loadPage()
-                .then(function() {
-                    return loadText(domFile)
-                        .then(function(domHtml) {
-                            document.getElementById('root')
-                                .innerHTML = domHtml;
-                        });
-                })
-                .then(function() {
-                    if (cssFile)
-                        return loadText(cssFile)
-                            .then(function(cssText) {
-                                document.getElementById('style')
-                                    .appendChild(document.createTextNode(cssText));
-                            });
-                })
-                .then(function() {
-                    if (controlImageFile)
-                        return loadText(controlImageFile)
-                            .then(function(imageHtml) {
-                                document.getElementById('control-image')
-                                    .src = imageHtml;
-                            });
-                })
+        function loadTestPage(html, css, controlImage) {
+            return loadPage().then(function() {
+                return getResource(html).then(function(html) {
+                    document.getElementById('root').innerHTML = html;
+                });
+            }).then(function() {
+                if (css) return getResource(css).then(function(css) {
+                    document.getElementById('style').appendChild(document.createTextNode(css));
+                });
+            }).then(function() {
+                if (controlImage) return getResource(controlImage).then(function(css) {
+                    document.getElementById('control-image').src = css;
+                });
+            })
         }
-
 
         function loadPage() {
-            return loadText('page.html')
-                .then(function(text) {
-                    var root = document.createElement('div');
-                    root.id = 'test-root';
-                    root.innerHTML = text;
-                    document.body.appendChild(root);
-                });
+            return getResource('page.html').then(function(html) {
+                var root = document.createElement('div');
+                root.id = 'test-root';
+                root.innerHTML = html;
+                document.body.appendChild(root);
+            });
         }
 
         function purgePage() {
@@ -402,17 +386,16 @@
             if (root) root.remove();
         }
 
-        function loadText(fileName) {
+        function getResource(fileName) {
             var url = BASE_URL + fileName;
             var request = new XMLHttpRequest();
             request.open('GET', url, true);
-            request.responseType = 'text/plain';
+            request.responseType = 'text';
 
             return new Promise(function(resolve, reject) {
                 request.onload = function() {
                     if (this.status == 200)
-                        resolve(request.response.toString()
-                            .trim());
+                        resolve(request.response.toString().trim());
                     else
                         reject(new Error('cannot load ' + url));
                 };
