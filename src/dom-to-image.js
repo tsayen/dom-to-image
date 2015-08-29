@@ -300,60 +300,54 @@
             }
 
             cloneNode(domNode, function(clone) {
-                embedFonts(clone)
-                    .then(function(node) {
-                        makeImage(node, domNode.scrollWidth, domNode.scrollHeight, complete);
-                    });
+                embedFonts(clone).then(function(node) {
+                    makeImage(node, domNode.scrollWidth, domNode.scrollHeight, complete);
+                });
             }, options.filter);
         });
     }
 
-    function drawOffScreen(domNode, done, options) {
-        toImage(domNode, function(image) {
+    function drawOffScreen(domNode, options) {
+        return toImage(domNode, function() {}, options).then(function(image) {
             var canvas = document.createElement('canvas');
             canvas.width = domNode.scrollWidth;
             canvas.height = domNode.scrollHeight;
-            canvas.getContext('2d')
-                .drawImage(image, 0, 0);
-            done(canvas);
-        }, options);
+            canvas.getContext('2d').drawImage(image, 0, 0);
+            return canvas;
+        });
     }
 
-
     function toBlob(domNode, done, options) {
-        return new Promise(function(resolve, reject) {
+        return drawOffScreen(domNode, options).then(function(canvas) {
+            if (canvas.toBlob)
+                return new Promise(function(resolve) {
+                    function complete(result) {
+                        done(result);
+                        resolve(result);
+                    }
+                    canvas.toBlob(complete);
+                });
 
-            function complete(result) {
-                done(result);
-                resolve(result);
+            /* canvas.toBlob() method is not available in Chrome 40 */
+            var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
+            var binaryArray = new Uint8Array(binaryString.length);
+            for (var i = 0; i < binaryString.length; i++) {
+                binaryArray[i] = binaryString.charCodeAt(i);
             }
 
-            drawOffScreen(domNode, function(canvas) {
-                if (canvas.toBlob) {
-                    canvas.toBlob(complete);
-                    return;
-                }
-                /* canvas.toBlob() method is not available in Chrome 40 */
-                var binaryString = window.atob(canvas.toDataURL()
-                    .split(',')[1]);
-                var binaryArray = new Uint8Array(binaryString.length);
-                for (var i = 0; i < binaryString.length; i++) {
-                    binaryArray[i] = binaryString.charCodeAt(i);
-                }
+            var blob = new Blob([binaryArray], {
+                type: 'image/png'
+            });
 
-                complete(new Blob([binaryArray], {
-                    type: 'image/png'
-                }));
-            }, options);
+            done(blob);
+            return blob;
         });
     }
 
     function toDataUrl(domNode, done, options) {
-        return new Promise(function(resolve) {
-            drawOffScreen(domNode, function(canvas) {
-                done(canvas.toDataURL());
-                resolve(canvas.toDataURL());
-            }, options);
+        return drawOffScreen(domNode, options).then(function(canvas) {
+            done(canvas.toDataURL());
+            return canvas.toDataURL();
         });
     }
 
