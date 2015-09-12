@@ -9,6 +9,7 @@
     var BASE_URL = '/base/spec/resources/';
 
     describe('domtoimage', function() {
+        this.timeout(30000);
 
         afterEach(purgePage);
 
@@ -17,7 +18,6 @@
         });
 
         function makeImage(src) {
-            debugger;
             return new Promise(function(resolve) {
                 var image = new Image();
                 image.onload = function() {
@@ -28,7 +28,6 @@
         }
 
         function drawImage(image) {
-            debugger;
             var domNode = $('#dom-node')[0];
             var canvas = $('#canvas')[0];
             canvas.height = domNode.offsetHeight.toString();
@@ -46,10 +45,10 @@
         }
 
         function compareToControlImage(image) {
-            assert.ok(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
+            assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
         }
 
-        it.only('should render simple node', function(done) {
+        it('should render simple node', function(done) {
             loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
                 .then(domNodeToDataUrl)
                 .then(makeImage)
@@ -57,22 +56,19 @@
                 .then(done).catch(error);
         });
 
-        it('should render big node', function(done) {
-            this.timeout(30000);
-            loadTestPage(
-                    'big/dom-node.html',
-                    'big/style.css',
-                    'big/control-image'
-                )
+        it('should render bigger node', function(done) {
+            loadTestPage('big/dom-node.html', 'big/style.css', 'big/control-image')
                 .then(function() {
-                    var domNode = $('#root')[0];
+                    var parent = $('#root')[0];
                     var child = $('.dom-child-node')[0];
                     for (var i = 0; i < 1000; i++) {
-                        domNode.appendChild(child.cloneNode(true));
+                        parent.appendChild(child.cloneNode(true));
                     }
-                    checkRendering(domtoimage.toDataUrl, done);
                 })
-                .catch(error);
+                .then(domNodeToDataUrl)
+                .then(makeImage)
+                .then(compareToControlImage)
+                .then(done).catch(error);
         });
 
         it('should handle "#" in colors and attributes', function(done) {
