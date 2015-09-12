@@ -24,11 +24,7 @@
                     resolve(image);
                 };
                 image.src = src;
-            });
-        }
-
-        function getControlImage() {
-            return $('#control-image')[0];
+            }).then(drawImage);
         }
 
         function drawImage(image) {
@@ -41,16 +37,24 @@
             return image;
         }
 
+        function domNodeToDataUrl() {
+            return domtoimage.toDataUrl($('#dom-node')[0], function() {});
+        }
+
+        function controlImage() {
+            return $('#control-image')[0];
+        }
+
+        function compareToControlImage(image) {
+            assert.ok(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
+        }
+
         it.only('should render simple node', function(done) {
             loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
-                .then(function() {
-                    return domtoimage.toDataUrl($('#dom-node')[0], function() {});
-                })
-                .then(makeImage).then(drawImage)
-                .then(function(image) {
-                    debugger;
-                    assert.ok(imagediff.equal(image, getControlImage()), 'rendered and control images should be equal');
-                }).then(done).catch(error);
+                .then(domNodeToDataUrl)
+                .then(makeImage)
+                .then(compareToControlImage)
+                .then(done).catch(error);
         });
 
         it('should render big node', function(done) {
