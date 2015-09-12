@@ -17,42 +17,9 @@
             assert.ok(domtoimage);
         });
 
-        function makeImage(src) {
-            return new Promise(function(resolve) {
-                var image = new Image();
-                image.onload = function() {
-                    resolve(image);
-                };
-                image.src = src;
-            }).then(drawImage);
-        }
-
-        function drawImage(image) {
-            var domNode = $('#dom-node')[0];
-            var canvas = $('#canvas')[0];
-            canvas.height = domNode.offsetHeight.toString();
-            canvas.width = domNode.offsetWidth.toString();
-            canvas.getContext('2d').drawImage(image, 0, 0);
-            return image;
-        }
-
-        function domNodeToDataUrl() {
-            return domtoimage.toDataUrl($('#dom-node')[0], function() {});
-        }
-
-        function controlImage() {
-            return $('#control-image')[0];
-        }
-
-        function compareToControlImage(image) {
-            assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
-        }
-
         it('should render simple node', function(done) {
             loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
-                .then(domNodeToDataUrl)
-                .then(makeImage)
-                .then(compareToControlImage)
+                .then(renderAndCheck)
                 .then(done).catch(error);
         });
 
@@ -65,62 +32,36 @@
                         parent.appendChild(child.cloneNode(true));
                     }
                 })
-                .then(domNodeToDataUrl)
+                .then(renderAndCheck)
+                .then(done).catch(error);
+        });
+
+        it('should handle "#" in colors and attributes', function(done) {
+            loadTestPage('hash/dom-node.html', 'hash/style.css', 'simple/control-image')
+                .then(renderAndCheck)
+                .then(done).catch(error);
+        });
+
+        it('should render nested svg with broken namespace', function(done) {
+            loadTestPage('svg/dom-node.html', 'svg/style.css', 'svg/control-image')
+                .then(renderAndCheck)
+                .then(done).catch(error);
+        });
+
+        it('should render correctly when the node is bigger than container', function(done) {
+            loadTestPage('scroll/dom-node.html', 'scroll/style.css', 'scroll/control-image')
+                .then(function() {
+                    return domtoimage.toDataUrl($('#root')[0], function() {});
+                })
                 .then(makeImage)
                 .then(compareToControlImage)
                 .then(done).catch(error);
         });
 
-        it('should handle "#" in colors and attributes', function(done) {
-            loadTestPage(
-                    'hash/dom-node.html',
-                    'hash/style.css',
-                    'simple/control-image'
-                )
-                .then(function() {
-                    checkRendering(domtoimage.toDataUrl, done);
-                })
-                .catch(error);
-        });
-
-        it('should render nested svg with broken namespace', function(done) {
-            loadTestPage(
-                    'svg/dom-node.html',
-                    'svg/style.css',
-                    'svg/control-image'
-                )
-                .then(function() {
-                    checkRendering(domtoimage.toDataUrl, done);
-                })
-                .catch(error);
-        });
-
-        function drawControlImage(image) {
-            $('#canvas')[0].getContext('2d').drawImage(image, 0, 0);
-        }
-
-        it('should render correctly when the node is bigger than container', function(done) {
-            loadTestPage(
-                    'scroll/dom-node.html',
-                    'scroll/style.css',
-                    'scroll/control-image'
-                )
-                .then(function() {
-                    var domNode = $('#root')[0];
-                    var controlImg = $('#control-image')[0];
-                    domtoimage.toDataUrl(domNode, function(dataUrl) {
-                        compare(dataUrl, controlImg, domNode, done);
-                    });
-                });
-        });
-
         it('should render nested text nodes', function(done) {
-            loadTestPage(
-                    'text/dom-node.html'
-                )
+            loadTestPage('text/dom-node.html')
                 .then(function() {
-                    var domNode = $('#dom-node')[0];
-                    domtoimage.toImage(domNode, function(image) {
+                    domtoimage.toImage(domNode(), function(image) {
                         drawControlImage(image);
                         assert.include(image.src, 'someText', 'text should be preserved');
                         assert.include(image.src, 'someMoreText', 'text should be preserved');
@@ -274,8 +215,7 @@
                         'fonts/regression.css'
                     )
                     .then(function() {
-                        var domNode = $('#dom-node')[0];
-                        domtoimage.toImage(domNode, function(image) {
+                        domtoimage.toImage(domNode(), function(image) {
                             drawControlImage(image);
                             document.body.appendChild(image);
                             console.log(image.src);
@@ -301,10 +241,9 @@
                     'filter/control-image'
                 )
                 .then(function() {
-                    var domNode = $('#dom-node')[0];
                     var controlImg = $('#control-image')[0];
-                    domtoimage.toDataUrl(domNode, function(dataUrl) {
-                        compare(dataUrl, controlImg, domNode, done);
+                    domtoimage.toDataUrl(domNode(), function(dataUrl) {
+                        compare(dataUrl, controlImg, domNode(), done);
                     }, {
                         filter: function(node) {
                             if (node.classList)
@@ -333,11 +272,11 @@
         }
 
         function checkRendering(makeDataUrl, done) {
-            var domNode = $('#dom-node')[0];
+            var node = domNode();
             var canvas = $('#canvas')[0];
-            canvas.height = domNode.offsetHeight.toString();
-            canvas.width = domNode.offsetWidth.toString();
-            makeDataUrl(domNode, function(dataUrl) {
+            canvas.height = node.offsetHeight.toString();
+            canvas.width = node.offsetWidth.toString();
+            makeDataUrl(node, function(dataUrl) {
                 checkDataUrl(dataUrl, done);
             });
         }
@@ -405,6 +344,53 @@
                 };
                 request.send();
             });
+        }
+
+
+        function makeImage(src) {
+            return new Promise(function(resolve) {
+                var image = new Image();
+                image.onload = function() {
+                    resolve(image);
+                };
+                image.src = src;
+            }).then(drawImage);
+        }
+
+        function drawImage(image) {
+            var node = domNode();
+            var canvas = $('#canvas')[0];
+            canvas.height = node.offsetHeight.toString();
+            canvas.width = node.offsetWidth.toString();
+            canvas.getContext('2d').drawImage(image, 0, 0);
+            return image;
+        }
+
+        function domNodeToDataUrl() {
+            return domtoimage.toDataUrl(domNode(), function() {});
+        }
+
+        function domNode() {
+            return $('#dom-node')[0];
+        }
+
+        function controlImage() {
+            return $('#control-image')[0];
+        }
+
+        function compareToControlImage(image) {
+            assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
+        }
+
+        function renderAndCheck() {
+            return Promise.resolve()
+                .then(domNodeToDataUrl)
+                .then(makeImage)
+                .then(compareToControlImage);
+        }
+
+        function drawControlImage(image) {
+            $('#canvas')[0].getContext('2d').drawImage(image, 0, 0);
         }
 
         function mockResourceLoader(content) {
