@@ -49,11 +49,18 @@
         });
 
         it('should render correctly when the node is bigger than container', function(done) {
+            var domNode;
             loadTestPage('scroll/dom-node.html', 'scroll/style.css', 'scroll/control-image')
                 .then(function() {
-                    return domtoimage.toDataUrl($('#root')[0], function() {});
+                    domNode = $('#root')[0];
+                })
+                .then(function() {
+                    return domtoimage.toDataUrl(domNode, function() {});
                 })
                 .then(makeImage)
+                .then(function(image) {
+                    return drawImage(image, domNode);
+                })
                 .then(compareToControlImage)
                 .then(done).catch(error);
         });
@@ -99,7 +106,7 @@
             });
 
             it('should reject when resource not available', function(done) {
-                domtoimage.impl.resourceLoader.load('nonexistent file').catch(function(error) {
+                domtoimage.impl.resourceLoader.load('nonexistent_file').catch(function(error) {
                     assert.ok(error.message);
                 }).then(done);
             });
@@ -357,8 +364,8 @@
             }).then(drawImage);
         }
 
-        function drawImage(image) {
-            var node = domNode();
+        function drawImage(image, node) {
+            var node = node || domNode();
             var canvas = $('#canvas')[0];
             canvas.height = node.offsetHeight.toString();
             canvas.width = node.offsetWidth.toString();
@@ -379,6 +386,7 @@
         }
 
         function compareToControlImage(image) {
+            debugger;
             assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
         }
 
