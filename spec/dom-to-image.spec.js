@@ -78,19 +78,17 @@
         });
 
         it('should render to blob', function (done) {
-            loadTestPage(
-                    'simple/dom-node.html',
-                    'simple/style.css',
-                    'simple/control-image'
-                )
+            loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
                 .then(function () {
-                    checkRendering(function (domNode, callback) {
-                        domtoimage.toBlob(domNode, function (blob) {
-                            callback(global.URL.createObjectURL(blob));
-                        });
-                    }, done);
+                    return domtoimage.toBlob(domNode(), function () {});
                 })
-                .catch(error);
+                .then(function (blob) {
+                    return global.URL.createObjectURL(blob);
+                })
+                .then(makeImage)
+                .then(drawImage)
+                .then(compareToControlImage)
+                .then(done).catch(error);
         });
 
         describe('resource loader', function () {
