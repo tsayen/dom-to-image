@@ -239,55 +239,18 @@
                  })*/
                 ;
             });
+
+            function mockResourceLoader(content) {
+                return {
+                    load: function (url) {
+                        return Promise.resolve(content[url]);
+                    }
+                };
+            }
         });
 
         function error(e) {
             console.error(e.toString() + '\n' + e.stack);
-        }
-
-        function compare(imgUrl, ctrlImg, node, done) {
-            var img = new Image();
-            img.onload = function () {
-                drawRenderedImage(img, node);
-                assert.ok(imagediff.equal(img, ctrlImg), 'rendered and control images should be equal');
-                done();
-            };
-            img.src = imgUrl;
-
-            function drawRenderedImage(image, node) {
-                var canvas = $('#canvas')[0];
-                canvas.height = node.scrollHeight.toString();
-                canvas.width = node.scrollWidth.toString();
-                canvas.getContext('2d').drawImage(image, 0, 0);
-            }
-        }
-
-        function checkRendering(makeDataUrl, done) {
-            var node = domNode();
-            var canvas = $('#canvas')[0];
-            canvas.height = node.offsetHeight.toString();
-            canvas.width = node.offsetWidth.toString();
-            makeDataUrl(node, function (dataUrl) {
-                checkDataUrl(dataUrl, done);
-            });
-        }
-
-        function checkDataUrl(imageDataUrl, done) {
-            var control = $('#control-image')[0];
-            var rendered = new Image();
-            rendered.onload = function () {
-                drawControlImage(rendered);
-                assert.ok(imagediff.equal(rendered, control), 'rendered and control images should be equal');
-                done();
-            };
-            rendered.src = imageDataUrl;
-        }
-
-        function drawRenderedImage(image, node) {
-            var canvas = $('#canvas')[0];
-            canvas.height = node.scrollHeight.toString();
-            canvas.width = node.scrollWidth.toString();
-            canvas.getContext('2d').drawImage(image, 0, 0);
         }
 
         function loadTestPage(html, css, controlImage) {
@@ -307,16 +270,17 @@
         }
 
         function loadPage() {
-            return getResource('page.html').then(function (html) {
-                var root = document.createElement('div');
-                root.id = 'test-root';
-                root.innerHTML = html;
-                document.body.appendChild(root);
-            });
+            return getResource('page.html')
+                .then(function (html) {
+                    var root = document.createElement('div');
+                    root.id = 'test-root';
+                    root.innerHTML = html;
+                    document.body.appendChild(root);
+                });
         }
 
         function purgePage() {
-            var root = document.getElementById('test-root');
+            var root = $('#test-root');
             if (root) root.remove();
         }
 
@@ -336,7 +300,6 @@
                 request.send();
             });
         }
-
 
         function makeImage(src) {
             return new Promise(function (resolve) {
@@ -378,20 +341,6 @@
                 .then(domNodeToDataUrl)
                 .then(makeImage)
                 .then(compareToControlImage);
-        }
-
-        function drawControlImage(image) {
-            $('#canvas')[0].getContext('2d').drawImage(image, 0, 0);
-        }
-
-        function mockResourceLoader(content) {
-            return {
-                load: function (url) {
-                    return new Promise(function (resolve, reject) {
-                        resolve(content[url]);
-                    });
-                }
-            };
         }
     });
 })(this);
