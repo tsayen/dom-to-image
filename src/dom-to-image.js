@@ -11,7 +11,7 @@
                 request.onload = function () {
                     if (this.status !== 200) {
                         reject(new Error('Cannot fetch resource "' + url + '": ' + this.status));
-                        return
+                        return;
                     }
                     var encoder = new FileReader();
                     encoder.onloadend = function () {
