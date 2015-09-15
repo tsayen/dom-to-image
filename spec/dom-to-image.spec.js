@@ -109,12 +109,13 @@
         describe('resource loader', function () {
 
             it('should get and encode resource', function (done) {
-                getResource('fonts/fontawesome.base64').then(function (testContent) {
-                    domtoimage.impl.resourceLoader.load(BASE_URL + 'fonts/fontawesome.woff2')
-                        .then(function (content) {
-                            assert.equal(content, testContent);
-                        }).then(done).catch(error);
-                });
+                getResource('fonts/fontawesome.base64')
+                    .then(function (testResource) {
+                        return domtoimage.impl.resourceLoader.load(BASE_URL + 'fonts/fontawesome.woff2')
+                            .then(function (resource) {
+                                assert.equal(resource, testResource);
+                            });
+                    }).then(done).catch(error);
             });
         });
 
