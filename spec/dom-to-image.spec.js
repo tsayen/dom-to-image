@@ -91,19 +91,21 @@
         });
 
         it('should use node filter', function (done) {
+            function filter(node) {
+                if (node.classList) return !node.classList.contains('omit');
+                return true;
+            }
+
             loadTestPage('filter/dom-node.html', 'filter/style.css', 'filter/control-image')
                 .then(function () {
-                    var controlImg = $('#control-image')[0];
-                    domtoimage.toDataUrl(domNode(), function (dataUrl) {
-                        compare(dataUrl, controlImg, domNode(), done);
-                    }, {
-                        filter: function (node) {
-                            if (node.classList)
-                                return !node.classList.contains('omit');
-                            return true;
-                        }
-                    });
-                });
+                    return domtoimage.toDataUrl(domNode(), function () {}, {
+                        filter: filter
+                    })
+                })
+                .then(makeImage)
+                .then(drawImage)
+                .then(compareToControlImage)
+                .then(done).catch(error);
         });
 
         describe('resource loader', function () {
