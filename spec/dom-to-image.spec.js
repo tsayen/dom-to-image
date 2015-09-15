@@ -22,13 +22,12 @@
                 .then(done).catch(error);
         });
 
-        it.skip('should render bigger node', function (done) {
-            this.timeout(30000);
-            loadTestPage('big/dom-node.html', 'big/style.css', 'big/control-image')
+        it('should render bigger node', function (done) {
+            loadTestPage('bigger/dom-node.html', 'bigger/style.css', 'bigger/control-image')
                 .then(function () {
                     var parent = $('#root');
                     var child = $('.dom-child-node');
-                    for (var i = 0; i < 1000; i++) {
+                    for (var i = 0; i < 10; i++) {
                         parent.append(child.clone());
                     }
                 })
@@ -91,6 +90,22 @@
                 .then(done).catch(error);
         });
 
+        it('should use node filter', function (done) {
+            loadTestPage('filter/dom-node.html', 'filter/style.css', 'filter/control-image')
+                .then(function () {
+                    var controlImg = $('#control-image')[0];
+                    domtoimage.toDataUrl(domNode(), function (dataUrl) {
+                        compare(dataUrl, controlImg, domNode(), done);
+                    }, {
+                        filter: function (node) {
+                            if (node.classList)
+                                return !node.classList.contains('omit');
+                            return true;
+                        }
+                    });
+                });
+        });
+
         describe('resource loader', function () {
 
             it('should get and encode resource', function (done) {
@@ -123,6 +138,7 @@
                     })
                     .then(function (fontRules) {
                         var rules = fontRules.rules();
+
                         assert.deepEqual(Object.keys(rules), ['Font1', 'Font2']);
 
                         assert.deepEqual({
@@ -154,15 +170,13 @@
             it('should embed web font', function (done) {
                 // given
                 var cssText, controlString;
-                Promise.all(
-                        [
+                Promise.all([
                             getResource('fonts/cssText').then(function (text) {
-                                cssText = text;
-                            }),
+                            cssText = text;
+                        }),
                             getResource('fonts/font-face.css').then(function (text) {
-                                controlString = text;
-                            })
-                        ])
+                            controlString = text;
+                        })])
                     .then(function () {
                         // when
                         var fontFaceRule = webFontRule.impl.createRule({
@@ -184,9 +198,7 @@
                     .then(function (cssRuleString) {
                         // then
                         assert.equal(cssRuleString, controlString);
-                    })
-                    .then(done)
-                    .catch(error);
+                    }).then(done).catch(error);
             });
 
             it('should create style with web font rules', function (done) {
@@ -207,9 +219,7 @@
                     .then(function (cssText) {
                         assert.include(cssText, 'url("data:font/woff2;base64,AAA")');
                         assert.include(cssText, 'url("data:font/truetype;base64,CCC")');
-                    })
-                    .then(done)
-                    .catch(error);
+                    }).then(done).catch(error);
             });
 
             it.skip('should render web fonts', function (done) {
@@ -237,26 +247,6 @@
         function error(e) {
             console.error(e.toString() + '\n' + e.stack);
         }
-
-        it('should use node filter', function (done) {
-            loadTestPage(
-                    'filter/dom-node.html',
-                    'filter/style.css',
-                    'filter/control-image'
-                )
-                .then(function () {
-                    var controlImg = $('#control-image')[0];
-                    domtoimage.toDataUrl(domNode(), function (dataUrl) {
-                        compare(dataUrl, controlImg, domNode(), done);
-                    }, {
-                        filter: function (node) {
-                            if (node.classList)
-                                return !node.classList.contains('omit');
-                            return true;
-                        }
-                    });
-                });
-        });
 
         function compare(imgUrl, ctrlImg, node, done) {
             var img = new Image();
@@ -383,7 +373,6 @@
         }
 
         function compareToControlImage(image) {
-            debugger;
             assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
         }
 
