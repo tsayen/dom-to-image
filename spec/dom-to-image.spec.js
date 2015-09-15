@@ -101,7 +101,7 @@
                 .then(function () {
                     return domtoimage.toDataUrl(domNode(), function () {}, {
                         filter: filter
-                    })
+                    });
                 })
                 .then(makeImage)
                 .then(drawImage)
@@ -163,8 +163,8 @@
                     .then(function (fontRules) {
                         var rules = fontRules.rules();
 
-                        assert.include(Object.keys(rules['Font1'].data().urls())[0], '/base/spec/resources/font1.woff');
-                        assert.include(Object.keys(rules['Font2'].data().urls())[0], '/base/spec/resources/fonts/font2.woff2');
+                        assert.include(Object.keys(rules.Font1.data().urls())[0], '/base/spec/resources/font1.woff');
+                        assert.include(Object.keys(rules.Font2.data().urls())[0], '/base/spec/resources/fonts/font2.woff2');
                     })
                     .then(done).catch(error);
             });
@@ -244,7 +244,7 @@
                 /*.catch(function(e){
                  console.error(e);
                  })*/
-                ;
+
             });
 
             function mockResourceLoader(content) {
@@ -273,7 +273,7 @@
                 if (controlImage) return getResource(controlImage).then(function (css) {
                     $('#control-image').attr('src', css);
                 });
-            })
+            });
         }
 
         function loadPage() {
@@ -319,7 +319,7 @@
         }
 
         function drawImage(image, node) {
-            var node = node || domNode();
+            node = node || domNode();
             var canvas = $('#canvas')[0];
             canvas.height = node.offsetHeight.toString();
             canvas.width = node.offsetWidth.toString();
