@@ -293,21 +293,23 @@
 
         return new Promise(function (resolve, reject) {
             cloneNode(domNode, function (clone) {
-                embedFonts(clone).then(function (node) {
-                    makeImage(node, domNode.scrollWidth, domNode.scrollHeight, complete);
-                });
+                embedFonts(clone)
+                    .then(function (node) {
+                        makeImage(node, domNode.scrollWidth, domNode.scrollHeight, resolve);
+                    });
             }, options.filter);
         });
     }
 
     function drawOffScreen(domNode, options) {
-        return toImage(domNode, function () {}, options).then(function (image) {
-            var canvas = document.createElement('canvas');
-            canvas.width = domNode.scrollWidth;
-            canvas.height = domNode.scrollHeight;
-            canvas.getContext('2d').drawImage(image, 0, 0);
-            return canvas;
-        });
+        return toImage(domNode, options)
+            .then(function (image) {
+                var canvas = document.createElement('canvas');
+                canvas.width = domNode.scrollWidth;
+                canvas.height = domNode.scrollHeight;
+                canvas.getContext('2d').drawImage(image, 0, 0);
+                return canvas;
+            });
     }
 
     function toBlob(domNode, options) {
@@ -321,7 +323,7 @@
                 return (function (canvas) {
                     var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
                     var binaryArray = new Uint8Array(binaryString.length);
-                    
+
                     for (var i = 0; i < binaryString.length; i++) {
                         binaryArray[i] = binaryString.charCodeAt(i);
                     }
