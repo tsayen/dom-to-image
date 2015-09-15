@@ -303,15 +303,6 @@
             .then(function (node) {
                 return makeImage(node, domNode.scrollWidth, domNode.scrollHeight);
             });
-
-        // return new Promise(function (resolve, reject) {
-        //     cloneNode(domNode, function (clone) {
-        //         return embedFonts(clone)
-        //             .then(function (node) {
-        //                 return makeImage(node, domNode.scrollWidth, domNode.scrollHeight);
-        //             });
-        //     }, options.filter);
-        // });
     }
 
     function toDataUrl(domNode, options) {
