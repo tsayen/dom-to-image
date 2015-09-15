@@ -71,6 +71,7 @@
         function verifyStylesLoaded() {
             var sheets = document.querySelectorAll('link[rel=stylesheet]');
             var loaded = [];
+
             function add(sheet) {
                 loaded.push(new Promise(function (resolve) {
                     sheet.onload = resolve;
@@ -315,31 +316,28 @@
         });
     }
 
-    function toBlob(domNode, done, options) {
-        return drawOffScreen(domNode, options).then(function (canvas) {
-            if (canvas.toBlob)
-                return new Promise(function (resolve) {
-                    function complete(result) {
-                        done(result);
-                        resolve(result);
-                    }
-                    canvas.toBlob(complete);
-                });
+    function canvasToBlob(canvas) {
+        var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
+        var binaryArray = new Uint8Array(binaryString.length);
+        for (var i = 0; i < binaryString.length; i++) {
+            binaryArray[i] = binaryString.charCodeAt(i);
+        }
 
-            /* canvas.toBlob() method is not available in Chrome 40 */
-            var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
-            var binaryArray = new Uint8Array(binaryString.length);
-            for (var i = 0; i < binaryString.length; i++) {
-                binaryArray[i] = binaryString.charCodeAt(i);
-            }
-
-            var blob = new Blob([binaryArray], {
-                type: 'image/png'
-            });
-
-            done(blob);
-            return blob;
+        return new Blob([binaryArray], {
+            type: 'image/png'
         });
+    }
+
+    function toBlob(domNode, options) {
+        return drawOffScreen(domNode, options)
+            .then(function (canvas) {
+                if (canvas.toBlob)
+                    return new Promise(function (resolve) {
+                        canvas.toBlob(resolve);
+                    });
+                /* canvas.toBlob() method is not available in Chrome */
+                return canvasToBlob(canvas);
+            });
     }
 
     function toDataUrl(domNode, done, options) {

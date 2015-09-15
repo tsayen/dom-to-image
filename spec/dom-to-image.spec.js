@@ -80,7 +80,7 @@
         it('should render to blob', function (done) {
             loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
                 .then(function () {
-                    return domtoimage.toBlob(domNode(), function () {});
+                    return domtoimage.toBlob(domNode());
                 })
                 .then(function (blob) {
                     return global.URL.createObjectURL(blob);
