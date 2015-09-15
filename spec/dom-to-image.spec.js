@@ -116,12 +116,6 @@
                         }).then(done).catch(error);
                 });
             });
-
-            it('should reject when resource not available', function (done) {
-                domtoimage.impl.resourceLoader.load('nonexistent_file').catch(function (error) {
-                    assert.ok(error.message);
-                }).then(done);
-            });
         });
 
         describe('web fonts', function () {
