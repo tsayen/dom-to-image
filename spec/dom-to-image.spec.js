@@ -22,7 +22,7 @@
                 .then(done).catch(error);
         });
 
-        it('should render bigger node', function (done) {
+        it.skip('should render bigger node', function (done) {
             this.timeout(30000);
             loadTestPage('big/dom-node.html', 'big/style.css', 'big/control-image')
                 .then(function () {
@@ -68,14 +68,13 @@
         it('should render nested text nodes', function (done) {
             loadTestPage('text/dom-node.html')
                 .then(function () {
-                    domtoimage.toImage(domNode(), function (image) {
-                        drawControlImage(image);
-                        assert.include(image.src, 'someText', 'text should be preserved');
-                        assert.include(image.src, 'someMoreText', 'text should be preserved');
-                        done();
-                    });
+                    return domtoimage.toImage(domNode(), function () {});
                 })
-                .catch(error);
+                .then(drawImage)
+                .then(function (image) {
+                    assert.include(image.src, 'someText', 'text should be preserved');
+                    assert.include(image.src, 'someMoreText', 'text should be preserved');
+                }).then(done).catch(error);
         });
 
         it('should render to blob', function (done) {
