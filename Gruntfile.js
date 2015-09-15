@@ -5,9 +5,7 @@ module.exports = function (grunt) {
         jshint: {
             files: ['Gruntfile.js', 'src/**/*.js', 'spec/**/*.js'],
             options: {
-                globals: {
-                    console: true
-                }
+                jshintrc: true
             }
         },
         karma: {

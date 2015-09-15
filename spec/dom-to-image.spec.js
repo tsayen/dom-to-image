@@ -299,7 +299,7 @@
 
             return new Promise(function (resolve, reject) {
                 request.onload = function () {
-                    if (this.status == 200)
+                    if (this.status === 200)
                         resolve(request.response.toString().trim());
                     else
                         reject(new Error('cannot load ' + url));
