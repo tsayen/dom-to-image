@@ -316,17 +316,7 @@
         });
     }
 
-    function canvasToBlob(canvas) {
-        var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
-        var binaryArray = new Uint8Array(binaryString.length);
-        for (var i = 0; i < binaryString.length; i++) {
-            binaryArray[i] = binaryString.charCodeAt(i);
-        }
 
-        return new Blob([binaryArray], {
-            type: 'image/png'
-        });
-    }
 
     function toBlob(domNode, options) {
         return drawOffScreen(domNode, options)
@@ -336,7 +326,17 @@
                         canvas.toBlob(resolve);
                     });
                 /* canvas.toBlob() method is not available in Chrome */
-                return canvasToBlob(canvas);
+                return (function canvasToBlob(canvas) {
+                    var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
+                    var binaryArray = new Uint8Array(binaryString.length);
+                    for (var i = 0; i < binaryString.length; i++) {
+                        binaryArray[i] = binaryString.charCodeAt(i);
+                    }
+
+                    return new Blob([binaryArray], {
+                        type: 'image/png'
+                    });
+                })(canvas);
             });
     }
 
