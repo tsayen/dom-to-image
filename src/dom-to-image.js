@@ -340,11 +340,11 @@
             });
     }
 
-    function toDataUrl(domNode, done, options) {
-        return drawOffScreen(domNode, options).then(function (canvas) {
-            done(canvas.toDataURL());
-            return canvas.toDataURL();
-        });
+    function toDataUrl(domNode, options) {
+        return drawOffScreen(domNode, options)
+            .then(function (canvas) {
+                return canvas.toDataURL();
+            });
     }
 
     global.domtoimage = {

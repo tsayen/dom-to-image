@@ -99,7 +99,7 @@
 
             loadTestPage('filter/dom-node.html', 'filter/style.css', 'filter/control-image')
                 .then(function () {
-                    return domtoimage.toDataUrl(domNode(), function () {}, {
+                    return domtoimage.toDataUrl(domNode(), {
                         filter: filter
                     });
                 })
@@ -328,7 +328,7 @@
         }
 
         function domNodeToDataUrl(node) {
-            return domtoimage.toDataUrl(node || domNode(), function () {});
+            return domtoimage.toDataUrl(node || domNode());
         }
 
         function domNode() {
