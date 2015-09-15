@@ -55,7 +55,7 @@
                     domNode = $('#root')[0];
                 })
                 .then(function () {
-                    return domtoimage.toDataUrl(domNode, function () {});
+                    return domNodeToDataUrl(domNode);
                 })
                 .then(makeImage)
                 .then(function (image) {
@@ -373,8 +373,8 @@
             return image;
         }
 
-        function domNodeToDataUrl() {
-            return domtoimage.toDataUrl(domNode(), function () {});
+        function domNodeToDataUrl(node) {
+            return domtoimage.toDataUrl(node || domNode(), function () {});
         }
 
         function domNode() {
