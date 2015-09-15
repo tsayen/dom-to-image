@@ -201,35 +201,29 @@
             copyStyle(original, clone);
     }
 
-    function cloneNode(node, done, filter) {
+    function cloneNode(node, filter) {
         if (filter && !filter(node)) {
-            done(null);
-            return;
+            return Promise.resolve();
         }
 
         var clone = node.cloneNode(false);
-
         processClone(clone, node);
 
         var children = node.childNodes;
-        if (children.length === 0) {
-            done(clone);
-            return;
+        if (children.length === 0) return Promise.resolve(clone);
+
+        function append(child) {
+            if (child) clone.appendChild(child);
         }
 
-        var cloned = 0;
+        var childrenCloned = [];
         for (var i = 0; i < children.length; i++) {
-            cloneChild(children[i]);
+            childrenCloned.push(cloneNode(children[i], filter).then(append));
         }
 
-        function cloneChild(child) {
-            cloneNode(child, function (childClone) {
-                if (childClone)
-                    clone.appendChild(childClone);
-                cloned++;
-                if (cloned === children.length) done(clone);
-            }, filter);
-        }
+        return Promise.all(childrenCloned).then(function () {
+            return clone;
+        });
     }
 
     function stripMargin(node) {
@@ -261,12 +255,14 @@
         return "data:image/svg+xml;charset=utf-8," + toSvg(node, width, height);
     }
 
-    function makeImage(node, width, height, done) {
-        var image = new Image();
-        image.onload = function () {
-            done(image);
-        };
-        image.src = makeDataUri(stripMargin(node), width, height);
+    function makeImage(node, width, height) {
+        return new Promise(function (resolve) {
+            var image = new Image();
+            image.onload = function () {
+                resolve(image);
+            };
+            image.src = makeDataUri(stripMargin(node), width, height);
+        });
     }
 
     function embedFonts(node) {
@@ -302,14 +298,20 @@
     function toImage(domNode, options) {
         options = options || {};
 
-        return new Promise(function (resolve, reject) {
-            cloneNode(domNode, function (clone) {
-                embedFonts(clone)
-                    .then(function (node) {
-                        makeImage(node, domNode.scrollWidth, domNode.scrollHeight, resolve);
-                    });
-            }, options.filter);
-        });
+        return cloneNode(domNode, options.filter)
+            .then(embedFonts)
+            .then(function (node) {
+                return makeImage(node, domNode.scrollWidth, domNode.scrollHeight);
+            });
+
+        // return new Promise(function (resolve, reject) {
+        //     cloneNode(domNode, function (clone) {
+        //         return embedFonts(clone)
+        //             .then(function (node) {
+        //                 return makeImage(node, domNode.scrollWidth, domNode.scrollHeight);
+        //             });
+        //     }, options.filter);
+        // });
     }
 
     function toDataUrl(domNode, options) {
