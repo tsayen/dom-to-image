@@ -73,7 +73,8 @@
                 .then(function (image) {
                     assert.include(image.src, 'someText', 'text should be preserved');
                     assert.include(image.src, 'someMoreText', 'text should be preserved');
-                }).then(done).catch(error);
+                })
+                .then(done).catch(error);
         });
 
         it('should render to blob', function (done) {
@@ -117,7 +118,8 @@
                             .then(function (resource) {
                                 assert.equal(resource, testResource);
                             });
-                    }).then(done).catch(error);
+                    })
+                    .then(done).catch(error);
             });
         });
 
@@ -136,31 +138,35 @@
                     .then(function (fontRules) {
                         var rules = fontRules.rules();
 
-                        assert.deepEqual(Object.keys(rules), ['Font1', 'Font2']);
-
                         assert.deepEqual({
                                 'http://fonts.com/font1.woff': 'woff',
                                 'http://fonts.com/font1.woff2': 'woff2'
                             },
-                            rules['Font1'].data().urls());
+                            rules.Font1.data().urls());
 
                         assert.deepEqual({
-                            'http://fonts.com/font2.ttf': 'truetype'
-                        }, rules['Font2'].data().urls());
+                                'http://fonts.com/font2.ttf': 'truetype'
+                            },
+                            rules.Font2.data().urls());
 
-                        assert.include(rules['Font1'].data().cssText(), 'Font1');
-                        assert.include(rules['Font2'].data().cssText(), 'Font2');
-                    }).then(done).catch(error);
+                        assert.include(rules.Font1.data().cssText(), 'Font1');
+                        assert.include(rules.Font2.data().cssText(), 'Font2');
+                    })
+                    .then(done).catch(error);
             });
 
             it('should resolve relative font urls', function (done) {
-                loadTestPage('fonts/rules-relative.html').then(function () {
-                    return webFontRule.readAll(global.document);
-                }).then(function (fontRules) {
-                    var rules = fontRules.rules();
-                    assert.include(Object.keys(rules['Font1'].data().urls())[0], '/base/spec/resources/font1.woff');
-                    assert.include(Object.keys(rules['Font2'].data().urls())[0], '/base/spec/resources/fonts/font2.woff2');
-                }).then(done).catch(error);
+                loadTestPage('fonts/rules-relative.html')
+                    .then(function () {
+                        return webFontRule.readAll(global.document);
+                    })
+                    .then(function (fontRules) {
+                        var rules = fontRules.rules();
+
+                        assert.include(Object.keys(rules['Font1'].data().urls())[0], '/base/spec/resources/font1.woff');
+                        assert.include(Object.keys(rules['Font2'].data().urls())[0], '/base/spec/resources/fonts/font2.woff2');
+                    })
+                    .then(done).catch(error);
             });
 
 
@@ -216,7 +222,8 @@
                     .then(function (cssText) {
                         assert.include(cssText, 'url("data:font/woff2;base64,AAA")');
                         assert.include(cssText, 'url("data:font/truetype;base64,CCC")');
-                    }).then(done).catch(error);
+                    })
+                    .then(done).catch(error);
             });
 
             it.skip('should render web fonts', function (done) {
