@@ -288,16 +288,10 @@
             });
     }
 
-    function toImage(domNode, done, options) {
+    function toImage(domNode, options) {
         options = options || {};
 
         return new Promise(function (resolve, reject) {
-
-            function complete(result) {
-                done(result);
-                resolve(result);
-            }
-
             cloneNode(domNode, function (clone) {
                 embedFonts(clone).then(function (node) {
                     makeImage(node, domNode.scrollWidth, domNode.scrollHeight, complete);
@@ -316,8 +310,6 @@
         });
     }
 
-
-
     function toBlob(domNode, options) {
         return drawOffScreen(domNode, options)
             .then(function (canvas) {
@@ -326,9 +318,10 @@
                         canvas.toBlob(resolve);
                     });
                 /* canvas.toBlob() method is not available in Chrome */
-                return (function canvasToBlob(canvas) {
+                return (function (canvas) {
                     var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
                     var binaryArray = new Uint8Array(binaryString.length);
+                    
                     for (var i = 0; i < binaryString.length; i++) {
                         binaryArray[i] = binaryString.charCodeAt(i);
                     }
