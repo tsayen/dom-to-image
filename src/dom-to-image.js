@@ -10,12 +10,12 @@
         }
 
         function next() {
-            return uid() + lastIndex++;
+            return 'u' + uid() + lastIndex++;
         }
 
         return {
             next: next
-        }
+        };
     })();
 
     var resourceLoader = {
@@ -212,7 +212,7 @@
     }
 
     function formatCssText(style) {
-        return style.cssText + ' content:' + style.getPropertyValue('content') + ';'
+        return style.cssText + ' content:' + style.getPropertyValue('content') + ';';
     }
 
     function formatCssProperties(style) {
@@ -227,23 +227,32 @@
         return lines.join(';') + ';';
     }
 
-    function getStyleAsText(style, selector) {
+    function getStyleAsTextNode(className, element, style) {
+        var selector = '.' + className + ':' + element;
         var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
-        return selector + '{' + cssText + '}';
+        return global.document.createTextNode(selector + '{' + cssText + '}');
     }
 
-    function clonePseudoElementStyle(nodes) {
-        var style = global.window.getComputedStyle(nodes.original, ':before');
+    function processPseudoElement(nodes, element) {
+        var style = global.window.getComputedStyle(nodes.original, element);
         var content = style.getPropertyValue('content');
         if (!content || content === 'none') return nodes;
 
-        var className = 'before-' + uid.next();
+        var className = uid.next();
+
         nodes.clone.className = nodes.clone.className + ' ' + className;
-        var selector = '.' + className + '::before';
-        var css = getStyleAsText(style, selector);
-        var styleElement = document.createElement('style');
-        styleElement.appendChild(document.createTextNode(css));
+
+        var styleElement = global.document.createElement('style');
+        styleElement.appendChild(getStyleAsTextNode(className, element, style));
         nodes.clone.appendChild(styleElement);
+
+        return nodes;
+    }
+
+    function clonePseudoElementStyle(nodes) {
+        [':before', ':after'].forEach(function (element) {
+            processPseudoElement(nodes, element);
+        });
         return nodes;
     }
 

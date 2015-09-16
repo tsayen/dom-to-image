@@ -85,7 +85,7 @@
                 .then(drawImage)
                 .then(function () {
                     assertTextRendered(["ONLY-BEFORE", "BOTH-BEFORE",]);
-                    // assertTextRendered(["ONLY-AFTER", "BOTH-AFTER"]);
+                    assertTextRendered(["ONLY-AFTER", "BOTH-AFTER"]);
                 })
                 .then(done).catch(error);
         });
