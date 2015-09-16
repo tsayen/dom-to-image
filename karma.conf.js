@@ -10,9 +10,8 @@ module.exports = function (config) {
             {pattern: 'bower_components/fontawesome/css/*', included: false, served: true},
 
             'bower_components/jquery/dist/jquery.js',
-            'bower_components/bluebird/js/browser/bluebird.js',
             'bower_components/js-imagediff/imagediff.js',
-            //'bower_components/fontawesome/css/font-awesome.css',
+            'bower_components/ocrad-bower/ocrad.js',
 
             'src/dom-to-image.js',
             'spec/dom-to-image.spec.js'

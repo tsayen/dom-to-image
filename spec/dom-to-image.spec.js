@@ -5,6 +5,7 @@
     var imagediff = global.imagediff;
     var domtoimage = global.domtoimage;
     var Promise = global.Promise;
+    var ocr = global.OCRAD;
 
     var BASE_URL = '/base/spec/resources/';
 
@@ -64,18 +65,31 @@
                 .then(done).catch(error);
         });
 
-        it('should render nested text nodes', function (done) {
-            loadTestPage('text/dom-node.html')
+        it('should render text nodes', function (done) {
+            loadTestPage('text/dom-node.html', 'text/style.css')
                 .then(function () {
                     return domtoimage.toImage(domNode(), function () {});
                 })
                 .then(drawImage)
-                .then(function (image) {
-                    assert.include(image.src, 'someText', 'text should be preserved');
-                    assert.include(image.src, 'someMoreText', 'text should be preserved');
+                .then(function () {
+                    assertTextRendered(['SOME TEXT', 'SOME MORE TEXT']);
                 })
                 .then(done).catch(error);
         });
+
+        it('should preserve content of ::before and ::after pseudo elements', function (done) {
+            loadTestPage('before-after/dom-node.html', 'before-after/style.css')
+                .then(function () {
+                    return domtoimage.toImage(domNode(), function () {});
+                })
+                .then(drawImage)
+                .then(function () {
+
+                })
+                .then(done).catch(error);
+        });
+
+
 
         it('should render to blob', function (done) {
             loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
@@ -320,10 +334,9 @@
 
         function drawImage(image, node) {
             node = node || domNode();
-            var canvas = $('#canvas')[0];
-            canvas.height = node.offsetHeight.toString();
-            canvas.width = node.offsetWidth.toString();
-            canvas.getContext('2d').drawImage(image, 0, 0);
+            canvas().height = node.offsetHeight.toString();
+            canvas().width = node.offsetWidth.toString();
+            canvas().getContext('2d').drawImage(image, 0, 0);
             return image;
         }
 
@@ -339,6 +352,10 @@
             return $('#control-image')[0];
         }
 
+        function canvas() {
+            return $('#canvas')[0];
+        }
+
         function compareToControlImage(image) {
             assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
         }
@@ -348,6 +365,13 @@
                 .then(domNodeToDataUrl)
                 .then(makeImage)
                 .then(compareToControlImage);
+        }
+
+        function assertTextRendered(lines) {
+            var renderedText = ocr(canvas());
+            lines.forEach(function (line) {
+                assert.include(renderedText, line);
+            });
         }
     });
 })(this);

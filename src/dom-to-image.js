@@ -179,27 +179,34 @@
                 style.getPropertyPriority(propertyName)
             );
         }
+        return node;
     }
 
     function copyStyle(source, target) {
-        var sourceStyle = global.window.getComputedStyle(source);
-        if (sourceStyle.cssText) {
-            target.style.cssText = sourceStyle.cssText;
-            return;
+        if (target instanceof Element) {
+            var sourceStyle = global.window.getComputedStyle(source);
+            if (sourceStyle.cssText) {
+                target.style.cssText = sourceStyle.cssText;
+            } else {
+                copyProperties(sourceStyle, target);
+            }
         }
-        copyProperties(sourceStyle, target);
+
+        return target;
     }
 
     function fixNamespace(node) {
         if (node instanceof SVGElement)
             node.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        return node;
     }
 
     function processClone(clone, original) {
-        fixNamespace(clone);
-        if (clone instanceof Element)
-            copyStyle(original, clone);
-        return clone;
+        return Promise.resolve(clone)
+            .then(fixNamespace)
+            .then(function (clone) {
+                return copyStyle(original, clone);
+            });
     }
 
     function cloneChildren(clone, original, filter) {

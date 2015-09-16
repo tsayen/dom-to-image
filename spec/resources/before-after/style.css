@@ -1,0 +1,12 @@
+.with-before::before {
+    content: "only-before";
+}
+.with-after::after {
+    content: "only-after";
+}
+.with-both::before {
+    content: "both-before";
+}
+.with-both::after {
+    content: "both-after";
+}
