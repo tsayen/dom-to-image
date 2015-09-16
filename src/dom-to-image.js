@@ -199,31 +199,42 @@
         fixNamespace(clone);
         if (clone instanceof Element)
             copyStyle(original, clone);
+        return clone;
     }
 
-    function cloneNode(node, filter) {
-        if (filter && !filter(node)) {
-            return Promise.resolve();
-        }
+    function cloneChildren(clone, original, filter) {
+        var children = original.childNodes;
+        var childrenCount = children.length;
 
-        var clone = node.cloneNode(false);
-        processClone(clone, node);
-
-        var children = node.childNodes;
-        if (children.length === 0) return Promise.resolve(clone);
+        if (childrenCount === 0) return Promise.resolve(clone);
 
         function append(child) {
             if (child) clone.appendChild(child);
         }
 
         var childrenCloned = [];
-        for (var i = 0; i < children.length; i++) {
+        for (var i = 0; i < childrenCount; i++) {
             childrenCloned.push(cloneNode(children[i], filter).then(append));
         }
 
         return Promise.all(childrenCloned).then(function () {
             return clone;
         });
+    }
+
+    function cloneNode(original, filter) {
+        if (filter && !filter(original)) return Promise.resolve();
+
+        return Promise.resolve()
+            .then(function () {
+                return original.cloneNode(false);
+            })
+            .then(function (clone) {
+                return processClone(clone, original);
+            })
+            .then(function (clone) {
+                return cloneChildren(clone, original, filter);
+            });
     }
 
     function stripMargin(node) {
