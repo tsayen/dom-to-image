@@ -1,6 +1,23 @@
 (function (global) {
     "use strict";
 
+    var uid = (function () {
+        var lastIndex = 0;
+
+        /* see http://stackoverflow.com/a/6248722/2519373 */
+        function uid() {
+            return ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
+        }
+
+        function next() {
+            return uid() + lastIndex++;
+        }
+
+        return {
+            next: next
+        }
+    })();
+
     var resourceLoader = {
         load: function (url) {
             var request = new XMLHttpRequest();
@@ -189,14 +206,44 @@
     }
 
     function cloneElementStyle(nodes) {
-        var computedStyle = global.window.getComputedStyle(nodes.original);
-        copyStyle(computedStyle, nodes.clone);
-
+        var style = global.window.getComputedStyle(nodes.original);
+        copyStyle(style, nodes.clone);
         return nodes;
     }
 
+    function formatCssText(style) {
+        return style.cssText + ' content:' + style.getPropertyValue('content') + ';'
+    }
+
+    function formatCssProperties(style) {
+        var lines = [];
+        var count = style.length;
+        for (var i = 0; i < count; i++) {
+            var name = style[i];
+            var line = name + ': ' + style.getPropertyValue(name);
+            if (style.getPropertyPriority(name)) line += ' !important';
+            lines.push(line);
+        }
+        return lines.join(';') + ';';
+    }
+
+    function getStyleAsText(style, selector) {
+        var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
+        return selector + '{' + cssText + '}';
+    }
+
     function clonePseudoElementStyle(nodes) {
-        
+        var style = global.window.getComputedStyle(nodes.original, ':before');
+        var content = style.getPropertyValue('content');
+        if (!content || content === 'none') return nodes;
+
+        var className = 'before-' + uid.next();
+        nodes.clone.className = nodes.clone.className + ' ' + className;
+        var selector = '.' + className + '::before';
+        var css = getStyleAsText(style, selector);
+        var styleElement = document.createElement('style');
+        styleElement.appendChild(document.createTextNode(css));
+        nodes.clone.appendChild(styleElement);
         return nodes;
     }
 
@@ -381,8 +428,11 @@
         toDataUrl: toDataUrl,
         toBlob: toBlob,
         impl: {
-            resourceLoader: resourceLoader,
-            webFontRule: webFontRule
+            webFontRule: webFontRule,
+            util: {
+                uid: uid,
+                resourceLoader: resourceLoader
+            }
         }
     };
 })(this);

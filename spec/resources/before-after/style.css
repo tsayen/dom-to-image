@@ -1,12 +1,19 @@
 .with-before::before {
-    content: "ONLY-BEFORE";
+    content: 'ONLY-BEFORE';
 }
 .with-after::after {
-    content: "ONLY-AFTER";
+    content: 'ONLY-AFTER';
 }
 .with-both::before {
-    content: "BOTH-BEFORE";
+    content: 'BOTH-BEFORE';
 }
 .with-both::after {
-    content: "BOTH-AFTER";
+    content: 'BOTH-AFTER';
+}
+
+#root {
+    border: none !important;
+    background-color: white;
+    font-family: sans-serif;
+    font-size: 20px;
 }
