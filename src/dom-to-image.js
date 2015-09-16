@@ -179,33 +179,50 @@
                 style.getPropertyPriority(propertyName)
             );
         }
-        return node;
     }
 
-    function copyStyle(source, target) {
-        if (target instanceof Element) {
-            var sourceStyle = global.window.getComputedStyle(source);
-            if (sourceStyle.cssText) {
-                target.style.cssText = sourceStyle.cssText;
-            } else {
-                copyProperties(sourceStyle, target);
-            }
-        }
-
-        return target;
+    function copyStyle(style, node) {
+        if (style.cssText)
+            node.style.cssText = style.cssText;
+        else
+            copyProperties(style, node);
     }
 
-    function fixNamespace(node) {
-        if (node instanceof SVGElement)
-            node.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        return node;
+    function cloneElementStyle(nodes) {
+        var computedStyle = global.window.getComputedStyle(nodes.original);
+        copyStyle(computedStyle, nodes.clone);
+
+        return nodes;
+    }
+
+    function clonePseudoElementStyle(nodes) {
+        
+        return nodes;
+    }
+
+    function cloneStyle(nodes) {
+        return Promise.resolve(nodes)
+            .then(cloneElementStyle)
+            .then(clonePseudoElementStyle);
+    }
+
+    function fixNamespace(nodes) {
+        if (nodes.clone instanceof SVGElement)
+            nodes.clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        return nodes;
     }
 
     function processClone(clone, original) {
-        return Promise.resolve(clone)
+        if (!(clone instanceof Element)) return clone;
+
+        return Promise.resolve({
+                clone: clone,
+                original: original
+            })
             .then(fixNamespace)
-            .then(function (clone) {
-                return copyStyle(original, clone);
+            .then(cloneStyle)
+            .then(function (nodes) {
+                return nodes.clone;
             });
     }
 

@@ -84,12 +84,10 @@
                 })
                 .then(drawImage)
                 .then(function () {
-
+                    assertTextRendered(["ONLY-BEFORE", "ONLY-AFTER", "BOTH-BEFORE", "BOTH-AFTER"]);
                 })
                 .then(done).catch(error);
         });
-
-
 
         it('should render to blob', function (done) {
             loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
