@@ -208,18 +208,22 @@
 
         if (childrenCount === 0) return Promise.resolve(clone);
 
-        function append(child) {
-            if (child) clone.appendChild(child);
+        var done = Promise.resolve();
+
+        function cloneChild(child) {
+            done = done
+                .then(function () {
+                    return cloneNode(child, filter);
+                })
+                .then(function (childClone) {
+                    if (childClone) clone.appendChild(childClone);
+                });
         }
 
-        var childrenCloned = [];
-        for (var i = 0; i < childrenCount; i++) {
-            childrenCloned.push(
-                cloneNode(children[i], filter).then(append)
-            );
-        }
+        for (var i = 0; i < childrenCount; i++)
+            cloneChild(children[i]);
 
-        return Promise.all(childrenCloned).then(function () {
+        return done.then(function () {
             return clone;
         });
     }
@@ -232,10 +236,10 @@
                 return original.cloneNode(false);
             })
             .then(function (clone) {
-                return processClone(clone, original);
+                return cloneChildren(clone, original, filter);
             })
             .then(function (clone) {
-                return cloneChildren(clone, original, filter);
+                return processClone(clone, original);
             });
     }
 
@@ -312,7 +316,7 @@
         options = options || {};
 
         return cloneNode(domNode, options.filter)
-            .then(embedFonts)
+            // .then(embedFonts)
             .then(function (node) {
                 return makeImage(node, domNode.scrollWidth, domNode.scrollHeight);
             });
