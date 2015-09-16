@@ -2,7 +2,7 @@
     "use strict";
 
     var uid = (function () {
-        var lastIndex = 0;
+        var index = 0;
 
         /* see http://stackoverflow.com/a/6248722/2519373 */
         function uid() {
@@ -10,7 +10,7 @@
         }
 
         function next() {
-            return 'u' + uid() + lastIndex++;
+            return 'u' + uid() + index++;
         }
 
         return {
