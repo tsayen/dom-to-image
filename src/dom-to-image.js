@@ -214,7 +214,9 @@
 
         var childrenCloned = [];
         for (var i = 0; i < childrenCount; i++) {
-            childrenCloned.push(cloneNode(children[i], filter).then(append));
+            childrenCloned.push(
+                cloneNode(children[i], filter).then(append)
+            );
         }
 
         return Promise.all(childrenCloned).then(function () {
