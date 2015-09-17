@@ -20,7 +20,7 @@
         it('should render simple node', function (done) {
             loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
                 .then(renderAndCheck)
-                .then(done).catch(error);
+                .then(done).catch(done);
         });
 
         it('should render bigger node', function (done) {
@@ -33,19 +33,19 @@
                     }
                 })
                 .then(renderAndCheck)
-                .then(done).catch(error);
+                .then(done).catch(done);
         });
 
         it('should handle "#" in colors and attributes', function (done) {
             loadTestPage('hash/dom-node.html', 'hash/style.css', 'simple/control-image')
                 .then(renderAndCheck)
-                .then(done).catch(error);
+                .then(done).catch(done);
         });
 
         it('should render nested svg with broken namespace', function (done) {
             loadTestPage('svg/dom-node.html', 'svg/style.css', 'svg/control-image')
                 .then(renderAndCheck)
-                .then(done).catch(error);
+                .then(done).catch(done);
         });
 
         it('should render correctly when the node is bigger than container', function (done) {
@@ -62,7 +62,7 @@
                     return drawImage(image, domNode);
                 })
                 .then(compareToControlImage)
-                .then(done).catch(error);
+                .then(done).catch(done);
         });
 
         it('should render text nodes', function (done) {
@@ -74,7 +74,7 @@
                 .then(function () {
                     assertTextRendered(['SOME TEXT', 'SOME MORE TEXT']);
                 })
-                .then(done).catch(error);
+                .then(done).catch(done);
         });
 
         it('should preserve content of ::before and ::after pseudo elements', function (done) {
@@ -87,7 +87,7 @@
                     assertTextRendered(["ONLY-BEFORE", "BOTH-BEFORE", ]);
                     assertTextRendered(["ONLY-AFTER", "BOTH-AFTER"]);
                 })
-                .then(done).catch(error);
+                .then(done).catch(done);
         });
 
         it('should render to blob', function (done) {
@@ -101,7 +101,7 @@
                 .then(makeImage)
                 .then(drawImage)
                 .then(compareToControlImage)
-                .then(done).catch(error);
+                .then(done).catch(done);
         });
 
         it('should use node filter', function (done) {
@@ -119,7 +119,8 @@
                 .then(makeImage)
                 .then(drawImage)
                 .then(compareToControlImage)
-                .then(done).catch(error);
+
+            .then(done).catch(done);
         });
 
         it.skip('should render web fonts', function (done) {
@@ -136,7 +137,7 @@
                         //done();
                     });
                 })
-                .catch(error);
+                .catch(done);
             /*.catch(function(e){
              console.error(e);
              })*/
@@ -154,7 +155,7 @@
                                 assert.equal(resource, testResource);
                             });
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should generate uids', function () {
@@ -170,14 +171,30 @@
             var fontFace = domtoimage.impl.fontFace;
 
             it('should read non-local font faces', function (done) {
+                loadTestPage('fonts/empty.html', 'fonts/font-face/remote.css')
+                    .then(function () {
+                        return fontFace.readAll(global.document);
+                    })
+                    .then(function (webFonts) {
+                        assert.equal(webFonts.length, 1);
+                        var font = webFonts[0].resolve();
+
+                    })
+                    .then(done).catch(done);
+            });
+
+            it('should resolve font face urls', function (done) {
                 loadTestPage('fonts/empty.html', 'fonts/font-face/rules.css')
                     .then(function () {
                         return fontFace.readAll(global.document);
                     })
-                    .then(function(webFonts){
+                    .then(function (webFonts) {
                         assert.equal(webFonts.length, 3);
+                        assert.include(webFonts[0].cssText(), 'Font1');
+                        assert.include(webFonts[1].cssText(), 'Font2');
+                        assert.include(webFonts[2].cssText(), 'Font3');
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should find all web font rules in document', function (done) {
@@ -202,7 +219,7 @@
                         assert.include(rules.Font1.data().cssText(), 'Font1');
                         assert.include(rules.Font2.data().cssText(), 'Font2');
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should resolve relative font urls', function (done) {
@@ -216,7 +233,7 @@
                         assert.include(Object.keys(rules.Font1.data().urls())[0], '/base/spec/resources/font1.woff');
                         assert.include(Object.keys(rules.Font2.data().urls())[0], '/base/spec/resources/fonts/font2.woff2');
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
 
@@ -251,7 +268,8 @@
                     .then(function (cssRuleString) {
                         // then
                         assert.equal(cssRuleString, controlString);
-                    }).then(done).catch(error);
+                    })
+                    .then(done).catch(done);
             });
 
             it('should create style with web font rules', function (done) {
@@ -273,7 +291,7 @@
                         assert.include(cssText, 'url("data:font/woff2;base64,AAA")');
                         assert.include(cssText, 'url("data:font/truetype;base64,CCC")');
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             function mockResourceLoader(content) {

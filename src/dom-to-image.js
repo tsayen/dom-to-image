@@ -70,29 +70,48 @@
             });
         }
 
+        var fontUrl = /url\(['"]?([^\?"]+)\??.*?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
+
+        function hasFontUrl(str) {
+            return str.search(fontUrl) !== -1;
+        }
+
+        function parseFontUrl(str) {
+            url = fontUrl.exec(str);
+            return {
+                url: url[1],
+                format: url[2]
+            };
+        }
+
         return {
             resolveUrl: resolveUrl,
             getStyleSheets: getStyleSheets,
             getAndEncode: getAndEncode,
-            uid: uid.next
+            uid: uid.next,
+            hasFontUrl: hasFontUrl,
+            readFontUrl: readFontUrl
         };
     })();
 
     var fontFace = (function () {
 
         function selectWebFontRules(cssRules) {
-            return cssRules.filter(function (rule) {
-                return rule.type === CSSRule.FONT_FACE_RULE;
-            });
+            return cssRules
+                .filter(function (rule) {
+                    return rule.type === CSSRule.FONT_FACE_RULE;
+                })
+                .filter(function (rule) {
+                    return util.hasFontUrl(rule.style.getPropertyValue('src'));
+                });
         }
 
         function getCssRules(styleSheets) {
             var cssRules = [];
             for (var s = 0; s < styleSheets.length; s++) {
                 var rules = styleSheets[s].cssRules;
-                for (var r = 0; r < rules.length; r++) {
+                for (var r = 0; r < rules.length; r++)
                     cssRules.push(rules[r]);
-                }
             }
             return cssRules;
         }
@@ -100,11 +119,43 @@
         function readAll(document) {
             return util.getStyleSheets(document)
                 .then(getCssRules)
-                .then(selectWebFontRules);
+                .then(selectWebFontRules)
+                .then(function (rules) {
+                    return rules.map(newWebFont);
+                });
+        }
+
+
+
+        function newWebFont(webFontRule) {
+
+            function newUrl() {}
+
+            function readUrls(src, cssText) {
+                var result = [];
+                src.split(/,\s*/)
+                    .map(util.parseFontUrl)
+                    .filter(function (fontUrl) {
+                        return !!fontUrl.url;
+                    })
+
+                return [];
+            }
+
+            function resolve(loadResource) {
+                loadResource = loadResource || util.getAndEncode;
+            }
+
+            return {
+                cssText: function () {
+                    return webFontRule.style.cssText;
+                },
+                resolve: resolve
+            }
         }
 
         return {
-            readAll: readAll
+            readAll: readAll,
         };
     })();
 
@@ -113,11 +164,10 @@
         function extractUrls(cssRule, baseUrl) {
             var sources = {};
             var propertyValue = cssRule.style.getPropertyValue('src');
-            propertyValue.split(/,\s*/)
-                .forEach(function (src) {
-                    var url = /url\(['"]?([^\?"]+)\??.*?['"]?\)\s+format\(['"]?(.*?)['"]?\)/.exec(src);
-                    if (url) sources[util.resolveUrl(url[1], baseUrl)] = url[2];
-                });
+            propertyValue.split(/,\s*/).forEach(function (src) {
+                var url = /url\(['"]?([^\?"]+)\??.*?['"]?\)\s+format\(['"]?(.*?)['"]?\)/.exec(src);
+                if (url) sources[util.resolveUrl(url[1], baseUrl)] = url[2];
+            });
             return sources;
         }
 
