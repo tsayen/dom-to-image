@@ -41,6 +41,54 @@
         }
     };
 
+    function getStyleSheets(document) {
+        var sheets = document.querySelectorAll('link[rel=stylesheet]');
+        var loaded = [];
+
+        function add(sheet) {
+            loaded.push(new Promise(function (resolve) {
+                sheet.onload = resolve;
+            }));
+        }
+
+        for (var s = 0; s < sheets.length; s++) add(sheets[s]);
+
+        return Promise.all(loaded)
+            .then(function () {
+                return document.styleSheets;
+            });
+    }
+
+    var fontFace = (function () {
+
+        function selectWebFontRules(cssRules) {
+            return cssRules.filter(function (rule) {
+                return rule.type === CSSRule.FONT_FACE_RULE;
+            });
+        }
+
+        function getCssRules(styleSheets) {
+            var cssRules = [];
+            for (var i = 0; i < styleSheets.length; i++) {
+                var rules = styleSheets[i].cssRules;
+                for (var r = 0; r < rules.length; r++) {
+                    cssRules.push(rules[r]);
+                }
+            }
+            return cssRules;
+        }
+
+        function readAll(document) {
+            return getStyleSheets(document)
+                .then(getCssRules)
+                .then(selectWebFontRules)
+        }
+
+        return {
+            readAll: readAll
+        }
+    })();
+
     var webFontRule = (function () {
 
         function resolve(url, baseUrl) {
@@ -68,8 +116,7 @@
         function tryRead(cssRule, baseUrl) {
             if (cssRule.type !== CSSRule.FONT_FACE_RULE) return null;
             var urls = extractUrls(cssRule, baseUrl);
-            if (Object.keys(urls)
-                .length === 0) return null;
+            if (Object.keys(urls).length === 0) return null;
 
             return createRule({
                 name: function () {
@@ -85,32 +132,15 @@
             });
         }
 
-        function verifyStylesLoaded() {
-            var sheets = document.querySelectorAll('link[rel=stylesheet]');
-            var loaded = [];
-
-            function add(sheet) {
-                loaded.push(new Promise(function (resolve) {
-                    sheet.onload = resolve;
-                }));
-            }
-            for (var s = 0; s < sheets.length; s++) {
-                add(sheets[s]);
-            }
-            return Promise.all(loaded);
-        }
-
         function readAll(document) {
-            return verifyStylesLoaded()
-                .then(function () {
-                    var styleSheets = document.styleSheets;
+            return getStyleSheets(document)
+                .then(function (styleSheets) {
                     var webFontRules = {};
                     for (var i = 0; i < styleSheets.length; i++) {
                         var cssRules = styleSheets[i].cssRules;
                         for (var r = 0; r < cssRules.length; r++) {
                             var webFontRule = tryRead(cssRules[r], styleSheets[i].href);
-                            if (webFontRule)
-                                webFontRules[webFontRule.data().name()] = webFontRule;
+                            if (webFontRule) webFontRules[webFontRule.data().name()] = webFontRule;
                         }
                     }
 
@@ -150,18 +180,17 @@
                     var result = data.cssText();
                     var jobs = [];
                     var fontUrls = data.urls();
-                    Object.keys(fontUrls)
-                        .forEach(function (url) {
-                            jobs.push(
-                                resourceLoader.load(url)
-                                .then(function (encodedFont) {
-                                    result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont));
-                                })
-                                .catch(function (error) {
-                                    reject(error);
-                                })
-                            );
-                        });
+                    Object.keys(fontUrls).forEach(function (url) {
+                        jobs.push(
+                            resourceLoader.load(url)
+                            .then(function (encodedFont) {
+                                result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont));
+                            })
+                            .catch(function (error) {
+                                reject(error);
+                            })
+                        );
+                    });
 
                     Promise.all(jobs)
                         .then(function () {
@@ -365,7 +394,6 @@
     function embedFonts(node) {
         return webFontRule.readAll(document)
             .then(function (cssRules) {
-                // console.log('css rules');
                 return cssRules.embedAll(Object.keys(cssRules.rules()));
             })
             .then(function (cssText) {
@@ -376,7 +404,6 @@
                 styleNode.appendChild(document.createTextNode(cssText));
                 root.appendChild(styleNode);
                 root.appendChild(node);
-                // console.log(cssText);
                 return root;
             });
     }
@@ -396,7 +423,7 @@
         options = options || {};
 
         return cloneNode(domNode, options.filter)
-            // .then(embedFonts)
+            .then(embedFonts)
             .then(function (node) {
                 return makeImage(node, domNode.scrollWidth, domNode.scrollHeight);
             });
@@ -437,6 +464,7 @@
         toDataUrl: toDataUrl,
         toBlob: toBlob,
         impl: {
+            fontFace: fontFace,
             webFontRule: webFontRule,
             util: {
                 uid: uid,

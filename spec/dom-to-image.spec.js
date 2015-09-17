@@ -84,7 +84,7 @@
                 })
                 .then(drawImage)
                 .then(function () {
-                    assertTextRendered(["ONLY-BEFORE", "BOTH-BEFORE",]);
+                    assertTextRendered(["ONLY-BEFORE", "BOTH-BEFORE", ]);
                     assertTextRendered(["ONLY-AFTER", "BOTH-AFTER"]);
                 })
                 .then(done).catch(error);
@@ -122,6 +122,27 @@
                 .then(done).catch(error);
         });
 
+        it.skip('should render web fonts', function (done) {
+            this.timeout(10000);
+            loadTestPage(
+                    'fonts/regression.html',
+                    'fonts/regression.css'
+                )
+                .then(function () {
+                    domtoimage.toImage(domNode(), function (image) {
+                        drawControlImage(image);
+                        document.body.appendChild(image);
+                        console.log(image.src);
+                        //done();
+                    });
+                })
+                .catch(error);
+            /*.catch(function(e){
+             console.error(e);
+             })*/
+
+        });
+
         describe('util', function () {
 
             it('resource loader should get and encode resource', function (done) {
@@ -136,7 +157,7 @@
                     .then(done).catch(error);
             });
 
-            it('uid should return uids', function(){
+            it('uid should return uids', function () {
                 var uid = domtoimage.impl.util.uid;
                 assert(uid.next().length >= 4);
                 assert.notEqual(uid.next(), uid.next());
@@ -146,12 +167,21 @@
         describe('web fonts', function () {
 
             var webFontRule = domtoimage.impl.webFontRule;
+            var fontFace = domtoimage.impl.fontFace;
+
+            it('should read non-local font faces', function (done) {
+                loadTestPage('fonts/empty.html', 'fonts/rules.css')
+                    .then(function () {
+                        return fontFace.readAll(global.document);
+                    })
+                    .then(function(webFonts){
+                        assert.equal(webFonts.length, 3);
+                    })
+                    .then(done).catch(error);
+            });
 
             it('should find all web font rules in document', function (done) {
-                loadTestPage(
-                        'fonts/empty.html',
-                        'fonts/rules.css'
-                    )
+                loadTestPage('fonts/empty.html', 'fonts/rules.css')
                     .then(function () {
                         return webFontRule.readAll(global.document);
                     })
@@ -244,27 +274,6 @@
                         assert.include(cssText, 'url("data:font/truetype;base64,CCC")');
                     })
                     .then(done).catch(error);
-            });
-
-            it.skip('should render web fonts', function (done) {
-                this.timeout(10000);
-                loadTestPage(
-                        'fonts/regression.html',
-                        'fonts/regression.css'
-                    )
-                    .then(function () {
-                        domtoimage.toImage(domNode(), function (image) {
-                            drawControlImage(image);
-                            document.body.appendChild(image);
-                            console.log(image.src);
-                            //done();
-                        });
-                    })
-                    .catch(error);
-                /*.catch(function(e){
-                 console.error(e);
-                 })*/
-
             });
 
             function mockResourceLoader(content) {
