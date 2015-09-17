@@ -171,28 +171,30 @@
             var fontFace = domtoimage.impl.fontFace;
 
             it('should read non-local font faces', function (done) {
-                loadTestPage('fonts/empty.html', 'fonts/font-face/remote.css')
-                    .then(function () {
-                        return fontFace.readAll(global.document);
-                    })
-                    .then(function (webFonts) {
-                        assert.equal(webFonts.length, 1);
-                        var font = webFonts[0].resolve();
-
-                    })
-                    .then(done).catch(done);
-            });
-
-            it('should resolve font face urls', function (done) {
                 loadTestPage('fonts/empty.html', 'fonts/font-face/rules.css')
                     .then(function () {
                         return fontFace.readAll(global.document);
                     })
                     .then(function (webFonts) {
                         assert.equal(webFonts.length, 3);
-                        assert.include(webFonts[0].cssText(), 'Font1');
-                        assert.include(webFonts[1].cssText(), 'Font2');
-                        assert.include(webFonts[2].cssText(), 'Font3');
+                    })
+                    .then(done).catch(done);
+            });
+
+            it('should resolve font face urls', function (done) {
+                loadTestPage('fonts/empty.html', 'fonts/font-face/remote.css')
+                    .then(function () {
+                        return fontFace.readAll(global.document);
+                    })
+                    .then(function (webFonts) {
+                        assert.equal(webFonts.length, 1);
+
+                        return webFonts[0].resolve();
+                    }).then(function(css){
+                        return getResource('fonts/font-face/remote-resolved.css')
+                            .then(function (controlCss) {
+                                assert.equal(css, controlCss);
+                            });
                     })
                     .then(done).catch(done);
             });
@@ -241,12 +243,13 @@
                 // given
                 var cssText, controlString;
                 Promise.all([
-                            getResource('fonts/cssText').then(function (text) {
+                        getResource('fonts/cssText').then(function (text) {
                             cssText = text;
                         }),
-                            getResource('fonts/font-face.css').then(function (text) {
+                        getResource('fonts/font-face.css').then(function (text) {
                             controlString = text;
-                        })])
+                        })
+                    ])
                     .then(function () {
                         // when
                         var fontFaceRule = webFontRule.impl.createRule({

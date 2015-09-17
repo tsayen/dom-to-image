@@ -77,11 +77,22 @@
         }
 
         function parseFontUrl(str) {
-            url = fontUrl.exec(str);
-            return {
-                url: url[1],
-                format: url[2]
-            };
+            var url = fontUrl.exec(str);
+            if (url)
+                return {
+                    url: url[1],
+                    format: url[2]
+                };
+            else
+                return {}
+        }
+
+        function urlAsRegex(url) {
+            function escape(string) {
+                return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
+            }
+
+            return new RegExp('url\\([\'"]?' + escape(url) + '\??.*?[\'"]?\\)', 'g');
         }
 
         return {
@@ -90,7 +101,8 @@
             getAndEncode: getAndEncode,
             uid: uid.next,
             hasFontUrl: hasFontUrl,
-            readFontUrl: readFontUrl
+            parseFontUrl: parseFontUrl,
+            urlAsRegex: urlAsRegex
         };
     })();
 
@@ -131,19 +143,29 @@
 
             function newUrl() {}
 
-            function readUrls(src, cssText) {
-                var result = [];
-                src.split(/,\s*/)
+            function readUrls() {
+                return webFontRule.style.getPropertyValue('src').split(/,\s*/)
                     .map(util.parseFontUrl)
                     .filter(function (fontUrl) {
                         return !!fontUrl.url;
-                    })
-
-                return [];
+                    });
             }
 
             function resolve(loadResource) {
                 loadResource = loadResource || util.getAndEncode;
+                var cssText = webFontRule.cssText;
+                return Promise.all(
+                        readUrls().map(function (fontUrl) {
+                            console.log(fontUrl.url);
+                            return loadResource(fontUrl.url)
+                                .then(function (encodedFont) {
+                                    cssText = cssText.replace(util.urlAsRegex(fontUrl.url), encodedFont);
+                                });
+                        })
+                    )
+                    .then(function () {
+                        return '@font-face{' + cssText + '}';
+                    });
             }
 
             return {
