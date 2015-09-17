@@ -145,11 +145,11 @@
 
         describe('util', function () {
 
-            it('resource loader should get and encode resource', function (done) {
-                var loader = domtoimage.impl.util.resourceLoader;
+            it('should get and encode resource', function (done) {
+                var get = domtoimage.impl.util.getAndEncode;
                 getResource('fonts/fontawesome.base64')
                     .then(function (testResource) {
-                        return loader.load(BASE_URL + 'fonts/fontawesome.woff2')
+                        return get(BASE_URL + 'fonts/fontawesome.woff2')
                             .then(function (resource) {
                                 assert.equal(resource, testResource);
                             });
@@ -157,10 +157,10 @@
                     .then(done).catch(error);
             });
 
-            it('uid should return uids', function () {
+            it('should generate uids', function () {
                 var uid = domtoimage.impl.util.uid;
-                assert(uid.next().length >= 4);
-                assert.notEqual(uid.next(), uid.next());
+                assert(uid().length >= 4);
+                assert.notEqual(uid(), uid());
             });
         });
 
@@ -170,7 +170,7 @@
             var fontFace = domtoimage.impl.fontFace;
 
             it('should read non-local font faces', function (done) {
-                loadTestPage('fonts/empty.html', 'fonts/rules.css')
+                loadTestPage('fonts/empty.html', 'fonts/font-face/rules.css')
                     .then(function () {
                         return fontFace.readAll(global.document);
                     })

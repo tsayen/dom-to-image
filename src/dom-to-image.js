@@ -1,25 +1,55 @@
 (function (global) {
     "use strict";
 
-    var uid = (function () {
-        var index = 0;
+    var util = (function () {
 
-        /* see http://stackoverflow.com/a/6248722/2519373 */
-        function uid() {
-            return ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
+        function resolveUrl(url, baseUrl) {
+            var doc = global.document.implementation.createHTMLDocument();
+            var base = doc.createElement('base');
+            doc.head.appendChild(base);
+            var a = doc.createElement('a');
+            doc.body.appendChild(a);
+            base.href = baseUrl;
+            a.href = url;
+            return a.href;
         }
 
-        function next() {
-            return 'u' + uid() + index++;
+        function getStyleSheets(document) {
+            var sheets = document.querySelectorAll('link[rel=stylesheet]');
+            var loaded = [];
+
+            function add(sheet) {
+                loaded.push(new Promise(function (resolve) {
+                    sheet.onload = resolve;
+                }));
+            }
+
+            for (var s = 0; s < sheets.length; s++) add(sheets[s]);
+
+            return Promise.all(loaded)
+                .then(function () {
+                    return document.styleSheets;
+                });
         }
 
-        return {
-            next: next
-        };
-    })();
+        var uid = (function () {
+            var index = 0;
 
-    var resourceLoader = {
-        load: function (url) {
+            function uid() {
+                /* see http://stackoverflow.com/a/6248722/2519373 */
+                return ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
+            }
+
+            function next() {
+                return 'u' + uid() + index++;
+            }
+
+            return {
+                next: next
+            };
+        })();
+
+        function getAndEncode(url) {
             var request = new XMLHttpRequest();
             request.open('GET', url, true);
             request.responseType = 'blob';
@@ -39,25 +69,14 @@
                 request.send();
             });
         }
-    };
 
-    function getStyleSheets(document) {
-        var sheets = document.querySelectorAll('link[rel=stylesheet]');
-        var loaded = [];
-
-        function add(sheet) {
-            loaded.push(new Promise(function (resolve) {
-                sheet.onload = resolve;
-            }));
-        }
-
-        for (var s = 0; s < sheets.length; s++) add(sheets[s]);
-
-        return Promise.all(loaded)
-            .then(function () {
-                return document.styleSheets;
-            });
-    }
+        return {
+            resolveUrl: resolveUrl,
+            getStyleSheets: getStyleSheets,
+            getAndEncode: getAndEncode,
+            uid: uid.next
+        };
+    })();
 
     var fontFace = (function () {
 
@@ -69,8 +88,8 @@
 
         function getCssRules(styleSheets) {
             var cssRules = [];
-            for (var i = 0; i < styleSheets.length; i++) {
-                var rules = styleSheets[i].cssRules;
+            for (var s = 0; s < styleSheets.length; s++) {
+                var rules = styleSheets[s].cssRules;
                 for (var r = 0; r < rules.length; r++) {
                     cssRules.push(rules[r]);
                 }
@@ -79,28 +98,17 @@
         }
 
         function readAll(document) {
-            return getStyleSheets(document)
+            return util.getStyleSheets(document)
                 .then(getCssRules)
-                .then(selectWebFontRules)
+                .then(selectWebFontRules);
         }
 
         return {
             readAll: readAll
-        }
+        };
     })();
 
     var webFontRule = (function () {
-
-        function resolve(url, baseUrl) {
-            var doc = global.document.implementation.createHTMLDocument();
-            var base = doc.createElement('base');
-            doc.head.appendChild(base);
-            var a = doc.createElement('a');
-            doc.body.appendChild(a);
-            base.href = baseUrl;
-            a.href = url;
-            return a.href;
-        }
 
         function extractUrls(cssRule, baseUrl) {
             var sources = {};
@@ -108,7 +116,7 @@
             propertyValue.split(/,\s*/)
                 .forEach(function (src) {
                     var url = /url\(['"]?([^\?"]+)\??.*?['"]?\)\s+format\(['"]?(.*?)['"]?\)/.exec(src);
-                    if (url) sources[resolve(url[1], baseUrl)] = url[2];
+                    if (url) sources[util.resolveUrl(url[1], baseUrl)] = url[2];
                 });
             return sources;
         }
@@ -133,7 +141,7 @@
         }
 
         function readAll(document) {
-            return getStyleSheets(document)
+            return util.getStyleSheets(document)
                 .then(function (styleSheets) {
                     var webFontRules = {};
                     for (var i = 0; i < styleSheets.length; i++) {
@@ -267,7 +275,7 @@
         var content = style.getPropertyValue('content');
         if (!content || content === 'none') return nodes;
 
-        var className = uid.next();
+        var className = util.uid();
 
         nodes.clone.className = nodes.clone.className + ' ' + className;
 
@@ -466,10 +474,7 @@
         impl: {
             fontFace: fontFace,
             webFontRule: webFontRule,
-            util: {
-                uid: uid,
-                resourceLoader: resourceLoader
-            }
+            util: util
         }
     };
 })(this);
