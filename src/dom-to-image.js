@@ -75,7 +75,9 @@
             'woff': 'application/x-font-woff',
             'woff2': 'application/x-font-woff2',
             'truetype': 'application/x-font-ttf',
-            'ttf': 'application/x-font-ttf'
+            'ttf': 'application/x-font-ttf',
+            'opentype': 'application/x-font-otf',
+            'embedded-opentype': 'application/x-font-otf'
         };
 
         function decorateDataUrl(content, type) {
@@ -124,7 +126,7 @@
         };
     })();
 
-    var fontFace = (function () {
+    var fontFaces = (function () {
 
         function selectWebFontRules(cssRules) {
             return cssRules
@@ -388,7 +390,7 @@
     }
 
     function embedFonts(node) {
-        return fontFace.resolveAll(node.ownerDocument)
+        return fontFaces.resolveAll(node.ownerDocument)
             .then(function (cssText) {
                 var root = document.createElement('div');
 
@@ -457,7 +459,7 @@
         toDataUrl: toDataUrl,
         toBlob: toBlob,
         impl: {
-            fontFace: fontFace,
+            fontFaces: fontFaces,
             util: util
         }
     };

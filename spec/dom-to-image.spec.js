@@ -166,12 +166,12 @@
         });
 
         describe('web fonts', function () {
-            var fontFace = domtoimage.impl.fontFace;
+            var fontFaces = domtoimage.impl.fontFaces;
 
             it('should read non-local font faces', function (done) {
                 loadTestPage('fonts/empty.html', 'fonts/font-face/rules.css')
                     .then(function () {
-                        return fontFace.readAll(global.document);
+                        return fontFaces.readAll(global.document);
                     })
                     .then(function (webFonts) {
                         assert.equal(webFonts.length, 3);
@@ -182,7 +182,7 @@
             it('should resolve font face urls', function (done) {
                 loadTestPage('fonts/empty.html', 'fonts/font-face/remote.css')
                     .then(function () {
-                        return fontFace.readAll(global.document);
+                        return fontFaces.readAll(global.document);
                     })
                     .then(function (webFonts) {
                         return webFonts[0].resolve(mockResourceLoader({
@@ -201,7 +201,7 @@
             it('should not resolve data urls', function (done) {
                 loadTestPage('fonts/empty.html', 'fonts/font-face/embedded.css')
                     .then(function () {
-                        return fontFace.readAll(global.document);
+                        return fontFaces.readAll(global.document);
                     })
                     .then(function (webFonts) {
                         return webFonts[0].resolve(
@@ -219,7 +219,7 @@
             it('should ignore query in font urls', function (done) {
                 loadTestPage('fonts/empty.html', 'fonts/font-face/with-query.css')
                     .then(function () {
-                        return fontFace.readAll(global.document);
+                        return fontFaces.readAll(global.document);
                     })
                     .then(function (webFonts) {
                         return webFonts[0].resolve(
@@ -237,7 +237,7 @@
             it('should resolve relative font urls', function (done) {
                 loadTestPage('fonts/rules-relative.html')
                     .then(function () {
-                        return fontFace.readAll(global.document);
+                        return fontFaces.readAll(global.document);
                     })
                     .then(function (webFonts) {
                         var requestedUrls = [];
