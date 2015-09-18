@@ -236,27 +236,29 @@
                     .then(done).catch(error);
             });
 
-            it('should find all web font rules in document', function (done) {
-                loadTestPage('fonts/empty.html', 'fonts/rules.css')
+            it('should resolve relative font urls', function (done) {
+                loadTestPage('fonts/rules-relative.html')
                     .then(function () {
-                        return webFontRule.readAll(global.document);
+                        return fontFace.readAll(global.document);
                     })
-                    .then(function (fontRules) {
-                        var rules = fontRules.rules();
-
-                        assert.deepEqual({
-                                'http://fonts.com/font1.woff': 'woff',
-                                'http://fonts.com/font1.woff2': 'woff2'
-                            },
-                            rules.Font1.data().urls());
-
-                        assert.deepEqual({
-                                'http://fonts.com/font2.ttf': 'truetype'
-                            },
-                            rules.Font2.data().urls());
-
-                        assert.include(rules.Font1.data().cssText(), 'Font1');
-                        assert.include(rules.Font2.data().cssText(), 'Font2');
+                    .then(function (webFonts) {
+                        var requestedUrls = [];
+                        return Promise.all(
+                            webFonts.map(function (webFont) {
+                                return webFont.resolve(
+                                    function (url) {
+                                        requestedUrls.push(url);
+                                        return Promise.resolve();
+                                    }
+                                );
+                            })
+                        ).then(function () {
+                            return requestedUrls;
+                        })
+                    })
+                    .then(function (urls) {
+                        assert.include(urls[0], '/base/spec/resources/font1.woff');
+                        assert.include(urls[1], '/base/spec/resources/fonts/font2.woff2');
                     })
                     .then(done).catch(error);
             });

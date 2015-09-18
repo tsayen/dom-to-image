@@ -107,7 +107,7 @@
             return new RegExp('url\\([\'"]?' + escape(url) + '(?:\\?.*?)?[\'"]?\\)', 'g');
         }
 
-        function isDataUrl(url){
+        function isDataUrl(url) {
             return url.search(/^(data:)/) !== -1;
         }
 
@@ -165,13 +165,18 @@
                     });
             }
 
+            function resourceUrl(fontUrl) {
+                var baseUrl = webFontRule.parentStyleSheet.href;
+                return baseUrl ? util.resolveUrl(fontUrl.url, baseUrl) : fontUrl.url;
+            }
+
             function resolve(loadResource) {
                 loadResource = loadResource || util.getAndEncode;
 
                 var cssText = webFontRule.cssText;
-
+                
                 var resolved = readUrls().map(function (fontUrl) {
-                    return loadResource(fontUrl.url, fontUrl.format)
+                    return loadResource(resourceUrl(fontUrl), fontUrl.format)
                         .then(function (encodedFont) {
                             cssText = cssText.replace(util.fontUrlAsRegex(fontUrl.url), encodedFont);
                         });
