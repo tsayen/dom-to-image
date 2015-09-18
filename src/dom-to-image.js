@@ -174,7 +174,7 @@
                 loadResource = loadResource || util.getAndEncode;
 
                 var cssText = webFontRule.cssText;
-                
+
                 var resolved = readUrls().map(function (fontUrl) {
                     return loadResource(resourceUrl(fontUrl), fontUrl.format)
                         .then(function (encodedFont) {
@@ -188,130 +188,27 @@
             }
 
             return {
-                cssText: function () {
-                    return webFontRule.style.cssText;
-                },
                 resolve: resolve
             };
         }
 
-        return {
-            readAll: readAll,
-        };
-    })();
-
-    var webFontRule = (function () {
-
-        function extractUrls(cssRule, baseUrl) {
-            var sources = {};
-            var propertyValue = cssRule.style.getPropertyValue('src');
-            propertyValue.split(/,\s*/).forEach(function (src) {
-                var url = /url\(['"]?([^\?"]+)\??.*?['"]?\)\s+format\(['"]?(.*?)['"]?\)/.exec(src);
-                if (url) sources[util.resolveUrl(url[1], baseUrl)] = url[2];
-            });
-            return sources;
-        }
-
-        function tryRead(cssRule, baseUrl) {
-            if (cssRule.type !== CSSRule.FONT_FACE_RULE) return null;
-            var urls = extractUrls(cssRule, baseUrl);
-            if (Object.keys(urls).length === 0) return null;
-
-            return createRule({
-                name: function () {
-                    return cssRule.style.getPropertyValue('font-family')
-                        .replace(/"/g, '');
-                },
-                urls: function () {
-                    return urls;
-                },
-                cssText: function () {
-                    return cssRule.style.cssText;
-                }
-            });
-        }
-
-        function readAll(document) {
-            return util.getStyleSheets(document)
-                .then(function (styleSheets) {
-                    var webFontRules = {};
-                    for (var i = 0; i < styleSheets.length; i++) {
-                        var cssRules = styleSheets[i].cssRules;
-                        for (var r = 0; r < cssRules.length; r++) {
-                            var webFontRule = tryRead(cssRules[r], styleSheets[i].href);
-                            if (webFontRule) webFontRules[webFontRule.data().name()] = webFontRule;
-                        }
-                    }
-
-                    return {
-                        embedAll: function (names, resourceProvider) {
-                            var jobs = names.map(function (name) {
-                                return webFontRules[name].embed(resourceProvider || resourceLoader);
-                            });
-                            return Promise.all(jobs)
-                                .then(function (results) {
-                                    return results.join('\n');
-                                });
-                        },
-                        rules: function () {
-                            return webFontRules;
-                        }
-                    };
+        function resolveAll(document) {
+            return readAll(document)
+                .then(function (webFonts) {
+                    return Promise.all(
+                        webFonts.map(function (webFontFace) {
+                            return webFontFace.resolve();
+                        })
+                    );
+                })
+                .then(function (cssStrings) {
+                    return cssStrings.join('\n');
                 });
-        }
-
-        function createRule(data) {
-
-            function asRegex(url) {
-                function escape(string) {
-                    return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
-                }
-
-                return new RegExp('url\\([\'"]?' + escape(url) + '\??.*?[\'"]?\\)', 'g');
-            }
-
-            function asDataUrl(fontType, encodedFont) {
-                return 'url("data:font/' + fontType + ';base64,' + encodedFont + '")';
-            }
-
-            function embed(resourceLoader) {
-                return new Promise(function (resolve, reject) {
-                    var result = data.cssText();
-                    var jobs = [];
-                    var fontUrls = data.urls();
-                    Object.keys(fontUrls).forEach(function (url) {
-                        jobs.push(
-                            resourceLoader.load(url)
-                            .then(function (encodedFont) {
-                                result = result.replace(asRegex(url), asDataUrl(fontUrls[url], encodedFont));
-                            })
-                            .catch(function (error) {
-                                reject(error);
-                            })
-                        );
-                    });
-
-                    Promise.all(jobs)
-                        .then(function () {
-                            resolve('@font-face {' + result + '}');
-                        });
-                });
-            }
-
-            return {
-                data: function () {
-                    return data;
-                },
-                embed: embed
-            };
         }
 
         return {
             readAll: readAll,
-            impl: {
-                createRule: createRule,
-                extractUrls: extractUrls
-            }
+            resolveAll: resolveAll
         };
     })();
 
@@ -491,10 +388,7 @@
     }
 
     function embedFonts(node) {
-        return webFontRule.readAll(document)
-            .then(function (cssRules) {
-                return cssRules.embedAll(Object.keys(cssRules.rules()));
-            })
+        return fontFace.resolveAll(node.ownerDocument)
             .then(function (cssText) {
                 var root = document.createElement('div');
 
@@ -564,7 +458,6 @@
         toBlob: toBlob,
         impl: {
             fontFace: fontFace,
-            webFontRule: webFontRule,
             util: util
         }
     };

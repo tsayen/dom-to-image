@@ -166,8 +166,6 @@
         });
 
         describe('web fonts', function () {
-
-            var webFontRule = domtoimage.impl.webFontRule;
             var fontFace = domtoimage.impl.fontFace;
 
             it('should read non-local font faces', function (done) {
