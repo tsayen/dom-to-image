@@ -49,7 +49,14 @@
             };
         })();
 
-        function getAndEncode(url) {
+        var mimeType = {
+            'woff': 'application/x-font-woff',
+            'woff2': 'application/x-font-woff2',
+            'truetype': 'application/x-font-ttf',
+            'ttf': 'application/x-font-ttf'
+        };
+
+        function getAndEncode(url, type) {
             var request = new XMLHttpRequest();
             request.open('GET', url, true);
             request.responseType = 'blob';
@@ -62,12 +69,17 @@
                     }
                     var encoder = new FileReader();
                     encoder.onloadend = function () {
-                        resolve(encoder.result.split(/,/)[1]);
+                        var content = encoder.result.split(/,/)[1];
+                        resolve(formatDataUrl(content, type));
                     };
                     encoder.readAsDataURL(request.response);
                 };
                 request.send();
             });
+        }
+
+        function formatDataUrl(content, type) {
+            return 'url("data:' + mimeType[type] + ';base64,' + content + '")';
         }
 
         var fontUrl = /url\(['"]?([^\?"]+)\??.*?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
@@ -84,7 +96,7 @@
                     format: url[2]
                 };
             else
-                return {}
+                return null;
         }
 
         function urlAsRegex(url) {
@@ -92,7 +104,7 @@
                 return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
             }
 
-            return new RegExp('url\\([\'"]?' + escape(url) + '\??.*?[\'"]?\\)', 'g');
+            return new RegExp('url\\([\'"]?' + escape(url) + '[\'"]?\\)', 'g');
         }
 
         return {
@@ -102,7 +114,8 @@
             uid: uid.next,
             hasFontUrl: hasFontUrl,
             parseFontUrl: parseFontUrl,
-            urlAsRegex: urlAsRegex
+            urlAsRegex: urlAsRegex,
+            formatDataUrl: formatDataUrl,
         };
     })();
 
@@ -137,8 +150,6 @@
                 });
         }
 
-
-
         function newWebFont(webFontRule) {
 
             function newUrl() {}
@@ -147,7 +158,7 @@
                 return webFontRule.style.getPropertyValue('src').split(/,\s*/)
                     .map(util.parseFontUrl)
                     .filter(function (fontUrl) {
-                        return !!fontUrl.url;
+                        return !!fontUrl;
                     });
             }
 
@@ -156,15 +167,14 @@
                 var cssText = webFontRule.cssText;
                 return Promise.all(
                         readUrls().map(function (fontUrl) {
-                            console.log(fontUrl.url);
-                            return loadResource(fontUrl.url)
+                            return loadResource(fontUrl.url, fontUrl.format)
                                 .then(function (encodedFont) {
                                     cssText = cssText.replace(util.urlAsRegex(fontUrl.url), encodedFont);
                                 });
                         })
                     )
                     .then(function () {
-                        return '@font-face{' + cssText + '}';
+                        return cssText;
                     });
             }
 
