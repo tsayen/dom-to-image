@@ -70,7 +70,7 @@
                     var encoder = new FileReader();
                     encoder.onloadend = function () {
                         var content = encoder.result.split(/,/)[1];
-                        resolve(formatDataUrl(content, type));
+                        resolve(decorateDataUrl(content, type));
                     };
                     encoder.readAsDataURL(request.response);
                 };
@@ -78,11 +78,11 @@
             });
         }
 
-        function formatDataUrl(content, type) {
+        function decorateDataUrl(content, type) {
             return 'url("data:' + mimeType[type] + ';base64,' + content + '")';
         }
 
-        var fontUrl = /url\(['"]?([^\?"]+)\??.*?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
+        var fontUrl = /url\(['"]?(.*?)['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
 
         function hasFontUrl(str) {
             return str.search(fontUrl) !== -1;
@@ -107,6 +107,10 @@
             return new RegExp('url\\([\'"]?' + escape(url) + '[\'"]?\\)', 'g');
         }
 
+        function isDataUrl(url){
+            return url.search(/^(data:)/) !== -1;
+        }
+
         return {
             resolveUrl: resolveUrl,
             getStyleSheets: getStyleSheets,
@@ -115,7 +119,8 @@
             hasFontUrl: hasFontUrl,
             parseFontUrl: parseFontUrl,
             urlAsRegex: urlAsRegex,
-            formatDataUrl: formatDataUrl,
+            decorateDataUrl: decorateDataUrl,
+            isDataUrl: isDataUrl
         };
     })();
 
@@ -155,16 +160,16 @@
             function newUrl() {}
 
             function readUrls() {
-                return webFontRule.style.getPropertyValue('src').split(/,\s*/)
+                return webFontRule.style.getPropertyValue('src').split(/,\s+/)
                     .map(util.parseFontUrl)
                     .filter(function (fontUrl) {
-                        return !!fontUrl;
+                        return fontUrl && !util.isDataUrl(fontUrl.url);
                     });
             }
 
             function resolve(loadResource) {
                 loadResource = loadResource || util.getAndEncode;
-                
+
                 var cssText = webFontRule.cssText;
 
                 var resolved = readUrls().map(function (fontUrl) {
@@ -184,7 +189,7 @@
                     return webFontRule.style.cssText;
                 },
                 resolve: resolve
-            }
+            };
         }
 
         return {
