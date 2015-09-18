@@ -246,7 +246,7 @@
                         return Promise.all(
                             webFonts.map(function (webFont) {
                                 return webFont.resolve(
-                                    function (url) {
+                                    function resourceLoader(url) {
                                         requestedUrls.push(url);
                                         return Promise.resolve();
                                     }
@@ -254,84 +254,11 @@
                             })
                         ).then(function () {
                             return requestedUrls;
-                        })
+                        });
                     })
                     .then(function (urls) {
                         assert.include(urls[0], '/base/spec/resources/font1.woff');
                         assert.include(urls[1], '/base/spec/resources/fonts/font2.woff2');
-                    })
-                    .then(done).catch(error);
-            });
-
-            it('should resolve relative font urls', function (done) {
-                loadTestPage('fonts/rules-relative.html')
-                    .then(function () {
-                        return webFontRule.readAll(global.document);
-                    })
-                    .then(function (fontRules) {
-                        var rules = fontRules.rules();
-
-                        assert.include(Object.keys(rules.Font1.data().urls())[0], '/base/spec/resources/font1.woff');
-                        assert.include(Object.keys(rules.Font2.data().urls())[0], '/base/spec/resources/fonts/font2.woff2');
-                    })
-                    .then(done).catch(error);
-            });
-
-
-            it.skip('should embed web font', function (done) {
-                // given
-                var cssText, controlString;
-                Promise.all([
-                        getResource('fonts/cssText').then(function (text) {
-                            cssText = text;
-                        }),
-                        getResource('fonts/font-face.css').then(function (text) {
-                            controlString = text;
-                        })
-                    ])
-                    .then(function () {
-                        // when
-                        var fontFaceRule = webFontRule.impl.createRule({
-                            cssText: function () {
-                                return cssText;
-                            },
-                            urls: function () {
-                                return {
-                                    'http://fonts.com/font1.woff2': 'woff2',
-                                    'font1.woff': 'woff'
-                                };
-                            }
-                        });
-                        return fontFaceRule.embed(mockResourceLoader({
-                            'http://fonts.com/font1.woff2': 'AAA',
-                            'font1.woff': 'BBB'
-                        }));
-                    })
-                    .then(function (cssRuleString) {
-                        // then
-                        assert.equal(cssRuleString, controlString);
-                    })
-                    .then(done).catch(error);
-            });
-
-            it.skip('should create style with web font rules', function (done) {
-                // given
-                loadTestPage(
-                        'fonts/empty.html',
-                        'fonts/style.css'
-                    )
-                    .then(function () {
-                        return webFontRule.readAll(global.document)
-                            .then(function (webFontRules) {
-                                return webFontRules.embedAll(Object.keys(webFontRules.rules()), mockResourceLoader({
-                                    'http://fonts.com/font1.woff2': 'AAA',
-                                    'http://fonts.com/font2.ttf': 'CCC'
-                                }));
-                            });
-                    })
-                    .then(function (cssText) {
-                        assert.include(cssText, 'url("data:font/woff2;base64,AAA")');
-                        assert.include(cssText, 'url("data:font/truetype;base64,CCC")');
                     })
                     .then(done).catch(error);
             });
