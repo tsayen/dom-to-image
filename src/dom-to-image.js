@@ -164,18 +164,19 @@
 
             function resolve(loadResource) {
                 loadResource = loadResource || util.getAndEncode;
+                
                 var cssText = webFontRule.cssText;
-                return Promise.all(
-                        readUrls().map(function (fontUrl) {
-                            return loadResource(fontUrl.url, fontUrl.format)
-                                .then(function (encodedFont) {
-                                    cssText = cssText.replace(util.urlAsRegex(fontUrl.url), encodedFont);
-                                });
-                        })
-                    )
-                    .then(function () {
-                        return cssText;
-                    });
+
+                var resolved = readUrls().map(function (fontUrl) {
+                    return loadResource(fontUrl.url, fontUrl.format)
+                        .then(function (encodedFont) {
+                            cssText = cssText.replace(util.urlAsRegex(fontUrl.url), encodedFont);
+                        });
+                });
+
+                return Promise.all(resolved).then(function () {
+                    return cssText;
+                });
             }
 
             return {
