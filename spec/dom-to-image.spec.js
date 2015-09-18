@@ -68,7 +68,7 @@
         it('should render text nodes', function (done) {
             loadTestPage('text/dom-node.html', 'text/style.css')
                 .then(function () {
-                    return domtoimage.toImage(domNode(), function () {});
+                    return domtoimage.toImage(domNode());
                 })
                 .then(drawImage)
                 .then(function () {
@@ -80,7 +80,7 @@
         it('should preserve content of ::before and ::after pseudo elements', function (done) {
             loadTestPage('before-after/dom-node.html', 'before-after/style.css')
                 .then(function () {
-                    return domtoimage.toImage(domNode(), function () {});
+                    return domtoimage.toImage(domNode());
                 })
                 .then(drawImage)
                 .then(function () {
@@ -123,25 +123,24 @@
             .then(done).catch(error);
         });
 
-        it.skip('should render web fonts', function (done) {
-            this.timeout(10000);
-            loadTestPage(
-                    'fonts/regression.html',
-                    'fonts/regression.css'
-                )
+        it.only('should render web fonts', function (done) {
+            loadTestPage('fonts/regression.html', 'fonts/regression.css')
                 .then(function () {
-                    domtoimage.toImage(domNode(), function (image) {
-                        drawControlImage(image);
-                        document.body.appendChild(image);
-                        console.log(image.src);
-                        //done();
-                    });
+                    return domtoimage.toImage($('#root')[0]);
                 })
-                .catch(error);
-            /*.catch(function(e){
-             console.error(e);
-             })*/
-
+                .then(makeImage)
+                .then(function (image) {
+                    return drawImage(image, $('#root')[0]);
+                })
+                .then(function (image) {
+                    // controlImage.src = image.src;
+                    // console.log(image.src);
+                    debugger;
+                    $('#test-root').append(image);
+                    return image;
+                })
+                // .then(compareToControlImage)
+                .then(done).catch(error);
         });
 
         describe('util', function () {
@@ -330,7 +329,7 @@
                     resolve(image);
                 };
                 image.src = src;
-            }).then(drawImage);
+            });
         }
 
         function drawImage(image, node) {

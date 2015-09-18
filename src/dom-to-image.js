@@ -168,6 +168,7 @@
             }
 
             function resourceUrl(fontUrl) {
+                // return fontUrl.url;
                 var baseUrl = webFontRule.parentStyleSheet.href;
                 return baseUrl ? util.resolveUrl(fontUrl.url, baseUrl) : fontUrl.url;
             }
@@ -263,7 +264,8 @@
     function processPseudoElement(nodes, element) {
         var style = global.window.getComputedStyle(nodes.original, element);
         var content = style.getPropertyValue('content');
-        if (!content || content === 'none') return nodes;
+        if (content === '' || content === 'none') return nodes;
+        console.log('content! ' + content);
 
         var className = util.uid();
 
@@ -362,8 +364,7 @@
 
     function serialize(node) {
         node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-        return escape(new XMLSerializer()
-            .serializeToString(node));
+        return escape(new XMLSerializer().serializeToString(node));
     }
 
     function asForeignObject(node) {
@@ -393,13 +394,10 @@
         return fontFaces.resolveAll(node.ownerDocument)
             .then(function (cssText) {
                 var root = document.createElement('div');
-
                 var styleNode = document.createElement('style');
-                styleNode.type = 'text/css';
                 styleNode.appendChild(document.createTextNode(cssText));
-                root.appendChild(styleNode);
-                root.appendChild(node);
-                return root;
+                node.appendChild(styleNode);
+                return node;
             });
     }
 
@@ -417,9 +415,13 @@
     function toImage(domNode, options) {
         options = options || {};
 
-        return cloneNode(domNode, options.filter)
+        return util.getStyleSheets(domNode.ownerDocument).then(function () {
+                return cloneNode(domNode, options.filter);
+            })
             .then(embedFonts)
             .then(function (node) {
+                var a = node.innerHTML;
+                // console.log(node.innerHTML);
                 return makeImage(node, domNode.scrollWidth, domNode.scrollHeight);
             });
     }
