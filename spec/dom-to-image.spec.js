@@ -218,6 +218,24 @@
                     .then(done).catch(error);
             });
 
+            it('should ignore query in font urls', function (done) {
+                loadTestPage('fonts/empty.html', 'fonts/font-face/with-query.css')
+                    .then(function () {
+                        return fontFace.readAll(global.document);
+                    })
+                    .then(function (webFonts) {
+                        return webFonts[0].resolve(
+                            mockResourceLoader({
+                                'http://fonts.com/font1.woff2': 'AAA'
+                            })
+                        );
+                    })
+                    .then(function (css) {
+                        assert.include(css, 'data:application/x-font-woff2;base64,AAA');
+                    })
+                    .then(done).catch(error);
+            });
+
             it('should find all web font rules in document', function (done) {
                 loadTestPage('fonts/empty.html', 'fonts/rules.css')
                     .then(function () {
@@ -318,7 +336,10 @@
 
             function mockResourceLoader(content) {
                 return function (url, type) {
-                    return Promise.resolve(domtoimage.impl.util.decorateDataUrl(content[url], type));
+                    if (content[url])
+                        return Promise.resolve(domtoimage.impl.util.decorateDataUrl(content[url], type));
+                    else
+                        return Promise.reject(new Error('no matching content for ' + url));
                 };
             }
         });

@@ -49,13 +49,6 @@
             };
         })();
 
-        var mimeType = {
-            'woff': 'application/x-font-woff',
-            'woff2': 'application/x-font-woff2',
-            'truetype': 'application/x-font-ttf',
-            'ttf': 'application/x-font-ttf'
-        };
-
         function getAndEncode(url, type) {
             var request = new XMLHttpRequest();
             request.open('GET', url, true);
@@ -78,11 +71,18 @@
             });
         }
 
+        var mimeType = {
+            'woff': 'application/x-font-woff',
+            'woff2': 'application/x-font-woff2',
+            'truetype': 'application/x-font-ttf',
+            'ttf': 'application/x-font-ttf'
+        };
+
         function decorateDataUrl(content, type) {
             return 'url("data:' + mimeType[type] + ';base64,' + content + '")';
         }
 
-        var fontUrl = /url\(['"]?(.*?)['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
+        var fontUrl = /url\(['"]?([^\?"]+)(?:\?.*?)?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
 
         function hasFontUrl(str) {
             return str.search(fontUrl) !== -1;
@@ -99,12 +99,12 @@
                 return null;
         }
 
-        function urlAsRegex(url) {
-            function escape(string) {
-                return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
-            }
+        function escape(string) {
+            return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
+        }
 
-            return new RegExp('url\\([\'"]?' + escape(url) + '[\'"]?\\)', 'g');
+        function fontUrlAsRegex(url) {
+            return new RegExp('url\\([\'"]?' + escape(url) + '(?:\\?.*?)?[\'"]?\\)', 'g');
         }
 
         function isDataUrl(url){
@@ -118,7 +118,7 @@
             uid: uid.next,
             hasFontUrl: hasFontUrl,
             parseFontUrl: parseFontUrl,
-            urlAsRegex: urlAsRegex,
+            fontUrlAsRegex: fontUrlAsRegex,
             decorateDataUrl: decorateDataUrl,
             isDataUrl: isDataUrl
         };
@@ -157,8 +157,6 @@
 
         function newWebFont(webFontRule) {
 
-            function newUrl() {}
-
             function readUrls() {
                 return webFontRule.style.getPropertyValue('src').split(/,\s+/)
                     .map(util.parseFontUrl)
@@ -175,7 +173,7 @@
                 var resolved = readUrls().map(function (fontUrl) {
                     return loadResource(fontUrl.url, fontUrl.format)
                         .then(function (encodedFont) {
-                            cssText = cssText.replace(util.urlAsRegex(fontUrl.url), encodedFont);
+                            cssText = cssText.replace(util.fontUrlAsRegex(fontUrl.url), encodedFont);
                         });
                 });
 
