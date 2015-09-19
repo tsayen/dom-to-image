@@ -1,6 +1,6 @@
-#root {
+#dom-node {
     border: 1px solid black;
-    padding: 1em !important;
-    width: 100px !important;
-    height: 100px !important;
+    padding: 1em;
+    width: 100px;
+    height: 100px;
 }

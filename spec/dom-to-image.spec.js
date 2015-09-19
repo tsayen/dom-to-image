@@ -122,8 +122,19 @@
                 .then(done).catch(error);
         });
 
-        it.only('should render web fonts', function (done) {
-            loadTestPage('fonts/dom-node.html', 'fonts/style.css'/*, 'fonts/control-image'*/)
+        it('should wait for stylesheet to load', function (done) {
+            loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
+                .then(renderAndCheck)
+                .then(done).catch(error);
+        });
+
+        it('should render web fonts', function (done) {
+            loadTestPage('fonts/dom-node.html', 'fonts/style.css', 'fonts/control-image')
+            .then(function (){
+                return new Promise(function(resolve){
+                    setTimeout(resolve, 1000);
+                })
+            })
                 .then(function () {
                     return domtoimage.toImage(domNode());
                 })
@@ -229,8 +240,13 @@
 
             it('should resolve relative font urls', function (done) {
                 loadTestPage('fonts/web-fonts/rules-relative.html')
+                    .then(function (){
+                        return new Promise(function(resolve){
+                            setTimeout(resolve, 1000);
+                        })
+                    })
                     .then(function () {
-                        return fontFaces.readAll(global.document);
+                        return fontFaces.readAll();
                     })
                     .then(function (webFonts) {
                         var requestedUrls = [];

@@ -132,33 +132,50 @@
         };
     })();
 
-    var loadStyles = (function () {
-        var linkLoaded = {};
+    // var loadStyles = (function () {
+    //     var linkLoaded = {};
+    //
+    //     return function () {
+    //         console.log('load styles');
+    //         var loaded = [];
+    //
+    //         function waitFor(sheet) {
+    //             console.log(sheet);
+    //             if (!linkLoaded[sheet.href]) {
+    //                 console.log('waiting');
+    //                 loaded.push(new Promise(function (resolve) {
+    //                     console.log(sheet.onload);
+    //                     sheet.onload = function () {
+    //                         linkLoaded[sheet.href] = true;
+    //                         console.log('loaded ' + sheet);
+    //                         resolve();
+    //                     };
+    //                 }));
+    //             }
+    //         }
+    //
+    //         var sheets = global.document.querySelectorAll('link[rel=stylesheet]');
+    //         for (var s = 0; s < sheets.length; s++) waitFor(sheets[s]);
+    //
+    //         return Promise.all(loaded)
+    //             .then(function () {
+    //                 return global.document.styleSheets;
+    //             });
+    //     }
+    // })();
 
-        return function () {
-            var loaded = [];
+    // var loadStyles = new Promise(function (resolve) {
+        // global.document.addEventListener('DOMContentLoaded', function () {
+        //     console.log('onload');
+        //     resolve(global.document.styleSheets);
+        // });
 
-            function waitFor(sheet) {
-                if (linkLoaded[sheet.href])
-                    loaded.push(Promise.resolve());
-                else
-                    loaded.push(new Promise(function (resolve) {
-                        sheet.addEventListener('load', function () {
-                            linkLoaded[sheet.href] = true;
-                            resolve();
-                        });
-                    }));
-            }
+        // $('link[rel=stylesheet]').load(function(){
+    //         resolve(global.document.styleSheets);
+    //     });
+    // });
 
-            var sheets = document.querySelectorAll('link[rel=stylesheet]');
-            for (var s = 0; s < sheets.length; s++) waitFor(sheets[s]);
-
-            return Promise.all(loaded)
-                .then(function () {
-                    return document.styleSheets;
-                });
-        }
-    })();
+    var loadStyles = Promise.resolve(global.document.styleSheets);
 
     var fontFaces = (function () {
 
@@ -175,6 +192,7 @@
         function getCssRules(styleSheets) {
             var cssRules = [];
             for (var s = 0; s < styleSheets.length; s++) {
+                // console.log(styleSheets[s].cssRules);
                 var rules = styleSheets[s].cssRules;
                 for (var r = 0; r < rules.length; r++)
                     cssRules.push(rules[r]);
@@ -183,7 +201,7 @@
         }
 
         function readAll() {
-            return loadStyles()
+            return loadStyles
                 .then(getCssRules)
                 .then(selectWebFontRules)
                 .then(function (rules) {
@@ -228,7 +246,7 @@
             };
         }
 
-        function resolveAll(document) {
+        function resolveAll() {
             return readAll(document)
                 .then(function (webFonts) {
                     return Promise.all(
@@ -424,7 +442,7 @@
     }
 
     function embedFonts(node) {
-        return fontFaces.resolveAll(node.ownerDocument)
+        return fontFaces.resolveAll()
             .then(function (cssText) {
                 var root = document.createElement('div');
                 var styleNode = document.createElement('style');
@@ -448,7 +466,7 @@
     function toImage(domNode, options) {
         options = options || {};
 
-        return loadStyles()
+        return loadStyles
             .then(function () {
                 return cloneNode(domNode, options.filter);
             })
