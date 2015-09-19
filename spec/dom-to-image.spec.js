@@ -122,12 +122,12 @@
                 .then(done).catch(error);
         });
 
-        it('should render web fonts', function (done) {
-            loadTestPage('fonts/dom-node.html', 'fonts/style.css', 'fonts/control-image')
+        it.only('should render web fonts', function (done) {
+            loadTestPage('fonts/dom-node.html', 'fonts/style.css'/*, 'fonts/control-image'*/)
                 .then(function () {
-                    return domtoimage.toDataUrl(domNode());
+                    return domtoimage.toImage(domNode());
                 })
-                .then(makeImage)
+                // .then(makeImage)
                 .then(drawImage)
                 .then(function (image) {
                     debugger;
@@ -278,8 +278,8 @@
                     $('#style').append(document.createTextNode(css));
                 });
             }).then(function () {
-                if (controlImage) return getResource(controlImage).then(function (css) {
-                    $('#control-image').attr('src', css);
+                if (controlImage) return getResource(controlImage).then(function (image) {
+                    $('#control-image').attr('src', image);
                 });
             });
         }
