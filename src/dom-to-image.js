@@ -3,6 +3,30 @@
 
     var util = (function () {
 
+        function toBlob(canvas) {
+            return new Promise(function (resolve) {
+                var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
+                var length = binaryString.length;
+                var binaryArray = new Uint8Array(length);
+
+                for (var i = 0; i < length; i++)
+                    binaryArray[i] = binaryString.charCodeAt(i);
+
+                resolve(new Blob([binaryArray], {
+                    type: 'image/png'
+                }));
+            });
+        }
+
+        function canvasToBlob(canvas) {
+            if (canvas.toBlob)
+                return new Promise(function (resolve) {
+                    canvas.toBlob(resolve);
+                });
+
+            return toBlob(canvas);
+        }
+
         function resolveUrl(url, baseUrl) {
             var doc = global.document.implementation.createHTMLDocument();
             var base = doc.createElement('base');
@@ -12,24 +36,6 @@
             base.href = baseUrl;
             a.href = url;
             return a.href;
-        }
-
-        function getStyleSheets(document) {
-            var sheets = document.querySelectorAll('link[rel=stylesheet]');
-            var loaded = [];
-
-            function add(sheet) {
-                loaded.push(new Promise(function (resolve) {
-                    sheet.onload = resolve;
-                }));
-            }
-
-            for (var s = 0; s < sheets.length; s++) add(sheets[s]);
-
-            return Promise.all(loaded)
-                .then(function () {
-                    return document.styleSheets;
-                });
         }
 
         var uid = (function () {
@@ -114,8 +120,8 @@
         }
 
         return {
+            canvasToBlob: canvasToBlob,
             resolveUrl: resolveUrl,
-            getStyleSheets: getStyleSheets,
             getAndEncode: getAndEncode,
             uid: uid.next,
             hasFontUrl: hasFontUrl,
@@ -124,6 +130,34 @@
             decorateDataUrl: decorateDataUrl,
             isDataUrl: isDataUrl
         };
+    })();
+
+    var loadStyles = (function () {
+        var linkLoaded = {};
+
+        return function () {
+            var loaded = [];
+
+            function waitFor(sheet) {
+                if (linkLoaded[sheet.href])
+                    loaded.push(Promise.resolve());
+                else
+                    loaded.push(new Promise(function (resolve) {
+                        sheet.addEventListener('load', function () {
+                            linkLoaded[sheet.href] = true;
+                            resolve();
+                        });
+                    }));
+            }
+
+            var sheets = document.querySelectorAll('link[rel=stylesheet]');
+            for (var s = 0; s < sheets.length; s++) waitFor(sheets[s]);
+
+            return Promise.all(loaded)
+                .then(function () {
+                    return document.styleSheets;
+                });
+        }
     })();
 
     var fontFaces = (function () {
@@ -148,8 +182,8 @@
             return cssRules;
         }
 
-        function readAll(document) {
-            return util.getStyleSheets(document)
+        function readAll() {
+            return loadStyles()
                 .then(getCssRules)
                 .then(selectWebFontRules)
                 .then(function (rules) {
@@ -168,7 +202,6 @@
             }
 
             function resourceUrl(fontUrl) {
-                // return fontUrl.url;
                 var baseUrl = webFontRule.parentStyleSheet.href;
                 return baseUrl ? util.resolveUrl(fontUrl.url, baseUrl) : fontUrl.url;
             }
@@ -240,7 +273,8 @@
     }
 
     function formatCssText(style) {
-        return style.cssText + ' content:' + style.getPropertyValue('content') + ';';
+        var content = style.getPropertyValue('content');
+        return style.cssText + ' content: ' + content + ';';
     }
 
     function formatCssProperties(style) {
@@ -265,7 +299,6 @@
         var style = global.window.getComputedStyle(nodes.original, element);
         var content = style.getPropertyValue('content');
         if (content === '' || content === 'none') return nodes;
-        console.log('content! ' + content);
 
         var className = util.uid();
 
@@ -415,13 +448,12 @@
     function toImage(domNode, options) {
         options = options || {};
 
-        return util.getStyleSheets(domNode.ownerDocument).then(function () {
+        return loadStyles()
+            .then(function () {
                 return cloneNode(domNode, options.filter);
             })
             .then(embedFonts)
             .then(function (node) {
-                var a = node.innerHTML;
-                // console.log(node.innerHTML);
                 return makeImage(node, domNode.scrollWidth, domNode.scrollHeight);
             });
     }
@@ -435,25 +467,7 @@
 
     function toBlob(domNode, options) {
         return drawOffScreen(domNode, options)
-            .then(function (canvas) {
-                if (canvas.toBlob)
-                    return new Promise(function (resolve) {
-                        canvas.toBlob(resolve);
-                    });
-                /* canvas.toBlob() method is not available in Chrome */
-                return (function (canvas) {
-                    var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
-                    var binaryArray = new Uint8Array(binaryString.length);
-
-                    for (var i = 0; i < binaryString.length; i++) {
-                        binaryArray[i] = binaryString.charCodeAt(i);
-                    }
-
-                    return new Blob([binaryArray], {
-                        type: 'image/png'
-                    });
-                })(canvas);
-            });
+            .then(util.canvasToBlob);
     }
 
     global.domtoimage = {

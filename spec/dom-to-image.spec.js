@@ -123,23 +123,13 @@
             .then(done).catch(error);
         });
 
-        it.only('should render web fonts', function (done) {
+        it('should render web fonts', function (done) {
             loadTestPage('fonts/regression.html', 'fonts/regression.css')
                 .then(function () {
-                    return domtoimage.toImage($('#root')[0]);
+                    return domtoimage.toImage(domNode());
                 })
-                .then(makeImage)
-                .then(function (image) {
-                    return drawImage(image, $('#root')[0]);
-                })
-                .then(function (image) {
-                    // controlImage.src = image.src;
-                    // console.log(image.src);
-                    debugger;
-                    $('#test-root').append(image);
-                    return image;
-                })
-                // .then(compareToControlImage)
+                .then(drawImage)
+                .then(compareToControlImage)
                 .then(done).catch(error);
         });
 
