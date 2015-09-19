@@ -119,16 +119,20 @@
                 .then(makeImage)
                 .then(drawImage)
                 .then(compareToControlImage)
-
-            .then(done).catch(error);
+                .then(done).catch(error);
         });
 
         it('should render web fonts', function (done) {
-            loadTestPage('fonts/regression.html', 'fonts/regression.css')
+            loadTestPage('fonts/dom-node.html', 'fonts/style.css', 'fonts/control-image')
                 .then(function () {
-                    return domtoimage.toImage(domNode());
+                    return domtoimage.toDataUrl(domNode());
                 })
+                .then(makeImage)
                 .then(drawImage)
+                .then(function (image) {
+                    debugger;
+                    return image;
+                })
                 .then(compareToControlImage)
                 .then(done).catch(error);
         });
@@ -137,9 +141,9 @@
 
             it('should get and encode resource', function (done) {
                 var getAndEncode = domtoimage.impl.util.getAndEncode;
-                getResource('fonts/fontawesome.base64')
+                getResource('util/fontawesome.base64')
                     .then(function (testResource) {
-                        return getAndEncode(BASE_URL + 'fonts/fontawesome.woff2', 'woff2')
+                        return getAndEncode(BASE_URL + 'util/fontawesome.woff2', 'woff2')
                             .then(function (resource) {
                                 assert.equal(resource, testResource);
                             });
@@ -158,7 +162,7 @@
             var fontFaces = domtoimage.impl.fontFaces;
 
             it('should read non-local font faces', function (done) {
-                loadTestPage('fonts/empty.html', 'fonts/font-face/rules.css')
+                loadTestPage('fonts/web-fonts/empty.html', 'fonts/web-fonts/rules.css')
                     .then(function () {
                         return fontFaces.readAll(global.document);
                     })
@@ -169,7 +173,7 @@
             });
 
             it('should resolve font face urls', function (done) {
-                loadTestPage('fonts/empty.html', 'fonts/font-face/remote.css')
+                loadTestPage('fonts/web-fonts/empty.html', 'fonts/web-fonts/remote.css')
                     .then(function () {
                         return fontFaces.readAll(global.document);
                     })
@@ -188,7 +192,7 @@
             });
 
             it('should not resolve data urls', function (done) {
-                loadTestPage('fonts/empty.html', 'fonts/font-face/embedded.css')
+                loadTestPage('fonts/web-fonts/empty.html', 'fonts/web-fonts/embedded.css')
                     .then(function () {
                         return fontFaces.readAll(global.document);
                     })
@@ -206,7 +210,7 @@
             });
 
             it('should ignore query in font urls', function (done) {
-                loadTestPage('fonts/empty.html', 'fonts/font-face/with-query.css')
+                loadTestPage('fonts/web-fonts/empty.html', 'fonts/web-fonts/with-query.css')
                     .then(function () {
                         return fontFaces.readAll(global.document);
                     })
@@ -224,7 +228,7 @@
             });
 
             it('should resolve relative font urls', function (done) {
-                loadTestPage('fonts/rules-relative.html')
+                loadTestPage('fonts/web-fonts/rules-relative.html')
                     .then(function () {
                         return fontFaces.readAll(global.document);
                     })
@@ -244,8 +248,8 @@
                         });
                     })
                     .then(function (urls) {
-                        assert.include(urls[0], '/base/spec/resources/font1.woff');
-                        assert.include(urls[1], '/base/spec/resources/fonts/font2.woff2');
+                        assert.include(urls[0], '/base/spec/resources/fonts/font1.woff');
+                        assert.include(urls[1], '/base/spec/resources/fonts/web-fonts/font2.woff2');
                     })
                     .then(done).catch(error);
             });
