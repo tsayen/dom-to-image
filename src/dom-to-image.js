@@ -263,7 +263,7 @@
 
     function getStyleAsTextNode(className, element, style) {
         var selector = '.' + className + ':' + element;
-        var cssText = /*style.cssText ? formatCssText(style) : */formatCssProperties(style);
+        var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
         return global.document.createTextNode(selector + '{' + cssText + '}');
     }
 
@@ -434,6 +434,8 @@
         return drawOffScreen(domNode, options)
             .then(function (canvas) {
                 return canvas.toDataURL();
+            }).catch(function(e){
+                console.log(e);
             });
     }
 

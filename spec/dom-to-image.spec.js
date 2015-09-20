@@ -137,21 +137,30 @@
                     })
                 })
                 .then(function () {
-                    return domtoimage.toDataUrl(domNode());
+                    return domtoimage.toImage(domNode());
+                })
+                .then(function (url) {
+                    return new Promise(function (resolve) {
+                        setTimeout(function(){
+                            resolve(url);
+                        }, 1000);
+                    })
                 })
                 .then(function (url) {
                     // console.log(url);
                     return url;
                 })
-                .then(makeImage)
-                .then(drawImage)
+                // .then(makeImage)
                 .then(function (image) {
                     return new Promise(function (resolve) {
                         setTimeout(function () {
+                            $('#test-root').append(image);
+                            debugger;
                             resolve(image);
                         }, 1000);
                     })
                 })
+                .then(drawImage)
                 .then(compareToControlImage)
                 .then(done).catch(error);
         });
