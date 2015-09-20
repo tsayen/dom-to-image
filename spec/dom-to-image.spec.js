@@ -122,7 +122,7 @@
                 .then(done).catch(error);
         });
 
-        it('should work with external stylesheet', function (done) {
+        it('should render with external stylesheet', function (done) {
             loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
                 .then(renderAndCheck)
                 .then(done).catch(error);
@@ -137,13 +137,13 @@
                     })
                 })
                 .then(function () {
-                    return domtoimage.toImage(domNode());
+                    return domtoimage.toDataUrl(domNode());
                 })
-                .then(function (image) {
-                    console.log(image);
-                    return image;
+                .then(function (url) {
+                    // console.log(url);
+                    return url;
                 })
-                // .then(makeImage)
+                .then(makeImage)
                 .then(drawImage)
                 .then(function (image) {
                     return new Promise(function (resolve) {
