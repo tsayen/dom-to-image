@@ -132,51 +132,6 @@
         };
     })();
 
-    // var loadStyles = (function () {
-    //     var linkLoaded = {};
-    //
-    //     return function () {
-    //         console.log('load styles');
-    //         var loaded = [];
-    //
-    //         function waitFor(sheet) {
-    //             console.log(sheet);
-    //             if (!linkLoaded[sheet.href]) {
-    //                 console.log('waiting');
-    //                 loaded.push(new Promise(function (resolve) {
-    //                     console.log(sheet.onload);
-    //                     sheet.onload = function () {
-    //                         linkLoaded[sheet.href] = true;
-    //                         console.log('loaded ' + sheet);
-    //                         resolve();
-    //                     };
-    //                 }));
-    //             }
-    //         }
-    //
-    //         var sheets = global.document.querySelectorAll('link[rel=stylesheet]');
-    //         for (var s = 0; s < sheets.length; s++) waitFor(sheets[s]);
-    //
-    //         return Promise.all(loaded)
-    //             .then(function () {
-    //                 return global.document.styleSheets;
-    //             });
-    //     }
-    // })();
-
-    // var loadStyles = new Promise(function (resolve) {
-        // global.document.addEventListener('DOMContentLoaded', function () {
-        //     console.log('onload');
-        //     resolve(global.document.styleSheets);
-        // });
-
-        // $('link[rel=stylesheet]').load(function(){
-    //         resolve(global.document.styleSheets);
-    //     });
-    // });
-
-    var loadStyles = Promise.resolve(global.document.styleSheets);
-
     var fontFaces = (function () {
 
         function selectWebFontRules(cssRules) {
@@ -192,7 +147,6 @@
         function getCssRules(styleSheets) {
             var cssRules = [];
             for (var s = 0; s < styleSheets.length; s++) {
-                // console.log(styleSheets[s].cssRules);
                 var rules = styleSheets[s].cssRules;
                 for (var r = 0; r < rules.length; r++)
                     cssRules.push(rules[r]);
@@ -201,7 +155,7 @@
         }
 
         function readAll() {
-            return loadStyles
+            return Promise.resolve(document.styleSheets)
                 .then(getCssRules)
                 .then(selectWebFontRules)
                 .then(function (rules) {
@@ -309,7 +263,7 @@
 
     function getStyleAsTextNode(className, element, style) {
         var selector = '.' + className + ':' + element;
-        var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
+        var cssText = /*style.cssText ? formatCssText(style) : */formatCssProperties(style);
         return global.document.createTextNode(selector + '{' + cssText + '}');
     }
 
@@ -466,7 +420,7 @@
     function toImage(domNode, options) {
         options = options || {};
 
-        return loadStyles
+        return Promise.resolve()
             .then(function () {
                 return cloneNode(domNode, options.filter);
             })

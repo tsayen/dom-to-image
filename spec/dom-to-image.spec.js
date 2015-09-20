@@ -122,27 +122,35 @@
                 .then(done).catch(error);
         });
 
-        it('should wait for stylesheet to load', function (done) {
+        it('should work with external stylesheet', function (done) {
             loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
                 .then(renderAndCheck)
                 .then(done).catch(error);
         });
 
-        it('should render web fonts', function (done) {
+        it.only('should render web fonts', function (done) {
+            this.timeout(10000);
             loadTestPage('fonts/dom-node.html', 'fonts/style.css', 'fonts/control-image')
-            .then(function (){
-                return new Promise(function(resolve){
-                    setTimeout(resolve, 1000);
+                .then(function () {
+                    return new Promise(function (resolve) {
+                        setTimeout(resolve, 1000);
+                    })
                 })
-            })
                 .then(function () {
                     return domtoimage.toImage(domNode());
+                })
+                .then(function (image) {
+                    console.log(image);
+                    return image;
                 })
                 // .then(makeImage)
                 .then(drawImage)
                 .then(function (image) {
-                    debugger;
-                    return image;
+                    return new Promise(function (resolve) {
+                        setTimeout(function () {
+                            resolve(image);
+                        }, 1000);
+                    })
                 })
                 .then(compareToControlImage)
                 .then(done).catch(error);
@@ -240,8 +248,8 @@
 
             it('should resolve relative font urls', function (done) {
                 loadTestPage('fonts/web-fonts/rules-relative.html')
-                    .then(function (){
-                        return new Promise(function(resolve){
+                    .then(function () {
+                        return new Promise(function (resolve) {
                             setTimeout(resolve, 1000);
                         })
                     })
@@ -285,19 +293,24 @@
         }
 
         function loadTestPage(html, css, controlImage) {
-            return loadPage().then(function () {
-                return getResource(html).then(function (html) {
-                    $('#root').html(html);
+            return loadPage()
+                .then(function () {
+                    return getResource(html).then(function (html) {
+                        $('#root').html(html);
+                    });
+                })
+                .then(function () {
+                    if (css)
+                        return getResource(css).then(function (css) {
+                            $('#style').append(document.createTextNode(css));
+                        });
+                })
+                .then(function () {
+                    if (controlImage)
+                        return getResource(controlImage).then(function (image) {
+                            $('#control-image').attr('src', image);
+                        });
                 });
-            }).then(function () {
-                if (css) return getResource(css).then(function (css) {
-                    $('#style').append(document.createTextNode(css));
-                });
-            }).then(function () {
-                if (controlImage) return getResource(controlImage).then(function (image) {
-                    $('#control-image').attr('src', image);
-                });
-            });
         }
 
         function loadPage() {
