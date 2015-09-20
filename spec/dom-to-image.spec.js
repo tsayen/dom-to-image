@@ -128,40 +128,16 @@
                 .then(done).catch(error);
         });
 
-        it.only('should render web fonts', function (done) {
-            this.timeout(10000);
-            loadTestPage('fonts/dom-node.html', 'fonts/style.css', 'fonts/control-image')
+        it('should render web fonts', function (done) {
+            loadTestPage('fonts/dom-node.html', 'fonts/style.css')
                 .then(function () {
-                    return new Promise(function (resolve) {
-                        setTimeout(resolve, 1000);
-                    })
+                    return domtoimage.toDataUrl(domNode());
                 })
-                .then(function () {
-                    return domtoimage.toImage(domNode());
-                })
-                .then(function (url) {
-                    return new Promise(function (resolve) {
-                        setTimeout(function(){
-                            resolve(url);
-                        }, 1000);
-                    })
-                })
-                .then(function (url) {
-                    // console.log(url);
-                    return url;
-                })
-                // .then(makeImage)
-                .then(function (image) {
-                    return new Promise(function (resolve) {
-                        setTimeout(function () {
-                            $('#test-root').append(image);
-                            debugger;
-                            resolve(image);
-                        }, 1000);
-                    })
-                })
+                .then(makeImage)
                 .then(drawImage)
-                .then(compareToControlImage)
+                .then(function () {
+                    assertTextRendered(['o']);
+                })
                 .then(done).catch(error);
         });
 
@@ -368,8 +344,13 @@
             node = node || domNode();
             canvas().height = node.offsetHeight.toString();
             canvas().width = node.offsetWidth.toString();
+            canvas().getContext('2d').imageSmoothingEnabled = false;
             canvas().getContext('2d').drawImage(image, 0, 0);
-            return image;
+            return new Promise(function(resolve) {
+                setTimeout(function () {
+                    resolve(image);
+                }, 1000);
+            });
         }
 
         function domNodeToDataUrl(node) {

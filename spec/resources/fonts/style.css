@@ -1,7 +1,8 @@
 #root {
-    border: 1px solid black;
-    padding: 1em;
-    width: 100px;
+    padding: 16px;
+    width: 100px !important;
     height: 100px !important;
-    font-size: 2em;
+    font-size: 60px;
+    border: none !important;
+    background-color: white;
 }

@@ -400,14 +400,21 @@
             .then(function (cssText) {
                 var root = document.createElement('div');
                 var styleNode = document.createElement('style');
-                styleNode.appendChild(document.createTextNode(cssText));
                 node.appendChild(styleNode);
+                styleNode.appendChild(document.createTextNode(cssText));
                 return node;
             });
     }
 
     function drawOffScreen(domNode, options) {
         return toImage(domNode, options)
+            .then(function (image) {
+                return new Promise(function (resolve) {
+                    setTimeout(function () {
+                        resolve(image);
+                    }, 10);
+                })
+            })
             .then(function (image) {
                 var canvas = document.createElement('canvas');
                 canvas.width = domNode.scrollWidth;
@@ -434,8 +441,6 @@
         return drawOffScreen(domNode, options)
             .then(function (canvas) {
                 return canvas.toDataURL();
-            }).catch(function(e){
-                console.log(e);
             });
     }
 
