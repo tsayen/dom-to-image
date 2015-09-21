@@ -129,6 +129,13 @@
             };
         }
 
+        function asArray(arrayLike) {
+            var array = [];
+            var length = arrayLike.length;
+            for (var i = 0; i < length; i++) array.push(arrayLike[i]);
+            return array;
+        }
+
         return {
             canvasToBlob: canvasToBlob,
             resolveUrl: resolveUrl,
@@ -139,7 +146,8 @@
             fontUrlAsRegex: fontUrlAsRegex,
             decorateDataUrl: decorateDataUrl,
             isDataUrl: isDataUrl,
-            delay: delay
+            delay: delay,
+            asArray: asArray
         };
     })();
 
@@ -157,16 +165,14 @@
 
         function getCssRules(styleSheets) {
             var cssRules = [];
-            for (var s = 0; s < styleSheets.length; s++) {
-                var rules = styleSheets[s].cssRules;
-                for (var r = 0; r < rules.length; r++)
-                    cssRules.push(rules[r]);
-            }
+            styleSheets.forEach(function (sheet) {
+                util.asArray(sheet.cssRules).forEach(cssRules.push.bind(cssRules));
+            });
             return cssRules;
         }
 
         function readAll() {
-            return Promise.resolve(document.styleSheets)
+            return Promise.resolve(util.asArray(document.styleSheets))
                 .then(getCssRules)
                 .then(selectWebFontRules)
                 .then(function (rules) {

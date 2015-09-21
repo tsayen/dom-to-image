@@ -222,7 +222,6 @@
                         var sources = webFonts.map(function (webFont) {
                             return webFont.src();
                         });
-
                         assertSomeIncludesAll(sources, ['http://fonts.com/font1.woff', 'http://fonts.com/font1.woff2']);
                         assertSomeIncludesAll(sources, ['http://fonts.com/font2.ttf?v1.1.3']);
                     })
@@ -390,7 +389,7 @@
         function assertIncludes(haystack, needles) {
             needles.forEach(function (needle) {
                 assert.include(haystack, needle);
-            })
+            });
         }
 
         function assertSomeIncludesAll(haystacks, needles) {
