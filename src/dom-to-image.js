@@ -119,6 +119,16 @@
             return url.search(/^(data:)/) !== -1;
         }
 
+        function delay(ms) {
+            return function (arg) {
+                return new Promise(function (resolve) {
+                    setTimeout(function () {
+                        resolve(arg);
+                    }, ms);
+                });
+            };
+        }
+
         return {
             canvasToBlob: canvasToBlob,
             resolveUrl: resolveUrl,
@@ -128,7 +138,8 @@
             parseFontUrl: parseFontUrl,
             fontUrlAsRegex: fontUrlAsRegex,
             decorateDataUrl: decorateDataUrl,
-            isDataUrl: isDataUrl
+            isDataUrl: isDataUrl,
+            delay: delay
         };
     })();
 
@@ -408,13 +419,7 @@
 
     function drawOffScreen(domNode, options) {
         return toImage(domNode, options)
-            .then(function (image) {
-                return new Promise(function (resolve) {
-                    setTimeout(function () {
-                        resolve(image);
-                    }, 10);
-                })
-            })
+            .then(util.delay(100))
             .then(function (image) {
                 var canvas = document.createElement('canvas');
                 canvas.width = domNode.scrollWidth;

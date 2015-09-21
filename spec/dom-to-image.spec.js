@@ -7,6 +7,8 @@
     var Promise = global.Promise;
     var ocr = global.OCRAD;
 
+    var delay = domtoimage.impl.util.delay;
+
     var BASE_URL = '/base/spec/resources/';
 
     describe('domtoimage', function () {
@@ -124,12 +126,15 @@
 
         it('should render with external stylesheet', function (done) {
             loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
+                .then(delay(500))
                 .then(renderAndCheck)
                 .then(done).catch(error);
         });
 
         it('should render web fonts', function (done) {
+            this.timeout(10000);
             loadTestPage('fonts/dom-node.html', 'fonts/style.css')
+                .then(delay(1000))
                 .then(function () {
                     return domtoimage.toDataUrl(domNode());
                 })
@@ -346,11 +351,7 @@
             canvas().width = node.offsetWidth.toString();
             canvas().getContext('2d').imageSmoothingEnabled = false;
             canvas().getContext('2d').drawImage(image, 0, 0);
-            return new Promise(function(resolve) {
-                setTimeout(function () {
-                    resolve(image);
-                }, 1000);
-            });
+            return image;
         }
 
         function domNodeToDataUrl(node) {
