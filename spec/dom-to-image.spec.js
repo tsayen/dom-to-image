@@ -279,7 +279,7 @@
                     .then(function () {
                         return new Promise(function (resolve) {
                             setTimeout(resolve, 1000);
-                        })
+                        });
                     })
                     .then(function () {
                         return fontFaces.readAll();
