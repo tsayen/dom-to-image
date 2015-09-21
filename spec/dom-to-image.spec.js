@@ -312,10 +312,6 @@
             }
         });
 
-        function error(e) {
-            console.error(e.toString() + '\n' + e.stack);
-        }
-
         function loadTestPage(html, css, controlImage) {
             return loadPage()
                 .then(function () {
@@ -352,6 +348,18 @@
             if (root) root.remove();
         }
 
+        function domNode() {
+            return $('#dom-node')[0];
+        }
+
+        function controlImage() {
+            return $('#control-image')[0];
+        }
+
+        function canvas() {
+            return $('#canvas')[0];
+        }
+
         function getResource(fileName) {
             var url = BASE_URL + fileName;
             var request = new XMLHttpRequest();
@@ -369,16 +377,8 @@
             });
         }
 
-        function domNode() {
-            return $('#dom-node')[0];
-        }
-
-        function controlImage() {
-            return $('#control-image')[0];
-        }
-
-        function canvas() {
-            return $('#canvas')[0];
+        function error(e) {
+            console.error(e.toString() + '\n' + e.stack);
         }
     });
 })(this);
