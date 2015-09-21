@@ -19,131 +19,169 @@
             assert.ok(domtoimage);
         });
 
-        it('should render simple node', function (done) {
-            loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
-                .then(renderAndCheck)
-                .then(done).catch(error);
-        });
+        describe('regression', function () {
 
-        it('should render bigger node', function (done) {
-            loadTestPage('bigger/dom-node.html', 'bigger/style.css', 'bigger/control-image')
-                .then(function () {
-                    var parent = $('#root');
-                    var child = $('.dom-child-node');
-                    for (var i = 0; i < 10; i++) {
-                        parent.append(child.clone());
-                    }
-                })
-                .then(renderAndCheck)
-                .then(done).catch(error);
-        });
+            it('should render small node', function (done) {
+                loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
+                    .then(renderAndCheck)
+                    .then(done).catch(error);
+            });
 
-        it('should handle "#" in colors and attributes', function (done) {
-            loadTestPage('hash/dom-node.html', 'hash/style.css', 'simple/control-image')
-                .then(renderAndCheck)
-                .then(done).catch(error);
-        });
+            it('should render bigger node', function (done) {
+                loadTestPage('bigger/dom-node.html', 'bigger/style.css', 'bigger/control-image')
+                    .then(function () {
+                        var parent = $('#root');
+                        var child = $('.dom-child-node');
+                        for (var i = 0; i < 10; i++) {
+                            parent.append(child.clone());
+                        }
+                    })
+                    .then(renderAndCheck)
+                    .then(done).catch(error);
+            });
 
-        it('should render nested svg with broken namespace', function (done) {
-            loadTestPage('svg/dom-node.html', 'svg/style.css', 'svg/control-image')
-                .then(renderAndCheck)
-                .then(done).catch(error);
-        });
+            it('should handle "#" in colors and attributes', function (done) {
+                loadTestPage('hash/dom-node.html', 'hash/style.css', 'simple/control-image')
+                    .then(renderAndCheck)
+                    .then(done).catch(error);
+            });
 
-        it('should render correctly when the node is bigger than container', function (done) {
-            var domNode;
-            loadTestPage('scroll/dom-node.html', 'scroll/style.css', 'scroll/control-image')
-                .then(function () {
-                    domNode = $('#root')[0];
-                })
-                .then(function () {
-                    return domNodeToDataUrl(domNode);
-                })
-                .then(makeImage)
-                .then(function (image) {
-                    return drawImage(image, domNode);
-                })
-                .then(compareToControlImage)
-                .then(done).catch(error);
-        });
+            it('should render nested svg with broken namespace', function (done) {
+                loadTestPage('svg/dom-node.html', 'svg/style.css', 'svg/control-image')
+                    .then(renderAndCheck)
+                    .then(done).catch(error);
+            });
 
-        it('should render text nodes', function (done) {
-            loadTestPage('text/dom-node.html', 'text/style.css')
-                .then(function () {
-                    return domtoimage.toImage(domNode());
-                })
-                .then(drawImage)
-                .then(function () {
-                    assertTextRendered(['SOME TEXT', 'SOME MORE TEXT']);
-                })
-                .then(done).catch(error);
-        });
+            it('should render correctly when the node is bigger than container', function (done) {
+                var domNode;
+                loadTestPage('scroll/dom-node.html', 'scroll/style.css', 'scroll/control-image')
+                    .then(function () {
+                        domNode = $('#root')[0];
+                    })
+                    .then(function () {
+                        return domNodeToDataUrl(domNode);
+                    })
+                    .then(makeImage)
+                    .then(function (image) {
+                        return drawImage(image, domNode);
+                    })
+                    .then(compareToControlImage)
+                    .then(done).catch(error);
+            });
 
-        it('should preserve content of ::before and ::after pseudo elements', function (done) {
-            loadTestPage('before-after/dom-node.html', 'before-after/style.css')
-                .then(function () {
-                    return domtoimage.toImage(domNode());
-                })
-                .then(drawImage)
-                .then(function () {
-                    assertTextRendered(["ONLY-BEFORE", "BOTH-BEFORE", ]);
-                    assertTextRendered(["ONLY-AFTER", "BOTH-AFTER"]);
-                })
-                .then(done).catch(error);
-        });
+            it('should render text nodes', function (done) {
+                loadTestPage('text/dom-node.html', 'text/style.css')
+                    .then(function () {
+                        return domtoimage.toImage(domNode());
+                    })
+                    .then(drawImage)
+                    .then(assertTextRendered(['SOME TEXT', 'SOME MORE TEXT']))
+                    .then(done).catch(error);
+            });
 
-        it('should render to blob', function (done) {
-            loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
-                .then(function () {
-                    return domtoimage.toBlob(domNode());
-                })
-                .then(function (blob) {
-                    return global.URL.createObjectURL(blob);
-                })
-                .then(makeImage)
-                .then(drawImage)
-                .then(compareToControlImage)
-                .then(done).catch(error);
-        });
+            it('should preserve content of ::before and ::after pseudo elements', function (done) {
+                loadTestPage('before-after/dom-node.html', 'before-after/style.css')
+                    .then(domNodeToDataUrl)
+                    .then(makeImage)
+                    .then(drawImage)
+                    .then(assertTextRendered(["ONLY-BEFORE", "BOTH-BEFORE", ]))
+                    .then(assertTextRendered(["ONLY-AFTER", "BOTH-AFTER"]))
+                    .then(done).catch(error);
+            });
 
-        it('should use node filter', function (done) {
-            function filter(node) {
-                if (node.classList) return !node.classList.contains('omit');
-                return true;
+            it('should render to blob', function (done) {
+                loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
+                    .then(function () {
+                        return domtoimage.toBlob(domNode());
+                    })
+                    .then(function (blob) {
+                        return global.URL.createObjectURL(blob);
+                    })
+                    .then(makeImage)
+                    .then(drawImage)
+                    .then(compareToControlImage)
+                    .then(done).catch(error);
+            });
+
+            it('should use node filter', function (done) {
+                function filter(node) {
+                    if (node.classList) return !node.classList.contains('omit');
+                    return true;
+                }
+
+                loadTestPage('filter/dom-node.html', 'filter/style.css', 'filter/control-image')
+                    .then(function () {
+                        return domtoimage.toDataUrl(domNode(), {
+                            filter: filter
+                        });
+                    })
+                    .then(makeImage)
+                    .then(drawImage)
+                    .then(compareToControlImage)
+                    .then(done).catch(error);
+            });
+
+            it('should render with external stylesheet', function (done) {
+                loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
+                    .then(delay(1000))
+                    .then(renderAndCheck)
+                    .then(done).catch(error);
+            });
+
+            it('should render web fonts', function (done) {
+                this.timeout(10000);
+                loadTestPage('fonts/dom-node.html', 'fonts/style.css')
+                    .then(delay(1000))
+                    .then(domNodeToDataUrl)
+                    .then(makeImage)
+                    .then(drawImage)
+                    .then(assertTextRendered(['o']))
+                    .then(done).catch(error);
+            });
+
+            function compareToControlImage(image) {
+                assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
             }
 
-            loadTestPage('filter/dom-node.html', 'filter/style.css', 'filter/control-image')
-                .then(function () {
-                    return domtoimage.toDataUrl(domNode(), {
-                        filter: filter
+            function renderAndCheck() {
+                return Promise.resolve()
+                    .then(domNodeToDataUrl)
+                    .then(makeImage)
+                    .then(compareToControlImage);
+            }
+
+            function assertTextRendered(lines) {
+                return function () {
+                    var renderedText = ocr(canvas());
+                    lines.forEach(function (line) {
+                        assert.include(renderedText, line);
                     });
-                })
-                .then(makeImage)
-                .then(drawImage)
-                .then(compareToControlImage)
-                .then(done).catch(error);
-        });
+                };
+            }
 
-        it('should render with external stylesheet', function (done) {
-            loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
-                .then(delay(500))
-                .then(renderAndCheck)
-                .then(done).catch(error);
-        });
+            function makeImage(src) {
+                return new Promise(function (resolve) {
+                    var image = new Image();
+                    image.onload = function () {
+                        resolve(image);
+                    };
+                    image.src = src;
+                });
+            }
 
-        it('should render web fonts', function (done) {
-            this.timeout(10000);
-            loadTestPage('fonts/dom-node.html', 'fonts/style.css')
-                .then(delay(1000))
-                .then(function () {
-                    return domtoimage.toDataUrl(domNode());
-                })
-                .then(makeImage)
-                .then(drawImage)
-                .then(function () {
-                    assertTextRendered(['o']);
-                })
-                .then(done).catch(error);
+            function drawImage(image, node) {
+                node = node || domNode();
+                canvas().height = node.offsetHeight.toString();
+                canvas().width = node.offsetWidth.toString();
+                canvas().getContext('2d').imageSmoothingEnabled = false;
+                canvas().getContext('2d').drawImage(image, 0, 0);
+                return image;
+            }
+
+
+            function domNodeToDataUrl(node) {
+                return domtoimage.toDataUrl(node || domNode());
+            }
         });
 
         describe('util', function () {
@@ -173,7 +211,7 @@
             it('should read non-local font faces', function (done) {
                 loadTestPage('fonts/web-fonts/empty.html', 'fonts/web-fonts/rules.css')
                     .then(function () {
-                        return fontFaces.readAll(global.document);
+                        return fontFaces.readAll();
                     })
                     .then(function (webFonts) {
                         assert.equal(webFonts.length, 3);
@@ -184,7 +222,7 @@
             it('should resolve font face urls', function (done) {
                 loadTestPage('fonts/web-fonts/empty.html', 'fonts/web-fonts/remote.css')
                     .then(function () {
-                        return fontFaces.readAll(global.document);
+                        return fontFaces.readAll();
                     })
                     .then(function (webFonts) {
                         return webFonts[0].resolve(mockResourceLoader({
@@ -203,7 +241,7 @@
             it('should not resolve data urls', function (done) {
                 loadTestPage('fonts/web-fonts/empty.html', 'fonts/web-fonts/embedded.css')
                     .then(function () {
-                        return fontFaces.readAll(global.document);
+                        return fontFaces.readAll();
                     })
                     .then(function (webFonts) {
                         return webFonts[0].resolve(
@@ -221,7 +259,7 @@
             it('should ignore query in font urls', function (done) {
                 loadTestPage('fonts/web-fonts/empty.html', 'fonts/web-fonts/with-query.css')
                     .then(function () {
-                        return fontFaces.readAll(global.document);
+                        return fontFaces.readAll();
                     })
                     .then(function (webFonts) {
                         return webFonts[0].resolve(
@@ -335,29 +373,6 @@
             });
         }
 
-        function makeImage(src) {
-            return new Promise(function (resolve) {
-                var image = new Image();
-                image.onload = function () {
-                    resolve(image);
-                };
-                image.src = src;
-            });
-        }
-
-        function drawImage(image, node) {
-            node = node || domNode();
-            canvas().height = node.offsetHeight.toString();
-            canvas().width = node.offsetWidth.toString();
-            canvas().getContext('2d').imageSmoothingEnabled = false;
-            canvas().getContext('2d').drawImage(image, 0, 0);
-            return image;
-        }
-
-        function domNodeToDataUrl(node) {
-            return domtoimage.toDataUrl(node || domNode());
-        }
-
         function domNode() {
             return $('#dom-node')[0];
         }
@@ -368,24 +383,6 @@
 
         function canvas() {
             return $('#canvas')[0];
-        }
-
-        function compareToControlImage(image) {
-            assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
-        }
-
-        function renderAndCheck() {
-            return Promise.resolve()
-                .then(domNodeToDataUrl)
-                .then(makeImage)
-                .then(compareToControlImage);
-        }
-
-        function assertTextRendered(lines) {
-            var renderedText = ocr(canvas());
-            lines.forEach(function (line) {
-                assert.include(renderedText, line);
-            });
         }
     });
 })(this);
