@@ -1,14 +1,12 @@
 #dom-node {
-    height: 100px !important;
     width: 100px;
     overflow: hidden;
 }
 
 #root {
-    border: 1px solid red !important;
+    border: 1px solid red;
     position: relative;
-    height: 100px !important;
-    width: 100px
+    height: 100px;
 }
 
 svg {

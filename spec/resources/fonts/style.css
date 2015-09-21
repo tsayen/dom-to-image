@@ -1,8 +1,7 @@
-#root {
+#dom-node {
     padding: 16px;
-    width: 100px !important;
-    height: 100px !important;
+    width: 100px;
+    height: 100px;
     font-size: 60px;
-    border: none !important;
     background-color: white;
 }

@@ -22,7 +22,7 @@
         describe('regression', function () {
 
             it('should render small node', function (done) {
-                loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
+                loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
                     .then(renderAndCheck)
                     .then(done).catch(error);
             });
@@ -30,7 +30,7 @@
             it('should render bigger node', function (done) {
                 loadTestPage('bigger/dom-node.html', 'bigger/style.css', 'bigger/control-image')
                     .then(function () {
-                        var parent = $('#root');
+                        var parent = $('#dom-node');
                         var child = $('.dom-child-node');
                         for (var i = 0; i < 10; i++) {
                             parent.append(child.clone());
@@ -47,16 +47,16 @@
             });
 
             it('should render nested svg with broken namespace', function (done) {
-                loadTestPage('svg/dom-node.html', 'svg/style.css', 'svg/control-image')
+                loadTestPage('svg-ns/dom-node.html', 'svg-ns/style.css', 'svg-ns/control-image')
                     .then(renderAndCheck)
                     .then(done).catch(error);
             });
 
-            it('should render correctly when the node is bigger than container', function (done) {
+            it('should render whole node when its is scrolled', function (done) {
                 var domNode;
                 loadTestPage('scroll/dom-node.html', 'scroll/style.css', 'scroll/control-image')
                     .then(function () {
-                        domNode = $('#root')[0];
+                        domNode = $('#scrolled')[0];
                     })
                     .then(function () {
                         return domNodeToDataUrl(domNode);
@@ -65,6 +65,7 @@
                     .then(function (image) {
                         return drawImage(image, domNode);
                     })
+                    .then(debug)
                     .then(compareToControlImage)
                     .then(done).catch(error);
             });
@@ -80,11 +81,11 @@
             });
 
             it('should preserve content of ::before and ::after pseudo elements', function (done) {
-                loadTestPage('before-after/dom-node.html', 'before-after/style.css')
+                loadTestPage('pseudo/dom-node.html', 'pseudo/style.css')
                     .then(domNodeToDataUrl)
                     .then(makeImage)
                     .then(drawImage)
-                    .then(assertTextRendered(["ONLY-BEFORE", "BOTH-BEFORE", ]))
+                    .then(assertTextRendered(["ONLY-BEFORE", "BOTH-BEFORE"]))
                     .then(assertTextRendered(["ONLY-AFTER", "BOTH-AFTER"]))
                     .then(done).catch(error);
             });
@@ -140,7 +141,7 @@
             });
 
             function compareToControlImage(image) {
-                assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be equal');
+                assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be same');
             }
 
             function renderAndCheck() {
@@ -148,6 +149,7 @@
                     .then(domNodeToDataUrl)
                     .then(makeImage)
                     .then(drawImage)
+                    .then(debug)
                     .then(compareToControlImage);
             }
 
@@ -317,7 +319,7 @@
             return loadPage()
                 .then(function () {
                     return getResource(html).then(function (html) {
-                        $('#root').html(html);
+                        $('#dom-node').html(html);
                     });
                 })
                 .then(function () {
@@ -378,11 +380,9 @@
             });
         }
 
-        function debug() {
-            return function (arg) {
-                debugger;
-                return arg;
-            }
+        function debug(arg) {
+            debugger;
+            return arg;
         }
 
         function error(e) {

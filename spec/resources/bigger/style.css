@@ -2,9 +2,8 @@
     width: 100px;
 }
 
-.dom-child-node {
+.child-node {
     height: auto;
-    width: 100%;
 }
 
 .red {
@@ -23,6 +22,5 @@
 .green,
 .blue {
     height: 3px;
-    width: 100%;
     border: 1px solid lightgrey;
 }
