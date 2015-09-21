@@ -288,6 +288,7 @@
     function clonePseudoElement(pair, element) {
         var style = global.window.getComputedStyle(pair.source, element);
         var content = style.getPropertyValue('content');
+
         if (content === '' || content === 'none') return pair;
 
         var className = util.uid();
@@ -314,7 +315,7 @@
         return node;
     }
 
-    function processClone(clone, original) {
+    function processClone(original, clone) {
         if (!(clone instanceof Element)) return clone;
 
         return Promise.resolve({
@@ -360,7 +361,7 @@
                 return cloneChildren(clone, original, filter);
             })
             .then(function (clone) {
-                return processClone(clone, original);
+                return processClone(original, clone);
             });
     }
 
