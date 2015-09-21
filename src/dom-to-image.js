@@ -354,18 +354,18 @@
             });
     }
 
-    function cloneNode(original, filter) {
-        if (filter && !filter(original)) return Promise.resolve();
+    function cloneNode(node, filter) {
+        if (filter && !filter(node)) return Promise.resolve();
 
         return Promise.resolve()
             .then(function () {
-                return original.cloneNode(false);
+                return node.cloneNode(false);
             })
             .then(function (clone) {
-                return cloneChildren(original, clone, filter);
+                return cloneChildren(node, clone, filter);
             })
             .then(function (clone) {
-                return processClone(original, clone);
+                return processClone(node, clone);
             });
     }
 
