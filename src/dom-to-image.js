@@ -253,10 +253,8 @@
     }
 
     function copyStyle(source, target) {
-        if (source.cssText)
-            target.cssText = source.cssText;
-        else
-            copyProperties(source, target);
+        if (source.cssText) target.cssText = source.cssText;
+        else copyProperties(source, target);
     }
 
     function cloneStyle(pair) {
@@ -305,7 +303,11 @@
     }
 
     function clonePseudoElements(pair) {
-        [':before', ':after'].forEach(function (element) {
+        [
+            ':before',
+            ':after'
+        ]
+        .forEach(function (element) {
             clonePseudoElement(pair, element);
         });
         return pair;
@@ -332,7 +334,7 @@
             .then(fixNamespace);
     }
 
-    function cloneOneByOne(parent, children, filter) {
+    function cloneChildrenInOrder(parent, children, filter) {
         var done = Promise.resolve();
         children.forEach(function (child) {
             done = done
@@ -350,7 +352,7 @@
         var children = original.childNodes;
         if (children.length === 0) return Promise.resolve(clone);
 
-        return cloneOneByOne(clone, util.asArray(children), filter)
+        return cloneChildrenInOrder(clone, util.asArray(children), filter)
             .then(function () {
                 return clone;
             });
@@ -369,12 +371,6 @@
             .then(function (clone) {
                 return processClone(node, clone);
             });
-    }
-
-    function stripMargin(node) {
-        var style = node.style;
-        style.margin = style.marginLeft = style.marginTop = style.marginBottom = style.marginRight = '';
-        return node;
     }
 
     function escape(xmlString) {
@@ -405,7 +401,7 @@
             image.onload = function () {
                 resolve(image);
             };
-            image.src = makeDataUri(stripMargin(node), width, height);
+            image.src = makeDataUri(node, width, height);
         });
     }
 
