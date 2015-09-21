@@ -242,11 +242,7 @@
 
     function copyProperties(source, target) {
         util.asArray(source).forEach(function (name) {
-            target.setProperty(
-                name,
-                source.getPropertyValue(name),
-                source.getPropertyPriority(name)
-            );
+            target.setProperty(name, source.getPropertyValue(name), source.getPropertyPriority(name));
         });
     }
 
