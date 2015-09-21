@@ -242,7 +242,11 @@
 
     function copyProperties(source, target) {
         util.asArray(source).forEach(function (name) {
-            target.setProperty(name, source.getPropertyValue(name), source.getPropertyPriority(name));
+            target.setProperty(
+                name,
+                source.getPropertyValue(name),
+                source.getPropertyPriority(name)
+            );
         });
     }
 
@@ -253,10 +257,10 @@
             copyProperties(source, target);
     }
 
-    function cloneElementStyle(nodes) {
-        var style = global.window.getComputedStyle(nodes.original);
-        copyStyle(style, nodes.clone.style);
-        return nodes;
+    function cloneStyle(pair) {
+        var style = global.window.getComputedStyle(pair.source);
+        copyStyle(style, pair.target.style);
+        return pair;
     }
 
     function formatCssText(style) {
@@ -267,66 +271,62 @@
     function formatCssProperties(style) {
         var result = util.asArray(style)
             .map(function (name) {
-                return name + ': ' + style.getPropertyValue(name) +
+                return name + ': ' +
+                    style.getPropertyValue(name) +
                     (style.getPropertyPriority(name) ? ' !important' : '');
             })
             .join('; ') + ';';
         return result;
     }
 
-    function getStyleAsTextNode(className, element, style) {
+    function formatPseudoElementStyle(className, element, style) {
         var selector = '.' + className + ':' + element;
         var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
         return global.document.createTextNode(selector + '{' + cssText + '}');
     }
 
-    function processPseudoElement(nodes, element) {
-        var style = global.window.getComputedStyle(nodes.original, element);
+    function clonePseudoElement(pair, element) {
+        var style = global.window.getComputedStyle(pair.source, element);
         var content = style.getPropertyValue('content');
-        if (content === '' || content === 'none') return nodes;
+        if (content === '' || content === 'none') return pair;
 
         var className = util.uid();
 
-        nodes.clone.className = nodes.clone.className + ' ' + className;
+        pair.target.className = pair.target.className + ' ' + className;
 
         var styleElement = global.document.createElement('style');
-        styleElement.appendChild(getStyleAsTextNode(className, element, style));
-        nodes.clone.appendChild(styleElement);
+        styleElement.appendChild(formatPseudoElementStyle(className, element, style));
+        pair.target.appendChild(styleElement);
 
-        return nodes;
+        return pair;
     }
 
-    function clonePseudoElementStyle(nodes) {
+    function clonePseudoElements(pair) {
         [':before', ':after'].forEach(function (element) {
-            processPseudoElement(nodes, element);
+            clonePseudoElement(pair, element);
         });
-        return nodes;
+        return pair;
     }
 
-    function cloneStyle(nodes) {
-        return Promise.resolve(nodes)
-            .then(cloneElementStyle)
-            .then(clonePseudoElementStyle);
-    }
-
-    function fixNamespace(nodes) {
-        if (nodes.clone instanceof SVGElement)
-            nodes.clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        return nodes;
+    function fixNamespace(node) {
+        if (node instanceof SVGElement)
+            node.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        return node;
     }
 
     function processClone(clone, original) {
         if (!(clone instanceof Element)) return clone;
 
         return Promise.resolve({
-                clone: clone,
-                original: original
+                source: original,
+                target: clone
             })
-            .then(fixNamespace)
             .then(cloneStyle)
-            .then(function (nodes) {
-                return nodes.clone;
-            });
+            .then(clonePseudoElements)
+            .then(function (pair) {
+                return pair.target;
+            })
+            .then(fixNamespace);
     }
 
     function cloneChildren(clone, original, filter) {
