@@ -270,15 +270,13 @@
     }
 
     function formatCssProperties(style) {
-        var lines = [];
-        var count = style.length;
-        for (var i = 0; i < count; i++) {
-            var name = style[i];
-            var line = name + ': ' + style.getPropertyValue(name);
-            if (style.getPropertyPriority(name)) line += ' !important';
-            lines.push(line);
-        }
-        return lines.join(';') + ';';
+        var result = util.asArray(style)
+            .map(function (name) {
+                return name + ': ' + style.getPropertyValue(name) +
+                    (style.getPropertyPriority(name) ? ' !important' : '');
+            })
+            .join('; ') + ';';
+        return result;
     }
 
     function getStyleAsTextNode(className, element, style) {
@@ -337,14 +335,11 @@
     }
 
     function cloneChildren(clone, original, filter) {
-        var children = original.childNodes;
-        var childrenCount = children.length;
-
-        if (childrenCount === 0) return Promise.resolve(clone);
+        var children = util.asArray(original.childNodes);
+        if (children.length === 0) return Promise.resolve(clone);
 
         var done = Promise.resolve();
-
-        function cloneChild(child) {
+        children.forEach(function (child) {
             done = done
                 .then(function () {
                     return cloneNode(child, filter);
@@ -352,10 +347,7 @@
                 .then(function (childClone) {
                     if (childClone) clone.appendChild(childClone);
                 });
-        }
-
-        for (var i = 0; i < childrenCount; i++)
-            cloneChild(children[i]);
+        });
 
         return done.then(function () {
             return clone;

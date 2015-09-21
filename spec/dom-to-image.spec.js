@@ -208,7 +208,7 @@
             });
         });
 
-        describe.only('web fonts', function () {
+        describe('web fonts', function () {
             var fontFaces = domtoimage.impl.fontFaces;
 
             it('should read non-local font faces', function (done) {
