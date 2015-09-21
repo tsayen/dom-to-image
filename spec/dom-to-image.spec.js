@@ -276,11 +276,7 @@
 
             it('should resolve relative font urls', function (done) {
                 loadTestPage('fonts/web-fonts/rules-relative.html')
-                    .then(function () {
-                        return new Promise(function (resolve) {
-                            setTimeout(resolve, 1000);
-                        });
-                    })
+                    .then(delay(1000))
                     .then(function () {
                         return fontFaces.readAll();
                     })
