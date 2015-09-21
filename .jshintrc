@@ -1,5 +1,6 @@
 {
     "eqeqeq" : true,
     "immed" : true,
-    "newcap" : true
+    "newcap" : true,
+    "unused" : "strict"
 }

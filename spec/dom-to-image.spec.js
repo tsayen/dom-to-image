@@ -65,7 +65,6 @@
                     .then(function (image) {
                         return drawImage(image, domNode);
                     })
-                    .then(debug)
                     .then(compareToControlImage)
                     .then(done).catch(error);
             });
@@ -149,7 +148,6 @@
                     .then(domNodeToDataUrl)
                     .then(makeImage)
                     .then(drawImage)
-                    .then(debug)
                     .then(compareToControlImage);
             }
 
@@ -348,6 +346,17 @@
                         return Promise.reject(new Error('no matching content for ' + url));
                 };
             }
+
+            function assertSomeIncludesAll(haystacks, needles) {
+                assert(
+                    haystacks.some(function (haystack) {
+                        return needles.every(function (needle) {
+                            return (haystack.indexOf(needle) !== -1);
+                        });
+                    }),
+                    '\nnone of\n[ ' + haystacks.join('\n') + ' ]\nincludes all of \n[ ' + needles.join(', ') + ' ]'
+                );
+            }
         });
 
         function loadTestPage(html, css, controlImage) {
@@ -413,28 +422,6 @@
                 };
                 request.send();
             });
-        }
-
-        function assertIncludes(haystack, needles) {
-            needles.forEach(function (needle) {
-                assert.include(haystack, needle);
-            });
-        }
-
-        function assertSomeIncludesAll(haystacks, needles) {
-            assert(
-                haystacks.some(function (haystack) {
-                    return needles.every(function (needle) {
-                        return (haystack.indexOf(needle) !== -1);
-                    });
-                }),
-                '\nnone of\n[ ' + haystacks.join('\n') + ' ]\nincludes all of \n[ ' + needles.join(', ') + ' ]'
-            );
-        }
-
-        function debug(arg) {
-            debugger;
-            return arg;
         }
 
         function error(e) {

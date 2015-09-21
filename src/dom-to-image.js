@@ -138,6 +138,10 @@
             return array;
         }
 
+        function escapeXhtml(string) {
+            return string.replace(/#/g, '%23');
+        }
+
         return {
             canvasToBlob: canvasToBlob,
             resolveUrl: resolveUrl,
@@ -149,7 +153,8 @@
             decorateDataUrl: decorateDataUrl,
             isDataUrl: isDataUrl,
             delay: delay,
-            asArray: asArray
+            asArray: asArray,
+            escapeXhtml: escapeXhtml
         };
     })();
 
@@ -373,42 +378,37 @@
             });
     }
 
-    function escape(xmlString) {
-        return xmlString.replace(/#/g, '%23');
-    }
-
-    function serialize(node) {
-        node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-        return escape(new XMLSerializer().serializeToString(node));
-    }
-
-    function asForeignObject(node) {
-        return "<foreignObject x='0' y='0' width='100%' height='100%'>" + serialize(node) + "</foreignObject>";
-    }
-
-    function toSvg(node, width, height) {
-        return "<svg xmlns='http://www.w3.org/2000/svg' width='" + width + "' height='" + height + "'>" +
-            asForeignObject(node) + "</svg>";
-    }
-
     function makeDataUri(node, width, height) {
-        return "data:image/svg+xml;charset=utf-8," + toSvg(node, width, height);
+        return Promise.resolve(node)
+            .then(function (node) {
+                node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+                return new XMLSerializer().serializeToString(node);
+            })
+            .then(util.escapeXhtml)
+            .then(function (xhtml) {
+                return '<foreignObject x="0" y="0" width="100%" height="100%">' + xhtml + "</foreignObject>";
+            })
+            .then(function (foreignObject) {
+                return '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' + foreignObject + '</svg>';
+            })
+            .then(function (svg) {
+                return "data:image/svg+xml;charset=utf-8," + svg;
+            });
     }
 
-    function makeImage(node, width, height) {
+    function makeImage(uri) {
         return new Promise(function (resolve) {
             var image = new Image();
             image.onload = function () {
                 resolve(image);
             };
-            image.src = makeDataUri(node, width, height);
+            image.src = uri;
         });
     }
 
     function embedFonts(node) {
         return fontFaces.resolveAll()
             .then(function (cssText) {
-                var root = document.createElement('div');
                 var styleNode = document.createElement('style');
                 node.appendChild(styleNode);
                 styleNode.appendChild(document.createTextNode(cssText));
@@ -416,7 +416,7 @@
             });
     }
 
-    function drawOffScreen(domNode, options) {
+    function draw(domNode, options) {
         return toImage(domNode, options)
             .then(util.delay(100))
             .then(function (image) {
@@ -428,28 +428,29 @@
             });
     }
 
-    function toImage(domNode, options) {
+    function toImage(node, options) {
         options = options || {};
 
-        return Promise.resolve()
-            .then(function () {
-                return cloneNode(domNode, options.filter);
+        return Promise.resolve(node)
+            .then(function (node) {
+                return cloneNode(node, options.filter);
             })
             .then(embedFonts)
-            .then(function (node) {
-                return makeImage(node, domNode.scrollWidth, domNode.scrollHeight);
-            });
+            .then(function (clone) {
+                return makeDataUri(clone, node.scrollWidth, node.scrollHeight);
+            })
+            .then(makeImage);
     }
 
-    function toDataUrl(domNode, options) {
-        return drawOffScreen(domNode, options)
+    function toDataUrl(node, options) {
+        return draw(node, options)
             .then(function (canvas) {
                 return canvas.toDataURL();
             });
     }
 
-    function toBlob(domNode, options) {
-        return drawOffScreen(domNode, options)
+    function toBlob(node, options) {
+        return draw(node, options)
             .then(util.canvasToBlob);
     }
 
