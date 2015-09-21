@@ -240,27 +240,26 @@
         };
     })();
 
-    function copyProperties(style, node) {
-        for (var i = 0; i < style.length; i++) {
-            var propertyName = style[i];
-            node.style.setProperty(
-                propertyName,
-                style.getPropertyValue(propertyName),
-                style.getPropertyPriority(propertyName)
+    function copyProperties(source, target) {
+        util.asArray(source).forEach(function (name) {
+            target.setProperty(
+                name,
+                source.getPropertyValue(name),
+                source.getPropertyPriority(name)
             );
-        }
+        });
     }
 
-    function copyStyle(style, node) {
-        if (style.cssText)
-            node.style.cssText = style.cssText;
+    function copyStyle(source, target) {
+        if (source.cssText)
+            target.cssText = source.cssText;
         else
-            copyProperties(style, node);
+            copyProperties(source, target);
     }
 
     function cloneElementStyle(nodes) {
         var style = global.window.getComputedStyle(nodes.original);
-        copyStyle(style, nodes.clone);
+        copyStyle(style, nodes.clone.style);
         return nodes;
     }
 
