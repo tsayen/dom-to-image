@@ -319,8 +319,7 @@
     }
 
     function fixNamespace(node) {
-        if (node instanceof SVGElement)
-            node.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        if (node instanceof SVGElement) node.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         return node;
     }
 
