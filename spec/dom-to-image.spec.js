@@ -147,6 +147,7 @@
                 return Promise.resolve()
                     .then(domNodeToDataUrl)
                     .then(makeImage)
+                    .then(drawImage)
                     .then(compareToControlImage);
             }
 
@@ -375,6 +376,13 @@
                 };
                 request.send();
             });
+        }
+
+        function debug() {
+            return function (arg) {
+                debugger;
+                return arg;
+            }
         }
 
         function error(e) {
