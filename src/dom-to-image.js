@@ -90,21 +90,23 @@
             return 'url("data:' + mimeType[type] + ';base64,' + content + '")';
         }
 
-        var fontUrl = /url\(['"]?([^\?"]+)(?:\?.*?)?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
+        var fontUrl = /url\(['"]?([^\?'"]+?)(?:\?.*?)?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
 
         function hasFontUrl(str) {
             return str.search(fontUrl) !== -1;
         }
 
-        function parseFontUrl(str) {
-            var url = fontUrl.exec(str);
-            if (url)
-                return {
+        function parseFontUrls(src) {
+            var regexp = new RegExp(fontUrl.source, 'g');
+            var result = [];
+            var url;
+            while ((url = regexp.exec(src)) !== null) {
+                result.push({
                     url: url[1],
                     format: url[2]
-                };
-            else
-                return null;
+                });
+            }
+            return result;
         }
 
         function escape(string) {
@@ -142,7 +144,7 @@
             getAndEncode: getAndEncode,
             uid: uid.next,
             hasFontUrl: hasFontUrl,
-            parseFontUrl: parseFontUrl,
+            parseFontUrls: parseFontUrls,
             fontUrlAsRegex: fontUrlAsRegex,
             decorateDataUrl: decorateDataUrl,
             isDataUrl: isDataUrl,
@@ -183,10 +185,9 @@
         function newWebFont(webFontRule) {
 
             function readUrls() {
-                return webFontRule.style.getPropertyValue('src').split(/,\s+/)
-                    .map(util.parseFontUrl)
+                return util.parseFontUrls(webFontRule.style.getPropertyValue('src'))
                     .filter(function (fontUrl) {
-                        return fontUrl && !util.isDataUrl(fontUrl.url);
+                        return !util.isDataUrl(fontUrl.url);
                     });
             }
 
@@ -200,12 +201,13 @@
 
                 var cssText = webFontRule.cssText;
 
-                var resolved = readUrls().map(function (fontUrl) {
-                    return loadResource(resourceUrl(fontUrl), fontUrl.format)
-                        .then(function (encodedFont) {
-                            cssText = cssText.replace(util.fontUrlAsRegex(fontUrl.url), encodedFont);
-                        });
-                });
+                var resolved = readUrls()
+                    .map(function (fontUrl) {
+                        return loadResource(resourceUrl(fontUrl), fontUrl.format)
+                            .then(function (encodedFont) {
+                                cssText = cssText.replace(util.fontUrlAsRegex(fontUrl.url), encodedFont);
+                            });
+                    });
 
                 return Promise.all(resolved).then(function () {
                     return cssText;
@@ -224,8 +226,8 @@
             return readAll(document)
                 .then(function (webFonts) {
                     return Promise.all(
-                        webFonts.map(function (webFontFace) {
-                            return webFontFace.resolve();
+                        webFonts.map(function (webFont) {
+                            return webFont.resolve();
                         })
                     );
                 })

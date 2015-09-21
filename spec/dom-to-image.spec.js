@@ -201,6 +201,34 @@
                     .then(done).catch(error);
             });
 
+            it('should parse font urls', function () {
+                var src =
+                    "url('http://fonts.com/font1.woff2') format(\"woff2\")" +
+                    "url(http://fonts.com/font3.woff2) format(woff2)" +
+                    ",url(\"fonts.com/font1.woff\") format('woff'), local(Arial)" +
+                    ", url('data:font/woff2;base64,AAA') format('woff2')";
+
+                var urls = domtoimage.impl.util.parseFontUrls(src);
+                assert.deepEqual(urls, [
+                    {
+                        url: 'http://fonts.com/font1.woff2',
+                        format: 'woff2'
+                    },
+                    {
+                        url: 'http://fonts.com/font3.woff2',
+                        format: 'woff2'
+                    },
+                    {
+                        url: 'fonts.com/font1.woff',
+                        format: 'woff'
+                    },
+                    {
+                        url: 'data:font/woff2;base64,AAA',
+                        format: 'woff2'
+                    }
+                ]);
+            });
+
             it('should generate uids', function () {
                 var uid = domtoimage.impl.util.uid;
                 assert(uid().length >= 4);
@@ -224,6 +252,7 @@
                         });
                         assertSomeIncludesAll(sources, ['http://fonts.com/font1.woff', 'http://fonts.com/font1.woff2']);
                         assertSomeIncludesAll(sources, ['http://fonts.com/font2.ttf?v1.1.3']);
+                        assertSomeIncludesAll(sources, ['data:font/woff2;base64,AAA']);
                     })
                     .then(done).catch(error);
             });
