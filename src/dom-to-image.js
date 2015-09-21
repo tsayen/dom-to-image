@@ -330,10 +330,7 @@
             .then(fixNamespace);
     }
 
-    function cloneChildren(clone, original, filter) {
-        var children = util.asArray(original.childNodes);
-        if (children.length === 0) return Promise.resolve(clone);
-
+    function cloneOneByOne(parent, children, filter) {
         var done = Promise.resolve();
         children.forEach(function (child) {
             done = done
@@ -341,13 +338,20 @@
                     return cloneNode(child, filter);
                 })
                 .then(function (childClone) {
-                    if (childClone) clone.appendChild(childClone);
+                    if (childClone) parent.appendChild(childClone);
                 });
         });
+        return done;
+    }
 
-        return done.then(function () {
-            return clone;
-        });
+    function cloneChildren(original, clone, filter) {
+        var children = original.childNodes;
+        if (children.length === 0) return Promise.resolve(clone);
+
+        return cloneOneByOne(clone, util.asArray(children), filter)
+            .then(function () {
+                return clone;
+            });
     }
 
     function cloneNode(original, filter) {
@@ -358,7 +362,7 @@
                 return original.cloneNode(false);
             })
             .then(function (clone) {
-                return cloneChildren(clone, original, filter);
+                return cloneChildren(original, clone, filter);
             })
             .then(function (clone) {
                 return processClone(original, clone);
