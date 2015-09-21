@@ -207,7 +207,10 @@
             }
 
             return {
-                resolve: resolve
+                resolve: resolve,
+                src: function () {
+                    return webFontRule.style.getPropertyValue('src');
+                }
             };
         }
 

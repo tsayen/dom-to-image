@@ -208,7 +208,7 @@
             });
         });
 
-        describe('web fonts', function () {
+        describe.only('web fonts', function () {
             var fontFaces = domtoimage.impl.fontFaces;
 
             it('should read non-local font faces', function (done) {
@@ -218,6 +218,13 @@
                     })
                     .then(function (webFonts) {
                         assert.equal(webFonts.length, 3);
+
+                        var sources = webFonts.map(function (webFont) {
+                            return webFont.src();
+                        });
+
+                        assertSomeIncludesAll(sources, ['http://fonts.com/font1.woff', 'http://fonts.com/font1.woff2']);
+                        assertSomeIncludesAll(sources, ['http://fonts.com/font2.ttf?v1.1.3']);
                     })
                     .then(done).catch(error);
             });
@@ -378,6 +385,23 @@
                 };
                 request.send();
             });
+        }
+
+        function assertIncludes(haystack, needles) {
+            needles.forEach(function (needle) {
+                assert.include(haystack, needle);
+            })
+        }
+
+        function assertSomeIncludesAll(haystacks, needles) {
+            assert(
+                haystacks.some(function (haystack) {
+                    return needles.every(function (needle) {
+                        return (haystack.indexOf(needle) !== -1);
+                    });
+                }),
+                '\nnone of\n[ ' + haystacks.join('\n') + ' ]\nincludes all of \n[ ' + needles.join(', ') + ' ]'
+            );
         }
 
         function debug(arg) {
