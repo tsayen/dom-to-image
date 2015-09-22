@@ -241,6 +241,16 @@
                 assert(uid().length >= 4);
                 assert.notEqual(uid(), uid());
             });
+
+            it('should get image', function (done) {
+                domtoimage.impl.util.getImage('resources/images/image.jpeg', function () {
+                        return Promise.resolve('AAA');
+                    })
+                    .then(function (content) {
+                        assert.equal(content, 'data:image/jpeg;base64,AAA');
+                    })
+                    .then(done).catch(error);
+            });
         });
 
         describe('web fonts', function () {
@@ -270,7 +280,7 @@
                         return fontFaces.readAll();
                     })
                     .then(function (webFonts) {
-                        return webFonts[0].resolve(mockResourceLoader({
+                        return webFonts[0].resolve(mockFontLoader({
                             'http://fonts.com/font1.woff2': 'AAA',
                             'http://fonts.com/font1.woff': 'BBB'
                         }));
@@ -290,7 +300,7 @@
                     })
                     .then(function (webFonts) {
                         return webFonts[0].resolve(
-                            mockResourceLoader({
+                            mockFontLoader({
                                 'data:application/x-font-woff2;base64,AAA': '!!!'
                             })
                         );
@@ -308,7 +318,7 @@
                     })
                     .then(function (webFonts) {
                         return webFonts[0].resolve(
-                            mockResourceLoader({
+                            mockFontLoader({
                                 'http://fonts.com/font1.woff2': 'AAA'
                             })
                         );
@@ -347,7 +357,7 @@
                     .then(done).catch(error);
             });
 
-            function mockResourceLoader(content) {
+            function mockFontLoader(content) {
                 return function (url, type) {
                     if (content[url])
                         return Promise.resolve(domtoimage.impl.util.dataAsFontUrl(content[url], type));
@@ -365,6 +375,28 @@
                     }),
                     '\nnone of\n[ ' + haystacks.join('\n') + ' ]\nincludes all of \n[ ' + needles.join(', ') + ' ]'
                 );
+            }
+        });
+
+        describe('images', function () {
+
+            it('should not inline images with data url', function (done) {
+                var img = new Image();
+                var originalSrc = 'data:image/jpeg;base64,AAA';
+                img.src = originalSrc;
+                domtoimage.impl.images.newImage(img).inline(mockImageLoader('XXX'))
+                    .then(function () {
+                        assert.equal(img.src, originalSrc);
+                    })
+                    .then(done).catch(error);
+            });
+
+            function mockImageLoader(content) {
+                return function (url) {
+                    return domtoimage.impl.util.getImage(url, function () {
+                        return Promise.resolve(content);
+                    });
+                };
             }
         });
 

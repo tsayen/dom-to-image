@@ -55,6 +55,17 @@
             };
         })();
 
+        function makeImage(uri) {
+            return new Promise(function (resolve, reject) {
+                var image = new Image();
+                image.onload = function () {
+                    resolve(image);
+                };
+                image.onerror = reject;
+                image.src = uri;
+            });
+        }
+
         function getAndEncode(url) {
             var request = new XMLHttpRequest();
             request.open('GET', url, true);
@@ -84,10 +95,18 @@
                 });
         }
 
-        function getImage(url) {
-            return getAndEncode(url)
+        function extension(url) {
+            var ext = /\.(.+)$/g.exec(url);
+            if (ext) return ext[1] || '';
+            return '';
+        }
+
+        function getImage(url, get) {
+            get = get || getAndEncode;
+            var ext = extension(url).toLowerCase();
+            return get(url)
                 .then(function (data) {
-                    return dataAsUrl(data, 'png');
+                    return dataAsUrl(data, mimeType[ext] || 'image');
                 });
         }
 
@@ -98,15 +117,17 @@
             'ttf': 'application/x-font-ttf',
             'opentype': 'application/x-font-otf',
             'embedded-opentype': 'application/x-font-otf',
-            'png': 'image/png'
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg'
         };
 
         function dataAsUrl(content, type) {
-            return 'data:' + mimeType[type] + ';base64,' + content;
+            return 'data:' + type + ';base64,' + content;
         }
 
         function dataAsFontUrl(content, type) {
-            return 'url("' + dataAsUrl(content, type) + '")';
+            return 'url("' + dataAsUrl(content, mimeType[type]) + '")';
         }
 
         var fontUrl = /url\(['"]?([^\?'"]+?)(?:\?.*?)?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
@@ -175,7 +196,8 @@
             isDataUrl: isDataUrl,
             delay: delay,
             asArray: asArray,
-            escapeXhtml: escapeXhtml
+            escapeXhtml: escapeXhtml,
+            makeImage: makeImage
         };
     })();
 
@@ -265,6 +287,48 @@
         return {
             readAll: readAll,
             resolveAll: resolveAll
+        };
+    })();
+
+    var images = (function () {
+
+        function newImage(element) {
+
+            function inline(getImage) {
+                getImage = getImage || util.getImage;
+
+                var url = element.src;
+                if (util.isDataUrl(url)) return Promise.resolve();
+
+                return getImage(url)
+                    .then(function (dataUrl) {
+                        return new Promise(function (resolve, reject) {
+                            element.onload = resolve;
+                            element.onerror = reject;
+                            element.src = dataUrl;
+                        });
+                    });
+            }
+
+            return {
+                inline: inline
+            };
+        }
+
+        function inlineAll(node) {
+            if (node instanceof HTMLImageElement)
+                return newImage(node).inline();
+            else
+                return Promise.all(
+                    util.asArray(node.childNodes).map(function (child) {
+                        return inlineAll(child);
+                    })
+                );
+        }
+
+        return {
+            newImage: newImage,
+            inlineAll: inlineAll,
         };
     })();
 
@@ -416,14 +480,11 @@
             });
     }
 
-    function makeImage(uri) {
-        return new Promise(function (resolve) {
-            var image = new Image();
-            image.onload = function () {
-                resolve(image);
-            };
-            image.src = uri;
-        });
+    function inlineImages(node) {
+        return images.inlineAll(node)
+            .then(function () {
+                return node;
+            });
     }
 
     function embedFonts(node) {
@@ -434,32 +495,6 @@
                 styleNode.appendChild(document.createTextNode(cssText));
                 return node;
             });
-    }
-
-    function inlineImage(image) {
-        return util.getImage(image.src, 'png')
-            .then(function (dataUrl) {
-                return new Promise(function (resolve) {
-                    image.onload = resolve;
-                    image.src = dataUrl;
-                });
-            });
-    }
-
-    function inlineImages(node) {
-        var done;
-        if (node instanceof HTMLImageElement)
-            done = inlineImage(node);
-        else
-            done = Promise.all(
-                util.asArray(node.childNodes).map(function (child) {
-                    return inlineImages(child);
-                })
-            );
-
-        return done.then(function(){
-            return node;
-        });
     }
 
     function draw(domNode, options) {
@@ -486,7 +521,7 @@
             .then(function (clone) {
                 return makeDataUri(clone, node.scrollWidth, node.scrollHeight);
             })
-            .then(makeImage);
+            .then(util.makeImage);
     }
 
     function toDataUrl(node, options) {
@@ -507,6 +542,7 @@
         toBlob: toBlob,
         impl: {
             fontFaces: fontFaces,
+            images: images,
             util: util
         }
     };
