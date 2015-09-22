@@ -140,15 +140,12 @@
             });
 
             it('should render images', function (done) {
-                this.timeout(10000);
-                loadTestPage('images/dom-node.html')
+                loadTestPage('images/dom-node.html', 'images/style.css')
                     .then(delay(1000))
                     .then(domNodeToDataUrl)
                     .then(makeImage)
                     .then(drawImage)
-                    .then(function(){
-                        debugger;
-                    })
+                    .then(assertTextRendered(["PNG"]))
                     .then(done).catch(error);
             });
 
@@ -191,7 +188,6 @@
                 canvas().getContext('2d').drawImage(image, 0, 0);
                 return image;
             }
-
 
             function domNodeToDataUrl(node) {
                 return domtoimage.toDataUrl(node || domNode());
@@ -354,7 +350,7 @@
             function mockResourceLoader(content) {
                 return function (url, type) {
                     if (content[url])
-                        return Promise.resolve(domtoimage.impl.util.decorateDataUrl(content[url], type));
+                        return Promise.resolve(domtoimage.impl.util.dataAsFontUrl(content[url], type));
                     else
                         return Promise.reject(new Error('no matching content for ' + url));
                 };

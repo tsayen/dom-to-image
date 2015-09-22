@@ -55,7 +55,7 @@
             };
         })();
 
-        function getAndEncode(url, type) {
+        function getAndEncode(url) {
             var request = new XMLHttpRequest();
             request.open('GET', url, true);
             request.responseType = 'blob';
@@ -69,12 +69,26 @@
                     var encoder = new FileReader();
                     encoder.onloadend = function () {
                         var content = encoder.result.split(/,/)[1];
-                        resolve(decorateDataUrl(content, type));
+                        resolve(content);
                     };
                     encoder.readAsDataURL(request.response);
                 };
                 request.send();
             });
+        }
+
+        function getFont(url, type) {
+            return getAndEncode(url)
+                .then(function (data) {
+                    return dataAsFontUrl(data, type);
+                });
+        }
+
+        function getImage(url) {
+            return getAndEncode(url)
+                .then(function (data) {
+                    return dataAsUrl(data, 'png');
+                });
         }
 
         var mimeType = {
@@ -83,11 +97,16 @@
             'truetype': 'application/x-font-ttf',
             'ttf': 'application/x-font-ttf',
             'opentype': 'application/x-font-otf',
-            'embedded-opentype': 'application/x-font-otf'
+            'embedded-opentype': 'application/x-font-otf',
+            'png': 'image/png'
         };
 
-        function decorateDataUrl(content, type) {
-            return 'url("data:' + mimeType[type] + ';base64,' + content + '")';
+        function dataAsUrl(content, type) {
+            return 'data:' + mimeType[type] + ';base64,' + content;
+        }
+
+        function dataAsFontUrl(content, type) {
+            return 'url("' + dataAsUrl(content, type) + '")';
         }
 
         var fontUrl = /url\(['"]?([^\?'"]+?)(?:\?.*?)?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
@@ -146,11 +165,13 @@
             canvasToBlob: canvasToBlob,
             resolveUrl: resolveUrl,
             getAndEncode: getAndEncode,
+            getFont: getFont,
+            getImage: getImage,
             uid: uid.next,
             hasFontUrl: hasFontUrl,
             parseFontUrls: parseFontUrls,
             fontUrlAsRegex: fontUrlAsRegex,
-            decorateDataUrl: decorateDataUrl,
+            dataAsFontUrl: dataAsFontUrl,
             isDataUrl: isDataUrl,
             delay: delay,
             asArray: asArray,
@@ -201,14 +222,14 @@
                 return baseUrl ? util.resolveUrl(fontUrl.url, baseUrl) : fontUrl.url;
             }
 
-            function resolve(loadResource) {
-                loadResource = loadResource || util.getAndEncode;
+            function resolve(getFont) {
+                getFont = getFont || util.getFont;
 
                 var cssText = webFontRule.cssText;
 
                 var resolved = readUrls()
                     .map(function (fontUrl) {
-                        return loadResource(resourceUrl(fontUrl), fontUrl.format)
+                        return getFont(resourceUrl(fontUrl), fontUrl.format)
                             .then(function (encodedFont) {
                                 cssText = cssText.replace(util.fontUrlAsRegex(fontUrl.url), encodedFont);
                             });
@@ -415,6 +436,32 @@
             });
     }
 
+    function inlineImage(image) {
+        return util.getImage(image.src, 'png')
+            .then(function (dataUrl) {
+                return new Promise(function (resolve) {
+                    image.onload = resolve;
+                    image.src = dataUrl;
+                });
+            });
+    }
+
+    function inlineImages(node) {
+        var done;
+        if (node instanceof HTMLImageElement)
+            done = inlineImage(node);
+        else
+            done = Promise.all(
+                util.asArray(node.childNodes).map(function (child) {
+                    return inlineImages(child);
+                })
+            );
+
+        return done.then(function(){
+            return node;
+        });
+    }
+
     function draw(domNode, options) {
         return toImage(domNode, options)
             .then(util.delay(100))
@@ -435,6 +482,7 @@
                 return cloneNode(node, options.filter);
             })
             .then(embedFonts)
+            .then(inlineImages)
             .then(function (clone) {
                 return makeDataUri(clone, node.scrollWidth, node.scrollHeight);
             })
