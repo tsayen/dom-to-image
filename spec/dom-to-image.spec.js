@@ -145,7 +145,7 @@
                     .then(domNodeToDataUrl)
                     .then(makeImage)
                     .then(drawImage)
-                    .then(assertTextRendered(["PNG"]))
+                    .then(assertTextRendered(["PNG", "JPG"]))
                     .then(done).catch(error);
             });
 
