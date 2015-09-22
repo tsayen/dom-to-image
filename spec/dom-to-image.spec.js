@@ -139,6 +139,19 @@
                     .then(done).catch(error);
             });
 
+            it('should render images', function (done) {
+                this.timeout(10000);
+                loadTestPage('images/dom-node.html')
+                    .then(delay(1000))
+                    .then(domNodeToDataUrl)
+                    .then(makeImage)
+                    .then(drawImage)
+                    .then(function(){
+                        debugger;
+                    })
+                    .then(done).catch(error);
+            });
+
             function compareToControlImage(image) {
                 assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be same');
             }
