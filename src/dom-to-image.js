@@ -327,8 +327,8 @@
         }
 
         return {
-            newImage: newImage,
             inlineAll: inlineAll,
+            newImage: newImage
         };
     })();
 
