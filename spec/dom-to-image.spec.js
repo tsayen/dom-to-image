@@ -149,6 +149,22 @@
                     .then(done).catch(error);
             });
 
+            it.only('should render background images', function (done) {
+                this.timeout(10000);
+                loadTestPage('css-bg/dom-node.html', 'css-bg/style.css')
+                    .then(delay(1000))
+                    .then(function () {
+                        return domtoimage.toImage(domNode());
+                    })
+                    .then(drawImage)
+                    .then(function (image) {
+                        debugger;
+                        return image;
+                    })
+                    .then(assertTextRendered(["PNG"]))
+                    .then(done).catch(error);
+            });
+
             function compareToControlImage(image) {
                 assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be same');
             }

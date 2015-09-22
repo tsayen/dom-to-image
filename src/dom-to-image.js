@@ -119,7 +119,8 @@
             'embedded-opentype': 'application/x-font-otf',
             'png': 'image/png',
             'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg'
+            'jpeg': 'image/jpeg',
+            'gif': 'image/gif'
         };
 
         function dataAsUrl(content, type) {
@@ -130,14 +131,14 @@
             return 'url("' + dataAsUrl(content, mimeType[type]) + '")';
         }
 
-        var fontUrl = /url\(['"]?([^\?'"]+?)(?:\?.*?)?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
+        var fontUrlRegex = /url\(['"]?([^\?'"]+?)(?:\?.*?)?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
 
         function hasFontUrl(str) {
-            return str.search(fontUrl) !== -1;
+            return str.search(fontUrlRegex) !== -1;
         }
 
         function parseFontUrls(src) {
-            var regexp = new RegExp(fontUrl.source, 'g');
+            var regexp = new RegExp(fontUrlRegex.source, 'g');
             var result = [];
             var url;
             while ((url = regexp.exec(src)) !== null) {
@@ -159,6 +160,26 @@
 
         function isDataUrl(url) {
             return url.search(/^(data:)/) !== -1;
+        }
+
+        var urlRegex = /url\(['"]?([^'"]+?)?['"]?\)/;
+
+        function hasUrl(src) {
+            return src.search(urlRegex) !== -1;
+        }
+
+        function parseUrls(src) {
+            var regexp = new RegExp(urlRegex.source, 'g');
+            var result = [];
+            var url;
+            while ((url = regexp.exec(src)) !== null) {
+                result.push(url[1]);
+            }
+            return result;
+        }
+
+        function urlAsRegex(url) {
+            return new RegExp('url\\([\'"]?' + escape(url) + '[\'"]?\\)', 'g');
         }
 
         function delay(ms) {
@@ -189,6 +210,9 @@
             getFont: getFont,
             getImage: getImage,
             uid: uid.next,
+            hasUrl: hasUrl,
+            parseUrls: parseUrls,
+            urlAsRegex: urlAsRegex,
             hasFontUrl: hasFontUrl,
             parseFontUrls: parseFontUrls,
             fontUrlAsRegex: fontUrlAsRegex,
@@ -315,15 +339,42 @@
             };
         }
 
-        function inlineAll(node) {
-            if (node instanceof HTMLImageElement)
-                return newImage(node).inline();
-            else
-                return Promise.all(
-                    util.asArray(node.childNodes).map(function (child) {
-                        return inlineAll(child);
+        function inlineBackground(node) {
+            var background = node.style.getPropertyValue('background');
+            if (!background || !util.hasUrl(background)) return Promise.resolve(node);
+
+            return Promise.all(
+                    util.parseUrls(background).map(function (url) {
+                        return util.getImage(url)
+                            .then(function (dataUrl) {
+                                background = background.replace(util.urlAsRegex(dataUrl, dataUrl));
+                            });
                     })
-                );
+                ).then(function () {
+                    node.style.setProperty(
+                        'background',
+                        background,
+                        node.style.getPropertyPriority('background')
+                    );
+                })
+                .then(function () {
+                    return node;
+                });
+        }
+
+        function inlineAll(node) {
+            if (!(node instanceof Element)) return Promise.resolve(node);
+            return inlineBackground(node)
+                .then(function () {
+                    if (node instanceof HTMLImageElement)
+                        return newImage(node).inline();
+                    else
+                        return Promise.all(
+                            util.asArray(node.childNodes).map(function (child) {
+                                return inlineAll(child);
+                            })
+                        );
+                });
         }
 
         return {
