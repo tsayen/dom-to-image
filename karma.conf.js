@@ -11,7 +11,6 @@ module.exports = function (config) {
             'bower_components/jquery/dist/jquery.js',
             'bower_components/js-imagediff/imagediff.js',
             'bower_components/ocrad-bower/ocrad.js',
-            // 'bower_components/fontawesome/css/font-awesome.css',
 
             'src/dom-to-image.js',
             'spec/dom-to-image.spec.js'
@@ -28,8 +27,6 @@ module.exports = function (config) {
         },
         autoWatch: true,
         browsers: ['Chrome', 'Firefox'],
-        // browsers: ['Chrome'/*, 'Firefox'*/],
-        // browsers: [/*'Chrome'*/, 'Firefox'],
         singleRun: false,
         browserNoActivityTimeout: 60000
     });

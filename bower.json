@@ -5,7 +5,7 @@
   "authors": [
     "tsayen <anatoly.sayenko@gmail.com>"
   ],
-  "description": "Generates an image from a DOM node using HTML5 canvas",
+  "description": "Generates an image from a DOM node using HTML5 canvas and SVG foreignObject",
   "main": "src/dom-to-image.js",
   "moduleType": [
     "globals"
@@ -14,7 +14,10 @@
     "dom",
     "image",
     "raster",
-    "render"
+    "render",
+    "html",
+    "canvas",
+    "svg"
   ],
   "license": "MIT",
   "ignore": [

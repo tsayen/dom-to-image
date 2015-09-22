@@ -52,7 +52,7 @@
                     .then(done).catch(error);
             });
 
-            it('should render whole node when its is scrolled', function (done) {
+            it('should render whole node when its scrolled', function (done) {
                 var domNode;
                 loadTestPage('scroll/dom-node.html', 'scroll/style.css', 'scroll/control-image')
                     .then(function () {

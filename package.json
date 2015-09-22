@@ -30,7 +30,10 @@
     "dom",
     "image",
     "raster",
-    "render"
+    "render",
+    "html",
+    "canvas",
+    "svg"
   ],
   "author": "tsayen <anatoly.sayenko@gmail.com>",
   "license": "MIT",
