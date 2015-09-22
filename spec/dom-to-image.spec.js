@@ -41,7 +41,7 @@
             });
 
             it('should handle "#" in colors and attributes', function (done) {
-                loadTestPage('hash/dom-node.html', 'hash/style.css', 'simple/control-image')
+                loadTestPage('hash/dom-node.html', 'hash/style.css', 'small/control-image')
                     .then(renderAndCheck)
                     .then(done).catch(error);
             });
@@ -90,7 +90,7 @@
             });
 
             it('should render to blob', function (done) {
-                loadTestPage('simple/dom-node.html', 'simple/style.css', 'simple/control-image')
+                loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
                     .then(function () {
                         return domtoimage.toBlob(domNode());
                     })
