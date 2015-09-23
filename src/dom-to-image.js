@@ -175,7 +175,7 @@
         }
 
         function shouldProcess(string) {
-            return string.search(URL_REGEX) !== -1
+            return string.search(URL_REGEX) !== -1;
         }
 
         function readUrls(string) {
