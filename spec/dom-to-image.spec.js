@@ -205,6 +205,8 @@
 
         describe('inliner', function () {
 
+            const NO_BASE_URL = null;
+
             it('should parse urls', function () {
                 var parse = domtoimage.impl.inliner.readUrls;
 
@@ -221,11 +223,29 @@
             it('should inline url', function (done) {
                 var inline = domtoimage.impl.inliner.inline;
 
-                inline('url(http://acme.com/image.png), url(foo.com)', 'http://acme.com/image.png', function () {
-                        return Promise.resolve('AAA');
-                    })
+                inline('url(http://acme.com/image.png), url(foo.com)', 'http://acme.com/image.png',
+                        NO_BASE_URL,
+                        function () {
+                            return Promise.resolve('AAA');
+                        })
                     .then(function (result) {
                         assert.equal(result, 'url(data:image/png;base64,AAA), url(foo.com)');
+                    })
+                    .then(done).catch(error);
+            });
+
+            it('should resolve urls if base url given', function (done) {
+                var inline = domtoimage.impl.inliner.inline;
+
+                inline('url(images/image.png)', 'images/image.png', 'http://acme.com/',
+                        function (url) {
+                            return Promise.resolve({
+                                'http://acme.com/images/image.png': 'AAA'
+                            }[url]);
+                        }
+                    )
+                    .then(function (result) {
+                        assert.equal(result, 'url(data:image/png;base64,AAA)');
                     })
                     .then(done).catch(error);
             });
@@ -233,12 +253,15 @@
             it('should inline all urls', function (done) {
                 var inlineAll = domtoimage.impl.inliner.inlineAll;
 
-                inlineAll('url(http://acme.com/image.png), url("foo.com/font.ttf")', function (url) {
-                        return Promise.resolve({
-                            'http://acme.com/image.png': 'AAA',
-                            'foo.com/font.ttf': 'BBB'
-                        }[url]);
-                    })
+                inlineAll('url(http://acme.com/image.png), url("foo.com/font.ttf")',
+                        NO_BASE_URL,
+                        function (url) {
+                            return Promise.resolve({
+                                'http://acme.com/image.png': 'AAA',
+                                'foo.com/font.ttf': 'BBB'
+                            }[url]);
+                        }
+                    )
                     .then(function (result) {
                         assert.equal(result, 'url(data:image/png;base64,AAA), url("data:application/x-font-ttf;base64,BBB")');
                     })

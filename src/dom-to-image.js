@@ -271,9 +271,12 @@
             });
         }
 
-        function inline(string, url, get) {
+        function inline(string, url, baseUrl, get) {
             return Promise.resolve(url)
-                .then(get)
+                .then(function (url) {
+                    return baseUrl ? util.resolveUrl(url, baseUrl) : url;
+                })
+                .then(get || util.getAndEncode)
                 .then(function (content) {
                     return 'data:' + util.mimeType(url) + ';base64,' + content;
                 })
@@ -282,14 +285,14 @@
                 });
         }
 
-        function inlineAll(string, get) {
+        function inlineAll(string, baseUrl, get) {
             return Promise.resolve(string)
                 .then(readUrls)
                 .then(function (urls) {
                     var done = Promise.resolve(string);
                     urls.forEach(function (url) {
                         done = done.then(function (string) {
-                            return inline(string, url, get);
+                            return inline(string, url, baseUrl, get);
                         });
                     });
                     return done;
