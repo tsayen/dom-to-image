@@ -363,23 +363,19 @@
         describe('images', function () {
 
             it('should not inline images with data url', function (done) {
-                var img = new Image();
                 var originalSrc = 'data:image/jpeg;base64,AAA';
+                
+                var img = new Image();
                 img.src = originalSrc;
-                domtoimage.impl.images.newImage(img).inline(mockImageLoader('XXX'))
+
+                domtoimage.impl.images.newImage(img).inline(function () {
+                        return Promise.resolve('XXX');
+                    })
                     .then(function () {
                         assert.equal(img.src, originalSrc);
                     })
                     .then(done).catch(error);
             });
-
-            function mockImageLoader(content) {
-                return function (url) {
-                    return domtoimage.impl.util.getImage(url, function () {
-                        return Promise.resolve(content);
-                    });
-                };
-            }
         });
 
         function loadTestPage(html, css, controlImage) {

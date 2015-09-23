@@ -231,6 +231,7 @@
             escape: escape,
             parseExtension: parseExtension,
             mimeType: mime,
+            dataAsUrl: dataAsUrl,
             canvasToBlob: canvasToBlob,
             resolveUrl: resolveUrl,
             getAndEncode: getAndEncode,
@@ -271,7 +272,7 @@
                 result.push(match[1]);
             }
             return result.filter(function (url) {
-                return url.search(/^(data:)/) === -1;
+                return !util.isDataUrl(url);
             });
         }
 
@@ -281,8 +282,8 @@
                     return baseUrl ? util.resolveUrl(url, baseUrl) : url;
                 })
                 .then(get || util.getAndEncode)
-                .then(function (content) {
-                    return 'data:' + util.mimeType(url) + ';base64,' + content;
+                .then(function (data) {
+                    return util.dataAsUrl(data, util.mimeType(url));
                 })
                 .then(function (dataUrl) {
                     return string.replace(urlAsRegex(url), '$1' + dataUrl + '$3');
@@ -379,13 +380,14 @@
 
         function newImage(element) {
 
-            function inline(getImage) {
-                getImage = getImage || util.getImage;
+            function inline(get) {
+                if (util.isDataUrl(element.src)) return Promise.resolve();
 
-                var url = element.src;
-                if (util.isDataUrl(url)) return Promise.resolve();
-
-                return getImage(url)
+                return Promise.resolve(element.src)
+                    .then(get ||  util.getAndEncode)
+                    .then(function(data){
+                        return util.dataAsUrl(data, util.mimeType(element.src));
+                    })
                     .then(function (dataUrl) {
                         return new Promise(function (resolve, reject) {
                             element.onload = resolve;
