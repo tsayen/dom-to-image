@@ -218,13 +218,17 @@
                 assert.deepEqual(parse('url(foo.com), url(data:AAA)'), ['foo.com']);
             });
 
+            it('should inline urls', function (done) {
+                var inline = domtoimage.impl.inliner.inline;
 
-
-            // it('should replace urls', function(){
-            //     var inline = domtoimage.impl.inliner.inline;
-            //
-            //     assert.equal('foo url("data:") bar', inline('url("http://acme.com")'));
-            // });
+                inline('url(http://acme.com/image.png), url(foo.com)', 'http://acme.com/image.png', function () {
+                        return Promise.resolve('AAA');
+                    })
+                    .then(function (result) {
+                        assert.equal(result, 'url(data:image/png;base64,AAA), url(foo.com)');
+                    })
+                    .then(done).catch(error);
+            });
         });
 
         describe('util', function () {

@@ -228,6 +228,7 @@
         }
 
         return {
+            escape: escape,
             parseExtension: parseExtension,
             mimeType: mime,
             canvasToBlob: canvasToBlob,
@@ -253,27 +254,31 @@
 
     var inliner = (function () {
 
-        const URL_REGEX = /(url\(['"]?)([^'"]+?)(['"]?\))/g;
+        const URL_REGEX = /url\(['"]?([^'"]+?)['"]?\)/g;
+
+        function urlAsRegex(url) {
+            return new RegExp('(url\\([\'"]?)(' + util.escape(url) + ')([\'"]?\\))', 'g');
+        }
 
         function readUrls(string) {
             var result = [];
             var match;
             while ((match = URL_REGEX.exec(string)) !== null) {
-                result.push(match[2]);
+                result.push(match[1]);
             }
             return result.filter(function (url) {
                 return url.search(/^(data:)/) === -1;
             });
         }
 
-        function inline(url, string, get) {
+        function inline(string, url, get) {
             return Promise.resolve(url)
                 .then(get)
                 .then(function (content) {
-                    return 'data:' + getMimeType(url) + ':base64,' + content;
+                    return 'data:' + util.mimeType(url) + ';base64,' + content;
                 })
                 .then(function (dataUrl) {
-                    return string.replace(URL_REGEX, '$1' + dataUrl + '$3');
+                    return string.replace(urlAsRegex(url), '$1' + dataUrl + '$3');
                 });
         }
 
