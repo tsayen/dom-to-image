@@ -3,6 +3,30 @@
 
     var util = (function () {
 
+        const MIME = {
+            'woff': 'application/x-font-woff',
+            'woff2': 'application/x-font-woff2',
+            'truetype': 'application/x-font-ttf',
+            'ttf': 'application/x-font-ttf',
+            'opentype': 'application/x-font-otf',
+            'embedded-opentype': 'application/x-font-otf',
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'gif': 'image/gif'
+        };
+
+        function parseExtension(url) {
+            var match = /\.([^\./]*?)$/g.exec(url);
+            if (match) return match[1];
+            else return '';
+        }
+
+        function mime(url){
+            var extension = parseExtension(url).toLowerCase();
+            return MIME[extension] || '';
+        }
+
         function toBlob(canvas) {
             return new Promise(function (resolve) {
                 var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
@@ -204,6 +228,8 @@
         }
 
         return {
+            parseExtension: parseExtension,
+            mimeType: mime,
             canvasToBlob: canvasToBlob,
             resolveUrl: resolveUrl,
             getAndEncode: getAndEncode,
@@ -222,6 +248,42 @@
             asArray: asArray,
             escapeXhtml: escapeXhtml,
             makeImage: makeImage
+        };
+    })();
+
+    var inliner = (function () {
+
+        const URL_REGEX = /(url\(['"]?)([^'"]+?)(['"]?\))/g;
+
+        function readUrls(string) {
+            var result = [];
+            var match;
+            while ((match = URL_REGEX.exec(string)) !== null) {
+                result.push(match[2]);
+            }
+            return result.filter(function (url) {
+                return url.search(/^(data:)/) === -1;
+            });
+        }
+
+        function inline(url, string, get) {
+            return Promise.resolve(url)
+                .then(get)
+                .then(function (content) {
+                    return 'data:' + getMimeType(url) + ':base64,' + content;
+                })
+                .then(function (dataUrl) {
+                    return string.replace(URL_REGEX, '$1' + dataUrl + '$3');
+                });
+        }
+
+        // function inline(string, config) {
+        //     var urls = config.regex
+        // }
+
+        return {
+            readUrls: readUrls,
+            inline: inline,
         };
     })();
 
@@ -594,7 +656,8 @@
         impl: {
             fontFaces: fontFaces,
             images: images,
-            util: util
+            util: util,
+            inliner: inliner
         }
     };
 })(this);

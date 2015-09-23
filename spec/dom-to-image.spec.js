@@ -203,6 +203,30 @@
             }
         });
 
+        describe('inliner', function () {
+
+            it('should parse urls', function () {
+                var parse = domtoimage.impl.inliner.readUrls;
+
+                assert.deepEqual(parse('url("http://acme.com/file")'), ['http://acme.com/file']);
+                assert.deepEqual(parse('url(foo.com), url(\'bar.org\')'), ['foo.com', 'bar.org']);
+            });
+
+            it('should ignore data urls', function () {
+                var parse = domtoimage.impl.inliner.readUrls;
+
+                assert.deepEqual(parse('url(foo.com), url(data:AAA)'), ['foo.com']);
+            });
+
+
+
+            // it('should replace urls', function(){
+            //     var inline = domtoimage.impl.inliner.inline;
+            //
+            //     assert.equal('foo url("data:") bar', inline('url("http://acme.com")'));
+            // });
+        });
+
         describe('util', function () {
 
             it('should get and encode resource', function (done) {
@@ -215,6 +239,33 @@
                             });
                     })
                     .then(done).catch(error);
+            });
+
+            it('should parse extension', function () {
+                var parse = domtoimage.impl.util.parseExtension;
+
+                assert.equal(parse('http://acme.com/font.woff'), 'woff');
+                assert.equal(parse('../FONT.TTF'), 'TTF');
+                assert.equal(parse('../font'), '');
+                assert.equal(parse('font'), '');
+            });
+
+            it('should guess mime type from url', function () {
+                var mime = domtoimage.impl.util.mimeType;
+
+                assert.equal(mime('http://acme.com/font.woff'), 'application/x-font-woff');
+                assert.equal(mime('IMAGE.PNG'), 'image/png');
+                assert.equal(mime('http://acme.com/image'), '');
+            });
+
+            it('should resolve url', function () {
+                var resolve = domtoimage.impl.util.resolveUrl;
+
+                assert.equal(resolve('font.woff', 'http://acme.com'), 'http://acme.com/font.woff');
+                assert.equal(resolve('/font.woff', 'http://acme.com/fonts/woff'), 'http://acme.com/font.woff');
+
+                assert.equal(resolve('../font.woff', 'http://acme.com/fonts/woff/'), 'http://acme.com/fonts/font.woff');
+                assert.equal(resolve('../font.woff', 'http://acme.com/fonts/woff'), 'http://acme.com/font.woff');
             });
 
             it('should parse font urls', function () {
