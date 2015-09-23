@@ -260,6 +260,10 @@
             return new RegExp('(url\\([\'"]?)(' + util.escape(url) + ')([\'"]?\\))', 'g');
         }
 
+        function nothingToInline(string) {
+            return string.search(URL_REGEX) === -1;
+        }
+
         function readUrls(string) {
             var result = [];
             var match;
@@ -286,6 +290,8 @@
         }
 
         function inlineAll(string, baseUrl, get) {
+            if (nothingToInline(string)) return Promise.resolve(string);
+
             return Promise.resolve(string)
                 .then(readUrls)
                 .then(function (urls) {
@@ -301,8 +307,10 @@
 
         return {
             inlineAll: inlineAll,
-            readUrls: readUrls,
-            inline: inline
+            impl: {
+                readUrls: readUrls,
+                inline: inline
+            }
         };
     })();
 
@@ -394,19 +402,14 @@
 
         function inlineBackground(node) {
             var background = node.style.getPropertyValue('background');
-            if (!background || !util.hasUrl(background)) return Promise.resolve(node);
 
-            return Promise.all(
-                    util.parseUrls(background).map(function (url) {
-                        return util.getImage(url)
-                            .then(function (dataUrl) {
-                                background = background.replace(util.urlAsRegex(url), dataUrl);
-                            });
-                    })
-                ).then(function () {
+            if (!background) return Promise.resolve(node);
+
+            return inliner.inlineAll(background)
+                .then(function (inlined) {
                     node.style.setProperty(
                         'background',
-                        background,
+                        inlined,
                         node.style.getPropertyPriority('background')
                     );
                 })

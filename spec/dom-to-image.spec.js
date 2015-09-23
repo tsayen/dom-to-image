@@ -208,20 +208,20 @@
             const NO_BASE_URL = null;
 
             it('should parse urls', function () {
-                var parse = domtoimage.impl.inliner.readUrls;
+                var parse = domtoimage.impl.inliner.impl.readUrls;
 
                 assert.deepEqual(parse('url("http://acme.com/file")'), ['http://acme.com/file']);
                 assert.deepEqual(parse('url(foo.com), url(\'bar.org\')'), ['foo.com', 'bar.org']);
             });
 
             it('should ignore data urls', function () {
-                var parse = domtoimage.impl.inliner.readUrls;
+                var parse = domtoimage.impl.inliner.impl.readUrls;
 
                 assert.deepEqual(parse('url(foo.com), url(data:AAA)'), ['foo.com']);
             });
 
             it('should inline url', function (done) {
-                var inline = domtoimage.impl.inliner.inline;
+                var inline = domtoimage.impl.inliner.impl.inline;
 
                 inline('url(http://acme.com/image.png), url(foo.com)', 'http://acme.com/image.png',
                         NO_BASE_URL,
@@ -235,7 +235,7 @@
             });
 
             it('should resolve urls if base url given', function (done) {
-                var inline = domtoimage.impl.inliner.inline;
+                var inline = domtoimage.impl.inliner.impl.inline;
 
                 inline('url(images/image.png)', 'images/image.png', 'http://acme.com/',
                         function (url) {
@@ -308,34 +308,6 @@
 
                 assert.equal(resolve('../font.woff', 'http://acme.com/fonts/woff/'), 'http://acme.com/fonts/font.woff');
                 assert.equal(resolve('../font.woff', 'http://acme.com/fonts/woff'), 'http://acme.com/font.woff');
-            });
-
-            it('should parse font urls', function () {
-                var src =
-                    "url('http://fonts.com/font1.woff2') format(\"woff2\")" +
-                    "url(http://fonts.com/font3.woff2) format(woff2)" +
-                    ",url(\"fonts.com/font1.woff\") format('woff'), local(Arial)" +
-                    ", url('data:font/woff2;base64,AAA') format('woff2')";
-
-                var urls = domtoimage.impl.util.parseFontUrls(src);
-                assert.deepEqual(urls, [
-                    {
-                        url: 'http://fonts.com/font1.woff2',
-                        format: 'woff2'
-                    },
-                    {
-                        url: 'http://fonts.com/font3.woff2',
-                        format: 'woff2'
-                    },
-                    {
-                        url: 'fonts.com/font1.woff',
-                        format: 'woff'
-                    },
-                    {
-                        url: 'data:font/woff2;base64,AAA',
-                        format: 'woff2'
-                    }
-                ]);
             });
 
             it('should generate uids', function () {
