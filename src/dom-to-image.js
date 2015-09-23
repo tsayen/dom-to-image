@@ -179,7 +179,7 @@
         }
 
         function urlAsRegex(url) {
-            return new RegExp('url\\([\'"]?' + escape(url) + '[\'"]?\\)', 'g');
+            return new RegExp(escape(url), 'g');
         }
 
         function delay(ms) {
@@ -347,7 +347,7 @@
                     util.parseUrls(background).map(function (url) {
                         return util.getImage(url)
                             .then(function (dataUrl) {
-                                background = background.replace(util.urlAsRegex(dataUrl, dataUrl));
+                                background = background.replace(util.urlAsRegex(url), dataUrl);
                             });
                     })
                 ).then(function () {
