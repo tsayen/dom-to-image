@@ -218,7 +218,7 @@
                 assert.deepEqual(parse('url(foo.com), url(data:AAA)'), ['foo.com']);
             });
 
-            it('should inline urls', function (done) {
+            it('should inline url', function (done) {
                 var inline = domtoimage.impl.inliner.inline;
 
                 inline('url(http://acme.com/image.png), url(foo.com)', 'http://acme.com/image.png', function () {
@@ -226,6 +226,21 @@
                     })
                     .then(function (result) {
                         assert.equal(result, 'url(data:image/png;base64,AAA), url(foo.com)');
+                    })
+                    .then(done).catch(error);
+            });
+
+            it('should inline all urls', function (done) {
+                var inlineAll = domtoimage.impl.inliner.inlineAll;
+
+                inlineAll('url(http://acme.com/image.png), url("foo.com/font.ttf")', function (url) {
+                        return Promise.resolve({
+                            'http://acme.com/image.png': 'AAA',
+                            'foo.com/font.ttf': 'BBB'
+                        }[url]);
+                    })
+                    .then(function (result) {
+                        assert.equal(result, 'url(data:image/png;base64,AAA), url("data:application/x-font-ttf;base64,BBB")');
                     })
                     .then(done).catch(error);
             });

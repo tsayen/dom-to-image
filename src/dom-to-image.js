@@ -22,7 +22,7 @@
             else return '';
         }
 
-        function mime(url){
+        function mime(url) {
             var extension = parseExtension(url).toLowerCase();
             return MIME[extension] || '';
         }
@@ -282,13 +282,24 @@
                 });
         }
 
-        // function inline(string, config) {
-        //     var urls = config.regex
-        // }
+        function inlineAll(string, get) {
+            return Promise.resolve(string)
+                .then(readUrls)
+                .then(function (urls) {
+                    var done = Promise.resolve(string);
+                    urls.forEach(function (url) {
+                        done = done.then(function (string) {
+                            return inline(string, url, get);
+                        });
+                    });
+                    return done;
+                });
+        }
 
         return {
             readUrls: readUrls,
             inline: inline,
+            inlineAll: inlineAll
         };
     })();
 
