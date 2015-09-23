@@ -539,6 +539,11 @@
             });
     }
 
+    /**
+     * @param node DOM node object to convert
+     * @param options {Object}
+     * @return {Promise} promise that resolves to SVG image data URL
+     * */
     function toImage(node, options) {
         options = options || {};
 
@@ -554,6 +559,11 @@
             .then(util.makeImage);
     }
 
+    /**
+     * @param node DOM node object to convert
+     * @param options {Object}
+     * @return {Promise} promise that resolves to PNG image data URL
+     * */
     function toDataUrl(node, options) {
         return draw(node, options)
             .then(function (canvas) {
@@ -561,6 +571,11 @@
             });
     }
 
+    /**
+     * @param node DOM node object to convert
+     * @param options {Object}
+     * @return {Promise} promise that resolves to PNG image blob
+     * */
     function toBlob(node, options) {
         return draw(node, options)
             .then(util.canvasToBlob);
