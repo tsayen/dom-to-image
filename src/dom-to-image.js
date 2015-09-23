@@ -27,6 +27,10 @@
             return MIME[extension] || '';
         }
 
+        function isDataUrl(url) {
+            return url.search(/^(data:)/) !== -1;
+        }
+
         function toBlob(canvas) {
             return new Promise(function (resolve) {
                 var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
@@ -112,98 +116,12 @@
             });
         }
 
-        function getFont(url, type) {
-            return getAndEncode(url)
-                .then(function (data) {
-                    return dataAsFontUrl(data, type);
-                });
-        }
-
-        function extension(url) {
-            var ext = /\.(.+)$/g.exec(url);
-            if (ext) return ext[1] || '';
-            return '';
-        }
-
-        function getImage(url, get) {
-            get = get || getAndEncode;
-            var ext = extension(url).toLowerCase();
-            return get(url)
-                .then(function (data) {
-                    return dataAsUrl(data, mimeType[ext] || 'image');
-                });
-        }
-
-        var mimeType = {
-            'woff': 'application/x-font-woff',
-            'woff2': 'application/x-font-woff2',
-            'truetype': 'application/x-font-ttf',
-            'ttf': 'application/x-font-ttf',
-            'opentype': 'application/x-font-otf',
-            'embedded-opentype': 'application/x-font-otf',
-            'png': 'image/png',
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg',
-            'gif': 'image/gif'
-        };
-
         function dataAsUrl(content, type) {
             return 'data:' + type + ';base64,' + content;
         }
 
-        function dataAsFontUrl(content, type) {
-            return 'url("' + dataAsUrl(content, mimeType[type]) + '")';
-        }
-
-        var fontUrlRegex = /url\(['"]?([^\?'"]+?)(?:\?.*?)?['"]?\)\s+format\(['"]?(.*?)['"]?\)/;
-
-        function hasFontUrl(str) {
-            return str.search(fontUrlRegex) !== -1;
-        }
-
-        function parseFontUrls(src) {
-            var regexp = new RegExp(fontUrlRegex.source, 'g');
-            var result = [];
-            var url;
-            while ((url = regexp.exec(src)) !== null) {
-                result.push({
-                    url: url[1],
-                    format: url[2]
-                });
-            }
-            return result;
-        }
-
         function escape(string) {
             return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
-        }
-
-        function fontUrlAsRegex(url) {
-            return new RegExp('url\\([\'"]?' + escape(url) + '(?:\\?.*?)?[\'"]?\\)', 'g');
-        }
-
-        function isDataUrl(url) {
-            return url.search(/^(data:)/) !== -1;
-        }
-
-        var urlRegex = /url\(['"]?([^'"]+?)?['"]?\)/;
-
-        function hasUrl(src) {
-            return src.search(urlRegex) !== -1;
-        }
-
-        function parseUrls(src) {
-            var regexp = new RegExp(urlRegex.source, 'g');
-            var result = [];
-            var url;
-            while ((url = regexp.exec(src)) !== null) {
-                result.push(url[1]);
-            }
-            return result;
-        }
-
-        function urlAsRegex(url) {
-            return new RegExp(escape(url), 'g');
         }
 
         function delay(ms) {
@@ -232,20 +150,11 @@
             parseExtension: parseExtension,
             mimeType: mime,
             dataAsUrl: dataAsUrl,
+            isDataUrl: isDataUrl,
             canvasToBlob: canvasToBlob,
             resolveUrl: resolveUrl,
             getAndEncode: getAndEncode,
-            getFont: getFont,
-            getImage: getImage,
             uid: uid.next,
-            hasUrl: hasUrl,
-            parseUrls: parseUrls,
-            urlAsRegex: urlAsRegex,
-            hasFontUrl: hasFontUrl,
-            parseFontUrls: parseFontUrls,
-            fontUrlAsRegex: fontUrlAsRegex,
-            dataAsFontUrl: dataAsFontUrl,
-            isDataUrl: isDataUrl,
             delay: delay,
             asArray: asArray,
             escapeXhtml: escapeXhtml,
@@ -262,7 +171,11 @@
         }
 
         function nothingToInline(string) {
-            return string.search(URL_REGEX) === -1;
+            return !shouldProcess(string);
+        }
+
+        function shouldProcess(string) {
+            return string.search(URL_REGEX) !== -1
         }
 
         function readUrls(string) {
@@ -308,6 +221,7 @@
 
         return {
             inlineAll: inlineAll,
+            shouldProcess: shouldProcess,
             impl: {
                 readUrls: readUrls,
                 inline: inline
@@ -323,7 +237,7 @@
                     return rule.type === CSSRule.FONT_FACE_RULE;
                 })
                 .filter(function (rule) {
-                    return util.hasFontUrl(rule.style.getPropertyValue('src'));
+                    return inliner.shouldProcess(rule.style.getPropertyValue('src'));
                 });
         }
 
@@ -384,8 +298,8 @@
                 if (util.isDataUrl(element.src)) return Promise.resolve();
 
                 return Promise.resolve(element.src)
-                    .then(get ||  util.getAndEncode)
-                    .then(function(data){
+                    .then(get || util.getAndEncode)
+                    .then(function (data) {
                         return util.dataAsUrl(data, util.mimeType(element.src));
                     })
                     .then(function (dataUrl) {

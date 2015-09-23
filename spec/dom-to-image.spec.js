@@ -315,16 +315,6 @@
                 assert(uid().length >= 4);
                 assert.notEqual(uid(), uid());
             });
-
-            it('should get image', function (done) {
-                domtoimage.impl.util.getImage('resources/images/image.jpeg', function () {
-                        return Promise.resolve('AAA');
-                    })
-                    .then(function (content) {
-                        assert.equal(content, 'data:image/jpeg;base64,AAA');
-                    })
-                    .then(done).catch(error);
-            });
         });
 
         describe('web fonts', function () {
@@ -364,7 +354,7 @@
 
             it('should not inline images with data url', function (done) {
                 var originalSrc = 'data:image/jpeg;base64,AAA';
-                
+
                 var img = new Image();
                 img.src = originalSrc;
 
