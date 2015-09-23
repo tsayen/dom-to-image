@@ -338,6 +338,7 @@
 
         function inlineAll(node) {
             if (!(node instanceof Element)) return Promise.resolve(node);
+
             return inlineBackground(node)
                 .then(function () {
                     if (node instanceof HTMLImageElement)
