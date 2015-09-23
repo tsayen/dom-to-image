@@ -22,7 +22,7 @@
             else return '';
         }
 
-        function mime(url) {
+        function mimeType(url) {
             var extension = parseExtension(url).toLowerCase();
             return MIME[extension] || '';
         }
@@ -148,7 +148,7 @@
         return {
             escape: escape,
             parseExtension: parseExtension,
-            mimeType: mime,
+            mimeType: mimeType,
             dataAsUrl: dataAsUrl,
             isDataUrl: isDataUrl,
             canvasToBlob: canvasToBlob,
@@ -285,8 +285,10 @@
         }
 
         return {
-            readAll: readAll,
-            resolveAll: resolveAll
+            resolveAll: resolveAll,
+            impl: {
+                readAll: readAll
+            }
         };
     })();
 
@@ -351,7 +353,9 @@
 
         return {
             inlineAll: inlineAll,
-            newImage: newImage
+            impl: {
+                newImage: newImage
+            }
         };
     })();
 
@@ -382,14 +386,16 @@
     }
 
     function formatCssProperties(style) {
-        var result = util.asArray(style)
-            .map(function (name) {
-                return name + ': ' +
-                    style.getPropertyValue(name) +
-                    (style.getPropertyPriority(name) ? ' !important' : '');
-            })
+
+        function formatProperty(name) {
+            return name + ': ' +
+                style.getPropertyValue(name) +
+                (style.getPropertyPriority(name) ? ' !important' : '');
+        }
+
+        return util.asArray(style)
+            .map(formatProperty)
             .join('; ') + ';';
-        return result;
     }
 
     function formatPseudoElementStyle(className, element, style) {

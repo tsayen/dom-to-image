@@ -323,7 +323,7 @@
             it('should read non-local font faces', function (done) {
                 loadTestPage('fonts/web-fonts/empty.html', 'fonts/web-fonts/rules.css')
                     .then(function () {
-                        return fontFaces.readAll();
+                        return fontFaces.impl.readAll();
                     })
                     .then(function (webFonts) {
                         assert.equal(webFonts.length, 3);
@@ -358,7 +358,7 @@
                 var img = new Image();
                 img.src = originalSrc;
 
-                domtoimage.impl.images.newImage(img).inline(function () {
+                domtoimage.impl.images.impl.newImage(img).inline(function () {
                         return Promise.resolve('XXX');
                     })
                     .then(function () {
