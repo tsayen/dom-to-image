@@ -157,11 +157,12 @@
                         return domtoimage.toImage(domNode());
                     })
                     .then(drawImage)
-                    .then(function (image) {
-                        debugger;
-                        return image;
-                    })
-                    .then(assertTextRendered(["PNG"]))
+                    // .then(function (image) {
+                    //     debugger;
+                    //     return image;
+                    // })
+                    .then(delay(30000))
+                    .then(assertTextRendered(["JPG"]))
                     .then(done).catch(error);
             });
 
