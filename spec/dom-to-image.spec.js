@@ -141,7 +141,7 @@
 
             it('should render images', function (done) {
                 loadTestPage('images/dom-node.html', 'images/style.css')
-                    .then(delay(1000))
+                    .then(delay(500))
                     .then(domNodeToDataUrl)
                     .then(makeImage)
                     .then(drawImage)
@@ -149,25 +149,17 @@
                     .then(done).catch(error);
             });
 
-            it.only('should render background images', function (done) {
-                this.timeout(10000);
+            it('should render background images', function (done) {
                 loadTestPage('css-bg/dom-node.html', 'css-bg/style.css')
-                    .then(delay(1000))
-                    .then(function () {
-                        return domtoimage.toImage(domNode());
-                    })
+                    .then(domNodeToDataUrl)
+                    .then(makeImage)
                     .then(drawImage)
-                    // .then(function (image) {
-                    //     debugger;
-                    //     return image;
-                    // })
-                    .then(delay(30000))
                     .then(assertTextRendered(["JPG"]))
                     .then(done).catch(error);
             });
 
-            function compareToControlImage(image) {
-                assert.isTrue(imagediff.equal(image, controlImage()), 'rendered and control images should be same');
+            function compareToControlImage(image, tolerance) {
+                assert.isTrue(imagediff.equal(image, controlImage(), tolerance), 'rendered and control images should be same');
             }
 
             function renderAndCheck() {
