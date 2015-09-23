@@ -300,9 +300,9 @@
         }
 
         return {
+            inlineAll: inlineAll,
             readUrls: readUrls,
-            inline: inline,
-            inlineAll: inlineAll
+            inline: inline
         };
     })();
 
@@ -336,39 +336,11 @@
         }
 
         function newWebFont(webFontRule) {
-
-            function readUrls() {
-                return util.parseFontUrls(webFontRule.style.getPropertyValue('src'))
-                    .filter(function (fontUrl) {
-                        return !util.isDataUrl(fontUrl.url);
-                    });
-            }
-
-            function resourceUrl(fontUrl) {
-                var baseUrl = webFontRule.parentStyleSheet.href;
-                return baseUrl ? util.resolveUrl(fontUrl.url, baseUrl) : fontUrl.url;
-            }
-
-            function resolve(getFont) {
-                getFont = getFont || util.getFont;
-
-                var cssText = webFontRule.cssText;
-
-                var resolved = readUrls()
-                    .map(function (fontUrl) {
-                        return getFont(resourceUrl(fontUrl), fontUrl.format)
-                            .then(function (encodedFont) {
-                                cssText = cssText.replace(util.fontUrlAsRegex(fontUrl.url), encodedFont);
-                            });
-                    });
-
-                return Promise.all(resolved).then(function () {
-                    return cssText;
-                });
-            }
-
             return {
-                resolve: resolve,
+                resolve: function resolve() {
+                    var baseUrl = (webFontRule.parentStyleSheet || {}).href;
+                    return inliner.inlineAll(webFontRule.cssText, baseUrl);
+                },
                 src: function () {
                     return webFontRule.style.getPropertyValue('src');
                 }
