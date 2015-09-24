@@ -553,9 +553,11 @@
     }
 
     /**
-     * @param node DOM node object to convert
-     * @param options {Object}
-     * @return {Promise} promise that resolves to SVG image data URL
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - The options object
+     * @param {Function} options.filter - A function that each subnode will be passed to,
+     *        and which should return boolean for whether the node (and it's children) should be included in the output
+     * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
         options = options || {};
@@ -572,9 +574,9 @@
     }
 
     /**
-     * @param node DOM node object to convert
-     * @param options {Object}
-     * @return {Promise} promise that resolves to PNG image data URL
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - The options object, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a PNG image data URL
      * */
     function toDataUrl(node, options) {
         return draw(node, options)
@@ -584,15 +586,18 @@
     }
 
     /**
-     * @param node DOM node object to convert
-     * @param options {Object}
-     * @return {Promise} promise that resolves to PNG image blob
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - The options object, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a PNG image blob
      * */
     function toBlob(node, options) {
         return draw(node, options)
             .then(util.canvasToBlob);
     }
 
+    /**
+     * @exports domtoimage
+     */
     global.domtoimage = {
         toSvg: toSvg,
         toDataUrl: toDataUrl,
