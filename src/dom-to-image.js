@@ -595,9 +595,6 @@
             .then(util.canvasToBlob);
     }
 
-    /**
-     * @exports domtoimage
-     */
     global.domtoimage = {
         toSvg: toSvg,
         toPng: toPng,
