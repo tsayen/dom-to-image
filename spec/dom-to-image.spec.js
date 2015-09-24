@@ -21,9 +21,33 @@
 
         describe('regression', function () {
 
-            it('should render small node', function (done) {
+            it('should render to svg', function (done) {
                 loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
-                    .then(renderAndCheck)
+                    .then(function () {
+                        return domtoimage.toSvg(domNode());
+                    })
+                    .then(check)
+                    .then(done).catch(error);
+            });
+
+            it('should render to png', function (done) {
+                loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
+                    .then(function () {
+                        return domtoimage.toDataUrl(domNode());
+                    })
+                    .then(check)
+                    .then(done).catch(error);
+            });
+
+            it('should render to blob', function (done) {
+                loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
+                    .then(function () {
+                        return domtoimage.toBlob(domNode());
+                    })
+                    .then(function (blob) {
+                        return global.URL.createObjectURL(blob);
+                    })
+                    .then(check)
                     .then(done).catch(error);
             });
 
@@ -59,11 +83,11 @@
                         domNode = $('#scrolled')[0];
                     })
                     .then(function () {
-                        return domNodeToDataUrl(domNode);
+                        return renderToPng(domNode);
                     })
-                    .then(makeImage)
+                    .then(makeImgElement)
                     .then(function (image) {
-                        return drawImage(image, domNode);
+                        return drawImgElement(image, domNode);
                     })
                     .then(compareToControlImage)
                     .then(done).catch(error);
@@ -71,35 +95,18 @@
 
             it('should render text nodes', function (done) {
                 loadTestPage('text/dom-node.html', 'text/style.css')
-                    .then(function () {
-                        return domtoimage.toImage(domNode());
-                    })
-                    .then(drawImage)
+                    .then(renderToPng)
+                    .then(drawDataUrl)
                     .then(assertTextRendered(['SOME TEXT', 'SOME MORE TEXT']))
                     .then(done).catch(error);
             });
 
             it('should preserve content of ::before and ::after pseudo elements', function (done) {
                 loadTestPage('pseudo/dom-node.html', 'pseudo/style.css')
-                    .then(domNodeToDataUrl)
-                    .then(makeImage)
-                    .then(drawImage)
+                    .then(renderToPng)
+                    .then(drawDataUrl)
                     .then(assertTextRendered(["ONLY-BEFORE", "BOTH-BEFORE"]))
                     .then(assertTextRendered(["ONLY-AFTER", "BOTH-AFTER"]))
-                    .then(done).catch(error);
-            });
-
-            it('should render to blob', function (done) {
-                loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
-                    .then(function () {
-                        return domtoimage.toBlob(domNode());
-                    })
-                    .then(function (blob) {
-                        return global.URL.createObjectURL(blob);
-                    })
-                    .then(makeImage)
-                    .then(drawImage)
-                    .then(compareToControlImage)
                     .then(done).catch(error);
             });
 
@@ -115,9 +122,7 @@
                             filter: filter
                         });
                     })
-                    .then(makeImage)
-                    .then(drawImage)
-                    .then(compareToControlImage)
+                    .then(check)
                     .then(done).catch(error);
             });
 
@@ -132,9 +137,8 @@
                 this.timeout(10000);
                 loadTestPage('fonts/dom-node.html', 'fonts/style.css')
                     .then(delay(1000))
-                    .then(domNodeToDataUrl)
-                    .then(makeImage)
-                    .then(drawImage)
+                    .then(renderToPng)
+                    .then(drawDataUrl)
                     .then(assertTextRendered(['o']))
                     .then(done).catch(error);
             });
@@ -142,18 +146,16 @@
             it('should render images', function (done) {
                 loadTestPage('images/dom-node.html', 'images/style.css')
                     .then(delay(500))
-                    .then(domNodeToDataUrl)
-                    .then(makeImage)
-                    .then(drawImage)
+                    .then(renderToPng)
+                    .then(drawDataUrl)
                     .then(assertTextRendered(["PNG", "JPG"]))
                     .then(done).catch(error);
             });
 
             it('should render background images', function (done) {
                 loadTestPage('css-bg/dom-node.html', 'css-bg/style.css')
-                    .then(domNodeToDataUrl)
-                    .then(makeImage)
-                    .then(drawImage)
+                    .then(renderToPng)
+                    .then(drawDataUrl)
                     .then(assertTextRendered(["JPG"]))
                     .then(done).catch(error);
             });
@@ -164,10 +166,20 @@
 
             function renderAndCheck() {
                 return Promise.resolve()
-                    .then(domNodeToDataUrl)
-                    .then(makeImage)
-                    .then(drawImage)
+                    .then(renderToPng)
+                    .then(check);
+            }
+
+            function check(dataUrl) {
+                return Promise.resolve(dataUrl)
+                    .then(drawDataUrl)
                     .then(compareToControlImage);
+            }
+
+            function drawDataUrl(dataUrl) {
+                return Promise.resolve(dataUrl)
+                    .then(makeImgElement)
+                    .then(drawImgElement);
             }
 
             function assertTextRendered(lines) {
@@ -179,7 +191,7 @@
                 };
             }
 
-            function makeImage(src) {
+            function makeImgElement(src) {
                 return new Promise(function (resolve) {
                     var image = new Image();
                     image.onload = function () {
@@ -189,7 +201,7 @@
                 });
             }
 
-            function drawImage(image, node) {
+            function drawImgElement(image, node) {
                 node = node || domNode();
                 canvas().height = node.offsetHeight.toString();
                 canvas().width = node.offsetWidth.toString();
@@ -198,7 +210,7 @@
                 return image;
             }
 
-            function domNodeToDataUrl(node) {
+            function renderToPng(node) {
                 return domtoimage.toDataUrl(node || domNode());
             }
         });

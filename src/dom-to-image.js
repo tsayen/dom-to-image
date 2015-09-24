@@ -540,7 +540,8 @@
     }
 
     function draw(domNode, options) {
-        return toImage(domNode, options)
+        return toSvg(domNode, options)
+            .then(util.makeImage)
             .then(util.delay(100))
             .then(function (image) {
                 var canvas = document.createElement('canvas');
@@ -556,7 +557,7 @@
      * @param options {Object}
      * @return {Promise} promise that resolves to SVG image data URL
      * */
-    function toImage(node, options) {
+    function toSvg(node, options) {
         options = options || {};
 
         return Promise.resolve(node)
@@ -567,8 +568,7 @@
             .then(inlineImages)
             .then(function (clone) {
                 return makeDataUri(clone, node.scrollWidth, node.scrollHeight);
-            })
-            .then(util.makeImage);
+            });
     }
 
     /**
@@ -594,7 +594,7 @@
     }
 
     global.domtoimage = {
-        toImage: toImage,
+        toSvg: toSvg,
         toDataUrl: toDataUrl,
         toBlob: toBlob,
         impl: {
