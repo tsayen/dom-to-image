@@ -5,19 +5,32 @@
 
         const TIMEOUT = 30000;
 
-        const MIME = {
-            'woff': 'application/x-font-woff',
-            'woff2': 'application/x-font-woff2',
-            'truetype': 'application/x-font-ttf',
-            'ttf': 'application/x-font-ttf',
-            'opentype': 'application/x-font-otf',
-            'embedded-opentype': 'application/x-font-otf',
-            'eot': 'application/x-font-otf',
-            'png': 'image/png',
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg',
-            'gif': 'image/gif'
-        };
+        const MIME = (function () {
+            /*
+             * Only WOFF and EOT mime types for fonts are 'real'
+             * see http://www.iana.org/assignments/media-types/media-types.xhtml
+             */
+            const WOFF = 'application/font-woff'
+            const EOT = 'application/vnd.ms-fontobject';
+            const TTF = 'application/font-truetype';
+
+            const JPEG = 'image/jpeg';
+
+            return {
+                'woff': WOFF,
+                'woff2': WOFF,
+                'truetype': TTF,
+                'ttf': TTF,
+                'opentype': EOT,
+                'embedded-opentype': EOT,
+                'eot': EOT,
+                'png': 'image/png',
+                'jpg': JPEG,
+                'jpeg': JPEG,
+                'gif': 'image/gif',
+                'tiff': 'image/tiff'
+            };
+        })();
 
         function parseExtension(url) {
             var match = /\.([^\./]*?)$/g.exec(url);

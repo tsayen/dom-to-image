@@ -275,7 +275,7 @@
                         }
                     )
                     .then(function (result) {
-                        assert.equal(result, 'url(data:image/png;base64,AAA), url("data:application/x-font-ttf;base64,BBB")');
+                        assert.equal(result, 'url(data:image/png;base64,AAA), url("data:application/font-truetype;base64,BBB")');
                     })
                     .then(done).catch(error);
             });
@@ -307,7 +307,7 @@
             it('should guess mime type from url', function () {
                 var mime = domtoimage.impl.util.mimeType;
 
-                assert.equal(mime('http://acme.com/font.woff'), 'application/x-font-woff');
+                assert.equal(mime('http://acme.com/font.woff'), 'application/font-woff');
                 assert.equal(mime('IMAGE.PNG'), 'image/png');
                 assert.equal(mime('http://acme.com/image'), '');
             });
