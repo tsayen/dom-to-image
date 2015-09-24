@@ -33,7 +33,7 @@
             it('should render to png', function (done) {
                 loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
                     .then(function () {
-                        return domtoimage.toDataUrl(domNode());
+                        return domtoimage.toPng(domNode());
                     })
                     .then(check)
                     .then(done).catch(error);
@@ -118,7 +118,7 @@
 
                 loadTestPage('filter/dom-node.html', 'filter/style.css', 'filter/control-image')
                     .then(function () {
-                        return domtoimage.toDataUrl(domNode(), {
+                        return domtoimage.toPng(domNode(), {
                             filter: filter
                         });
                     })
@@ -211,7 +211,7 @@
             }
 
             function renderToPng(node) {
-                return domtoimage.toDataUrl(node || domNode());
+                return domtoimage.toPng(node || domNode());
             }
         });
 

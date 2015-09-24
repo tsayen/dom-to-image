@@ -578,7 +578,7 @@
      * @param {Object} options - The options object, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a PNG image data URL
      * */
-    function toDataUrl(node, options) {
+    function toPng(node, options) {
         return draw(node, options)
             .then(function (canvas) {
                 return canvas.toDataURL();
@@ -600,7 +600,7 @@
      */
     global.domtoimage = {
         toSvg: toSvg,
-        toDataUrl: toDataUrl,
+        toPng: toPng,
         toBlob: toBlob,
         impl: {
             fontFaces: fontFaces,
