@@ -1,5 +1,5 @@
 (function (global) {
-    "use strict";
+    'use strict';
 
     var util = (function () {
 
@@ -11,24 +11,19 @@
              * see http://www.iana.org/assignments/media-types/media-types.xhtml
              */
             const WOFF = 'application/font-woff'
-            const EOT = 'application/vnd.ms-fontobject';
-            const TTF = 'application/font-truetype';
-
             const JPEG = 'image/jpeg';
 
             return {
                 'woff': WOFF,
                 'woff2': WOFF,
-                'truetype': TTF,
-                'ttf': TTF,
-                'opentype': EOT,
-                'embedded-opentype': EOT,
-                'eot': EOT,
+                'ttf': 'application/font-truetype',
+                'eot': 'application/vnd.ms-fontobject',
                 'png': 'image/png',
                 'jpg': JPEG,
                 'jpeg': JPEG,
                 'gif': 'image/gif',
-                'tiff': 'image/tiff'
+                'tiff': 'image/tiff',
+                'svg': 'image/svg+xml'
             };
         })();
 
@@ -87,7 +82,7 @@
 
             function uid() {
                 /* see http://stackoverflow.com/a/6248722/2519373 */
-                return ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
+                return ('0000' + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
             }
 
             function next() {
@@ -146,7 +141,7 @@
         }
 
         function escape(string) {
-            return string.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
+            return string.replace(/([.*+?^${}()|\[\]\/\\])/g, '\\$1');
         }
 
         function delay(ms) {
@@ -517,7 +512,7 @@
             });
     }
 
-    function makeDataUri(node, width, height) {
+    function makeSvgDataUri(node, width, height) {
         return Promise.resolve(node)
             .then(function (node) {
                 node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
@@ -525,13 +520,13 @@
             })
             .then(util.escapeXhtml)
             .then(function (xhtml) {
-                return '<foreignObject x="0" y="0" width="100%" height="100%">' + xhtml + "</foreignObject>";
+                return '<foreignObject x="0" y="0" width="100%" height="100%">' + xhtml + '</foreignObject>';
             })
             .then(function (foreignObject) {
                 return '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' + foreignObject + '</svg>';
             })
             .then(function (svg) {
-                return "data:image/svg+xml;charset=utf-8," + svg;
+                return 'data:image/svg+xml;charset=utf-8,' + svg;
             });
     }
 
@@ -582,7 +577,7 @@
             .then(embedFonts)
             .then(inlineImages)
             .then(function (clone) {
-                return makeDataUri(clone, node.scrollWidth, node.scrollHeight);
+                return makeSvgDataUri(clone, node.scrollWidth, node.scrollHeight);
             });
     }
 
