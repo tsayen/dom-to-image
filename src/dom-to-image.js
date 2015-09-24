@@ -12,6 +12,7 @@
             'ttf': 'application/x-font-ttf',
             'opentype': 'application/x-font-otf',
             'embedded-opentype': 'application/x-font-otf',
+            'eot': 'application/x-font-otf',
             'png': 'image/png',
             'jpg': 'image/jpeg',
             'jpeg': 'image/jpeg',
