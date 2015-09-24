@@ -554,9 +554,9 @@
 
     /**
      * @param {Node} node - The DOM Node object to render
-     * @param {Object} options - The options object
-     * @param {Function} options.filter - A function that each subnode will be passed to,
-     *        and which should return boolean for whether the node (and it's children) should be included in the output
+     * @param {Object} options - Rendering options
+     * @param {Function} options.filter - Should return true if passed node should be included in the output
+     *          (excluding node means excluding it's children as well)
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
@@ -575,7 +575,7 @@
 
     /**
      * @param {Node} node - The DOM Node object to render
-     * @param {Object} options - The options object, @see {@link toSvg}
+     * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a PNG image data URL
      * */
     function toPng(node, options) {
@@ -587,7 +587,7 @@
 
     /**
      * @param {Node} node - The DOM Node object to render
-     * @param {Object} options - The options object, @see {@link toSvg}
+     * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a PNG image blob
      * */
     function toBlob(node, options) {
