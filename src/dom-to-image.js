@@ -3,6 +3,8 @@
 
     var util = (function () {
 
+        const TIMEOUT = 30000;
+
         const MIME = {
             'woff': 'application/x-font-woff',
             'woff2': 'application/x-font-woff2',
@@ -95,16 +97,17 @@
         }
 
         function getAndEncode(url) {
-            var request = new XMLHttpRequest();
-            request.open('GET', url, true);
-            request.responseType = 'blob';
-
             return new Promise(function (resolve, reject) {
-                request.onload = function () {
-                    if (this.status !== 200) {
-                        reject(new Error('Cannot fetch resource "' + url + '": ' + this.status));
+                var request = new XMLHttpRequest();
+
+                request.onreadystatechange = function () {
+                    if (request.readyState !== 4) return;
+
+                    if (request.status !== 200) {
+                        reject(new Error('Cannot fetch resource ' + url + ', status: ' + this.status));
                         return;
                     }
+
                     var encoder = new FileReader();
                     encoder.onloadend = function () {
                         var content = encoder.result.split(/,/)[1];
@@ -112,6 +115,14 @@
                     };
                     encoder.readAsDataURL(request.response);
                 };
+
+                request.ontimeout = function () {
+                    reject(new Error('Timeout of ' + TIMEOUT + 'ms occured while fetching resource: ' + url));
+                };
+
+                request.responseType = 'blob';
+                request.timeout = TIMEOUT;
+                request.open('GET', url, true);
                 request.send();
             });
         }
