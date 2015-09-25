@@ -29,7 +29,7 @@ domtoimage.toBlob(document.getElementById('my-node'))
 Get an SVG data URL, but filter out all the `<i>` elements:
 ```javascript
 function filter (node) {
-    return (node.tagName === 'i');
+    return (node.tagName !== 'i');
 }
 
 domtoimage.toSvg(document.getElementById('my-node'), {filter: filter})
