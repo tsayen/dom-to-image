@@ -1,11 +1,11 @@
 {
   "name": "dom-to-image",
-  "version": "0.4.2",
+  "version": "1.0.0",
   "homepage": "https://github.com/tsayen/dom-to-image",
   "authors": [
-    "tsayen <anatoly.sayenko@gmail.com>"
+    "Anatolii Saienko <anatoly.sayenko@gmail.com>"
   ],
-  "description": "Generates an image from a DOM node using HTML5 canvas and SVG foreignObject",
+  "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
   "main": "src/dom-to-image.js",
   "moduleType": [
     "globals"
@@ -24,8 +24,7 @@
     "**/.*",
     "node_modules",
     "bower_components",
-    "test",
-    "tests"
+    "spec"
   ],
   "devDependencies": {
     "js-imagediff": "~1.0.8",

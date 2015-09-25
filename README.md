@@ -1,7 +1,7 @@
 # DOM to Image
 
 ## What is it
-**dom-to-image** is a library which can turn arbitrary DOM node into a vector (SVG) or raster (PNG) image, written in JavaScript. It's based on the idea from [domvas by Paul Bakaus](https://github.com/pbakaus/domvas) and has been completely rewritten, with some bugs fixed and some new features (like web font and image support) added.
+**dom-to-image** is a library which can turn arbitrary DOM node into a vector (SVG) or raster (PNG) image, written in JavaScript. It's based on [domvas by Paul Bakaus](https://github.com/pbakaus/domvas) and has been completely rewritten, with some bugs fixed and some new features (like web font and image support) added.
 
 ## Usage
 All the top level functions accept DOM node and rendering options, and return promises, which are fulfilled with corresponding data URLs.  
@@ -77,7 +77,8 @@ This library uses a feature of SVG that allows having arbitrary HTML content ins
 7. Optionally, to get PNG content, create an Image element with the SVG as a source, and render it on an off-screen canvas, that you have also created, then read the content from the canvas
 9. Done!
 
-Copyright 2015 Anatolii Saienko  
-Copyright 2012 Paul Bakaus
+## Authors
+Anatolii Saienko, Paul Bakaus (original idea)
 
-Licensed under MIT.
+## License
+MIT

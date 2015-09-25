@@ -1,7 +1,7 @@
 {
   "name": "dom-to-image",
-  "version": "0.3.1",
-  "description": "generates an image from a DOM node using HTML5 canvas",
+  "version": "1.0.0",
+  "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
   "main": "src/dom-to-image.js",
   "dependencies": {},
   "devDependencies": {
@@ -35,7 +35,7 @@
     "canvas",
     "svg"
   ],
-  "author": "tsayen <anatoly.sayenko@gmail.com>",
+  "author": "Anatolii Saienko <anatoly.sayenko@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/tsayen/dom-to-image/issues"
