@@ -40,7 +40,7 @@ domtoimage.toSvg(document.getElementById('my-node'), {filter: filter})
 All the functions under `impl` are not public API and are exposed only for unit testing.
 
 ## Browsers
-It's tested on latest Chrome and Firefox (44 and 40 respectively at the time of writing), with Chrome performing  significantly better on big DOM trees, possibly due to it's more performant SVG support.
+It's tested on latest Chrome and Firefox (44 and 40 respectively at the time of writing), with Chrome performing  significantly better on big DOM trees, possibly due to it's more performant SVG support, and the fact that it supports `CSSStyleDeclaration.cssText` property.
 
 ## Dependencies
 
