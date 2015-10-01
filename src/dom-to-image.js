@@ -1,11 +1,261 @@
 (function (global) {
     'use strict';
 
-    var util = (function () {
+    var util = newUtil();
+    var inliner = newInliner();
+    var fontFaces = newFontFaces();
+    var images = newImages();
 
-        const TIMEOUT = 30000;
+    global.domtoimage = {
+        toSvg: toSvg,
+        toPng: toPng,
+        toBlob: toBlob,
+        impl: {
+            fontFaces: fontFaces,
+            images: images,
+            util: util,
+            inliner: inliner
+        }
+    };
 
-        const MIME = (function () {
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options
+     * @param {Function} options.filter - Should return true if passed node should be included in the output
+     *          (excluding node means excluding it's children as well)
+     * @return {Promise} - A promise that is fulfilled with a SVG image data URL
+     * */
+    function toSvg(node, options) {
+        options = options || {};
+
+        return Promise.resolve(node)
+            .then(function (node) {
+                return cloneNode(node, options.filter);
+            })
+            .then(embedFonts)
+            .then(inlineImages)
+            .then(function (clone) {
+                return makeSvgDataUri(clone, node.scrollWidth, node.scrollHeight);
+            });
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a PNG image data URL
+     * */
+    function toPng(node, options) {
+        return draw(node, options)
+            .then(function (canvas) {
+                return canvas.toDataURL();
+            });
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a PNG image blob
+     * */
+    function toBlob(node, options) {
+        return draw(node, options)
+            .then(util.canvasToBlob);
+    }
+
+    function cloneNode(node, filter) {
+        if (filter && !filter(node)) return Promise.resolve();
+
+        return Promise.resolve()
+            .then(function () {
+                return node.cloneNode(false);
+            })
+            .then(function (clone) {
+                return cloneChildren(node, clone, filter);
+            })
+            .then(function (clone) {
+                return processClone(node, clone);
+            });
+
+        function cloneChildren(original, clone, filter) {
+            var children = original.childNodes;
+            if (children.length === 0) return Promise.resolve(clone);
+
+            return cloneChildrenInOrder(clone, util.asArray(children), filter)
+                .then(function () {
+                    return clone;
+                });
+
+            function cloneChildrenInOrder(parent, children, filter) {
+                var done = Promise.resolve();
+                children.forEach(function (child) {
+                    done = done
+                        .then(function () {
+                            return cloneNode(child, filter);
+                        })
+                        .then(function (childClone) {
+                            if (childClone) parent.appendChild(childClone);
+                        });
+                });
+                return done;
+            }
+        }
+
+        function processClone(original, clone) {
+            if (!(clone instanceof Element)) return clone;
+
+            return Promise.resolve({
+                    source: original,
+                    target: clone
+                })
+                .then(cloneStyle)
+                .then(clonePseudoElements)
+                .then(function (pair) {
+                    return pair.target;
+                })
+                .then(fixNamespace);
+
+            function cloneStyle(pair) {
+                var style = global.window.getComputedStyle(pair.source);
+                copyStyle(style, pair.target.style);
+                return pair;
+
+                function copyStyle(source, target) {
+                    if (source.cssText) target.cssText = source.cssText;
+                    else copyProperties(source, target);
+
+                    function copyProperties(source, target) {
+                        util.asArray(source).forEach(function (name) {
+                            target.setProperty(
+                                name,
+                                source.getPropertyValue(name),
+                                source.getPropertyPriority(name)
+                            );
+                        });
+                    }
+                }
+            }
+
+            function fixNamespace(node) {
+                if (node instanceof SVGElement) node.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                return node;
+            }
+
+            function clonePseudoElements(pair) {
+                [':before', ':after'].forEach(function (element) {
+                    clonePseudoElement(pair, element);
+                });
+                return pair;
+
+                function clonePseudoElement(pair, element) {
+                    var style = global.window.getComputedStyle(pair.source, element);
+                    var content = style.getPropertyValue('content');
+
+                    if (content === '' || content === 'none') return pair;
+
+                    var className = util.uid();
+
+                    pair.target.className = pair.target.className + ' ' + className;
+
+                    var styleElement = global.document.createElement('style');
+                    styleElement.appendChild(formatPseudoElementStyle(className, element, style));
+                    pair.target.appendChild(styleElement);
+
+                    return pair;
+
+                    function formatPseudoElementStyle(className, element, style) {
+                        var selector = '.' + className + ':' + element;
+                        var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
+                        return global.document.createTextNode(selector + '{' + cssText + '}');
+
+                        function formatCssText(style) {
+                            var content = style.getPropertyValue('content');
+                            return style.cssText + ' content: ' + content + ';';
+                        }
+
+                        function formatCssProperties(style) {
+
+                            return util.asArray(style)
+                                .map(formatProperty)
+                                .join('; ') + ';';
+
+                            function formatProperty(name) {
+                                return name + ': ' +
+                                    style.getPropertyValue(name) +
+                                    (style.getPropertyPriority(name) ? ' !important' : '');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function embedFonts(node) {
+        return fontFaces.resolveAll()
+            .then(function (cssText) {
+                var styleNode = document.createElement('style');
+                node.appendChild(styleNode);
+                styleNode.appendChild(document.createTextNode(cssText));
+                return node;
+            });
+    }
+
+    function inlineImages(node) {
+        return images.inlineAll(node)
+            .then(function () {
+                return node;
+            });
+    }
+
+    function makeSvgDataUri(node, width, height) {
+        return Promise.resolve(node)
+            .then(function (node) {
+                node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+                return new XMLSerializer().serializeToString(node);
+            })
+            .then(util.escapeXhtml)
+            .then(function (xhtml) {
+                return '<foreignObject x="0" y="0" width="100%" height="100%">' + xhtml + '</foreignObject>';
+            })
+            .then(function (foreignObject) {
+                return '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' + foreignObject + '</svg>';
+            })
+            .then(function (svg) {
+                return 'data:image/svg+xml;charset=utf-8,' + svg;
+            });
+    }
+
+    function draw(domNode, options) {
+        return toSvg(domNode, options)
+            .then(util.makeImage)
+            .then(util.delay(100))
+            .then(function (image) {
+                var canvas = document.createElement('canvas');
+                canvas.width = domNode.scrollWidth;
+                canvas.height = domNode.scrollHeight;
+                canvas.getContext('2d').drawImage(image, 0, 0);
+                return canvas;
+            });
+    }
+
+    function newUtil() {
+
+        return {
+            escape: escape,
+            parseExtension: parseExtension,
+            mimeType: mimeType,
+            dataAsUrl: dataAsUrl,
+            isDataUrl: isDataUrl,
+            canvasToBlob: canvasToBlob,
+            resolveUrl: resolveUrl,
+            getAndEncode: getAndEncode,
+            uid: uid(),
+            delay: delay,
+            asArray: asArray,
+            escapeXhtml: escapeXhtml,
+            makeImage: makeImage
+        };
+
+        function mimes() {
             /*
              * Only WOFF and EOT mime types for fonts are 'real'
              * see http://www.iana.org/assignments/media-types/media-types.xhtml
@@ -25,7 +275,7 @@
                 'tiff': 'image/tiff',
                 'svg': 'image/svg+xml'
             };
-        })();
+        }
 
         function parseExtension(url) {
             var match = /\.([^\./]*?)$/g.exec(url);
@@ -35,7 +285,7 @@
 
         function mimeType(url) {
             var extension = parseExtension(url).toLowerCase();
-            return MIME[extension] || '';
+            return mimes()[extension] || '';
         }
 
         function isDataUrl(url) {
@@ -77,22 +327,20 @@
             return a.href;
         }
 
-        var uid = (function () {
+        function uid() {
             var index = 0;
 
-            function uid() {
-                /* see http://stackoverflow.com/a/6248722/2519373 */
-                return ('0000' + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
-            }
+            return next;
 
             function next() {
                 return 'u' + uid() + index++;
-            }
 
-            return {
-                next: next
-            };
-        })();
+                function uid() {
+                    /* see http://stackoverflow.com/a/6248722/2519373 */
+                    return ('0000' + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
+                }
+            }
+        };
 
         function makeImage(uri) {
             return new Promise(function (resolve, reject) {
@@ -106,6 +354,8 @@
         }
 
         function getAndEncode(url) {
+            const TIMEOUT = 30000;
+
             return new Promise(function (resolve, reject) {
                 var request = new XMLHttpRequest();
 
@@ -164,27 +414,19 @@
         function escapeXhtml(string) {
             return string.replace(/#/g, '%23');
         }
+    }
+
+    function newInliner() {
+        const URL_REGEX = /url\(['"]?([^'"]+?)['"]?\)/g;
 
         return {
-            escape: escape,
-            parseExtension: parseExtension,
-            mimeType: mimeType,
-            dataAsUrl: dataAsUrl,
-            isDataUrl: isDataUrl,
-            canvasToBlob: canvasToBlob,
-            resolveUrl: resolveUrl,
-            getAndEncode: getAndEncode,
-            uid: uid.next,
-            delay: delay,
-            asArray: asArray,
-            escapeXhtml: escapeXhtml,
-            makeImage: makeImage
+            inlineAll: inlineAll,
+            shouldProcess: shouldProcess,
+            impl: {
+                readUrls: readUrls,
+                inline: inline
+            }
         };
-    })();
-
-    var inliner = (function () {
-
-        const URL_REGEX = /url\(['"]?([^'"]+?)['"]?\)/g;
 
         function urlAsRegex(url) {
             return new RegExp('(url\\([\'"]?)(' + util.escape(url) + ')([\'"]?\\))', 'g');
@@ -238,18 +480,16 @@
                     return done;
                 });
         }
+    }
+
+    function newFontFaces() {
 
         return {
-            inlineAll: inlineAll,
-            shouldProcess: shouldProcess,
+            resolveAll: resolveAll,
             impl: {
-                readUrls: readUrls,
-                inline: inline
+                readAll: readAll
             }
         };
-    })();
-
-    var fontFaces = (function () {
 
         function selectWebFontRules(cssRules) {
             return cssRules
@@ -303,16 +543,16 @@
                     return cssStrings.join('\n');
                 });
         }
+    }
+
+    function newImages() {
 
         return {
-            resolveAll: resolveAll,
+            inlineAll: inlineAll,
             impl: {
-                readAll: readAll
+                newImage: newImage
             }
         };
-    })();
-
-    var images = (function () {
 
         function newImage(element) {
 
@@ -338,24 +578,6 @@
             };
         }
 
-        function inlineBackground(node) {
-            var background = node.style.getPropertyValue('background');
-
-            if (!background) return Promise.resolve(node);
-
-            return inliner.inlineAll(background)
-                .then(function (inlined) {
-                    node.style.setProperty(
-                        'background',
-                        inlined,
-                        node.style.getPropertyPriority('background')
-                    );
-                })
-                .then(function () {
-                    return node;
-                });
-        }
-
         function inlineAll(node) {
             if (!(node instanceof Element)) return Promise.resolve(node);
 
@@ -370,248 +592,24 @@
                             })
                         );
                 });
-        }
 
-        return {
-            inlineAll: inlineAll,
-            impl: {
-                newImage: newImage
+            function inlineBackground(node) {
+                var background = node.style.getPropertyValue('background');
+
+                if (!background) return Promise.resolve(node);
+
+                return inliner.inlineAll(background)
+                    .then(function (inlined) {
+                        node.style.setProperty(
+                            'background',
+                            inlined,
+                            node.style.getPropertyPriority('background')
+                        );
+                    })
+                    .then(function () {
+                        return node;
+                    });
             }
-        };
-    })();
-
-    function copyProperties(source, target) {
-        util.asArray(source).forEach(function (name) {
-            target.setProperty(
-                name,
-                source.getPropertyValue(name),
-                source.getPropertyPriority(name)
-            );
-        });
-    }
-
-    function copyStyle(source, target) {
-        if (source.cssText) target.cssText = source.cssText;
-        else copyProperties(source, target);
-    }
-
-    function cloneStyle(pair) {
-        var style = global.window.getComputedStyle(pair.source);
-        copyStyle(style, pair.target.style);
-        return pair;
-    }
-
-    function formatCssText(style) {
-        var content = style.getPropertyValue('content');
-        return style.cssText + ' content: ' + content + ';';
-    }
-
-    function formatCssProperties(style) {
-
-        function formatProperty(name) {
-            return name + ': ' +
-                style.getPropertyValue(name) +
-                (style.getPropertyPriority(name) ? ' !important' : '');
         }
-
-        return util.asArray(style)
-            .map(formatProperty)
-            .join('; ') + ';';
     }
-
-    function formatPseudoElementStyle(className, element, style) {
-        var selector = '.' + className + ':' + element;
-        var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
-        return global.document.createTextNode(selector + '{' + cssText + '}');
-    }
-
-    function clonePseudoElement(pair, element) {
-        var style = global.window.getComputedStyle(pair.source, element);
-        var content = style.getPropertyValue('content');
-
-        if (content === '' || content === 'none') return pair;
-
-        var className = util.uid();
-
-        pair.target.className = pair.target.className + ' ' + className;
-
-        var styleElement = global.document.createElement('style');
-        styleElement.appendChild(formatPseudoElementStyle(className, element, style));
-        pair.target.appendChild(styleElement);
-
-        return pair;
-    }
-
-    function clonePseudoElements(pair) {
-        [
-            ':before',
-            ':after'
-        ]
-        .forEach(function (element) {
-            clonePseudoElement(pair, element);
-        });
-        return pair;
-    }
-
-    function fixNamespace(node) {
-        if (node instanceof SVGElement) node.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        return node;
-    }
-
-    function processClone(original, clone) {
-        if (!(clone instanceof Element)) return clone;
-
-        return Promise.resolve({
-                source: original,
-                target: clone
-            })
-            .then(cloneStyle)
-            .then(clonePseudoElements)
-            .then(function (pair) {
-                return pair.target;
-            })
-            .then(fixNamespace);
-    }
-
-    function cloneChildrenInOrder(parent, children, filter) {
-        var done = Promise.resolve();
-        children.forEach(function (child) {
-            done = done
-                .then(function () {
-                    return cloneNode(child, filter);
-                })
-                .then(function (childClone) {
-                    if (childClone) parent.appendChild(childClone);
-                });
-        });
-        return done;
-    }
-
-    function cloneChildren(original, clone, filter) {
-        var children = original.childNodes;
-        if (children.length === 0) return Promise.resolve(clone);
-
-        return cloneChildrenInOrder(clone, util.asArray(children), filter)
-            .then(function () {
-                return clone;
-            });
-    }
-
-    function cloneNode(node, filter) {
-        if (filter && !filter(node)) return Promise.resolve();
-
-        return Promise.resolve()
-            .then(function () {
-                return node.cloneNode(false);
-            })
-            .then(function (clone) {
-                return cloneChildren(node, clone, filter);
-            })
-            .then(function (clone) {
-                return processClone(node, clone);
-            });
-    }
-
-    function makeSvgDataUri(node, width, height) {
-        return Promise.resolve(node)
-            .then(function (node) {
-                node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-                return new XMLSerializer().serializeToString(node);
-            })
-            .then(util.escapeXhtml)
-            .then(function (xhtml) {
-                return '<foreignObject x="0" y="0" width="100%" height="100%">' + xhtml + '</foreignObject>';
-            })
-            .then(function (foreignObject) {
-                return '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' + foreignObject + '</svg>';
-            })
-            .then(function (svg) {
-                return 'data:image/svg+xml;charset=utf-8,' + svg;
-            });
-    }
-
-    function inlineImages(node) {
-        return images.inlineAll(node)
-            .then(function () {
-                return node;
-            });
-    }
-
-    function embedFonts(node) {
-        return fontFaces.resolveAll()
-            .then(function (cssText) {
-                var styleNode = document.createElement('style');
-                node.appendChild(styleNode);
-                styleNode.appendChild(document.createTextNode(cssText));
-                return node;
-            });
-    }
-
-    function draw(domNode, options) {
-        return toSvg(domNode, options)
-            .then(util.makeImage)
-            .then(util.delay(100))
-            .then(function (image) {
-                var canvas = document.createElement('canvas');
-                canvas.width = domNode.scrollWidth;
-                canvas.height = domNode.scrollHeight;
-                canvas.getContext('2d').drawImage(image, 0, 0);
-                return canvas;
-            });
-    }
-
-    /**
-     * @param {Node} node - The DOM Node object to render
-     * @param {Object} options - Rendering options
-     * @param {Function} options.filter - Should return true if passed node should be included in the output
-     *          (excluding node means excluding it's children as well)
-     * @return {Promise} - A promise that is fulfilled with a SVG image data URL
-     * */
-    function toSvg(node, options) {
-        options = options || {};
-
-        return Promise.resolve(node)
-            .then(function (node) {
-                return cloneNode(node, options.filter);
-            })
-            .then(embedFonts)
-            .then(inlineImages)
-            .then(function (clone) {
-                return makeSvgDataUri(clone, node.scrollWidth, node.scrollHeight);
-            });
-    }
-
-    /**
-     * @param {Node} node - The DOM Node object to render
-     * @param {Object} options - Rendering options, @see {@link toSvg}
-     * @return {Promise} - A promise that is fulfilled with a PNG image data URL
-     * */
-    function toPng(node, options) {
-        return draw(node, options)
-            .then(function (canvas) {
-                return canvas.toDataURL();
-            });
-    }
-
-    /**
-     * @param {Node} node - The DOM Node object to render
-     * @param {Object} options - Rendering options, @see {@link toSvg}
-     * @return {Promise} - A promise that is fulfilled with a PNG image blob
-     * */
-    function toBlob(node, options) {
-        return draw(node, options)
-            .then(util.canvasToBlob);
-    }
-
-    global.domtoimage = {
-        toSvg: toSvg,
-        toPng: toPng,
-        toBlob: toBlob,
-        impl: {
-            fontFaces: fontFaces,
-            images: images,
-            util: util,
-            inliner: inliner
-        }
-    };
 })(this);
