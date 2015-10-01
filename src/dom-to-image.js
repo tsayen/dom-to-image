@@ -330,9 +330,7 @@
         function uid() {
             var index = 0;
 
-            return next;
-
-            function next() {
+            return function () {
                 return 'u' + uid() + index++;
 
                 function uid() {
@@ -359,7 +357,14 @@
             return new Promise(function (resolve, reject) {
                 var request = new XMLHttpRequest();
 
-                request.onreadystatechange = function () {
+                request.onreadystatechange = done;
+                request.ontimeout = timeout;
+                request.responseType = 'blob';
+                request.timeout = TIMEOUT;
+                request.open('GET', url, true);
+                request.send();
+
+                function done() {
                     if (request.readyState !== 4) return;
 
                     if (request.status !== 200) {
@@ -375,14 +380,9 @@
                     encoder.readAsDataURL(request.response);
                 };
 
-                request.ontimeout = function () {
+                function timeout() {
                     reject(new Error('Timeout of ' + TIMEOUT + 'ms occured while fetching resource: ' + url));
                 };
-
-                request.responseType = 'blob';
-                request.timeout = TIMEOUT;
-                request.open('GET', url, true);
-                request.send();
             });
         }
 
@@ -428,14 +428,6 @@
             }
         };
 
-        function urlAsRegex(url) {
-            return new RegExp('(url\\([\'"]?)(' + util.escape(url) + ')([\'"]?\\))', 'g');
-        }
-
-        function nothingToInline(string) {
-            return !shouldProcess(string);
-        }
-
         function shouldProcess(string) {
             return string.search(URL_REGEX) !== -1;
         }
@@ -463,6 +455,10 @@
                 .then(function (dataUrl) {
                     return string.replace(urlAsRegex(url), '$1' + dataUrl + '$3');
                 });
+
+            function urlAsRegex(url) {
+                return new RegExp('(url\\([\'"]?)(' + util.escape(url) + ')([\'"]?\\))', 'g');
+            }
         }
 
         function inlineAll(string, baseUrl, get) {
@@ -479,6 +475,10 @@
                     });
                     return done;
                 });
+
+            function nothingToInline(string) {
+                return !shouldProcess(string);
+            }
         }
     }
 
@@ -556,6 +556,10 @@
 
         function newImage(element) {
 
+            return {
+                inline: inline
+            };
+
             function inline(get) {
                 if (util.isDataUrl(element.src)) return Promise.resolve();
 
@@ -572,10 +576,6 @@
                         });
                     });
             }
-
-            return {
-                inline: inline
-            };
         }
 
         function inlineAll(node) {
