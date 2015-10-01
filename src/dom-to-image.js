@@ -328,14 +328,14 @@
             var index = 0;
 
             return function () {
-                return 'u' + uid() + index++;
+                return 'u' + fourRandomChars() + index++;
 
-                function uid() {
+                function fourRandomChars() {
                     /* see http://stackoverflow.com/a/6248722/2519373 */
                     return ('0000' + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4);
                 }
-            }
-        };
+            };
+        }
 
         function makeImage(uri) {
             return new Promise(function (resolve, reject) {
@@ -365,7 +365,7 @@
                     if (request.readyState !== 4) return;
 
                     if (request.status !== 200) {
-                        reject(new Error('Cannot fetch resource ' + url + ', status: ' + this.status));
+                        reject(new Error('Cannot fetch resource ' + url + ', status: ' + request.status));
                         return;
                     }
 
@@ -375,11 +375,11 @@
                         resolve(content);
                     };
                     encoder.readAsDataURL(request.response);
-                };
+                }
 
                 function timeout() {
                     reject(new Error('Timeout of ' + TIMEOUT + 'ms occured while fetching resource: ' + url));
-                };
+                }
             });
         }
 
