@@ -522,7 +522,7 @@
             function getCssRules(styleSheets) {
                 var cssRules = [];
                 styleSheets.forEach(function (sheet) {
-                    util.asArray(sheet.cssRules).forEach(cssRules.push.bind(cssRules));
+                    util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
                 });
                 return cssRules;
             }
