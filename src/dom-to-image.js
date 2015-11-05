@@ -409,7 +409,7 @@
         }
 
         function escapeXhtml(string) {
-            return string.replace(/#/g, '%23');
+            return string.replace(/#/g, '%23').replace(/\n/g, '%0A');
         }
     }
 
