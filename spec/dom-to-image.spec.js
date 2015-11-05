@@ -160,6 +160,14 @@
                     .then(done).catch(error);
             });
 
+            it('should render line breaks in text area', function (done) {
+                loadTestPage('textarea/dom-node.html', 'textarea/style.css')
+                    .then(renderToPng)
+                    .then(drawDataUrl)
+                    .then(assertTextRendered(["TEXT\nWITH\nLINE\nBREAKS"]))
+                    .then(done).catch(error);
+            });
+
             function compareToControlImage(image, tolerance) {
                 assert.isTrue(imagediff.equal(image, controlImage(), tolerance), 'rendered and control images should be same');
             }
