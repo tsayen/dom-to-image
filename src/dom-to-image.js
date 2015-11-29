@@ -31,11 +31,13 @@
         return Promise.resolve(node)
             .then(function (node) {
                 return cloneNode(node, options.filter);
+            }).then(function(clone) {
+            	return options.mutate ? options.mutate(clone) : clone;
             })
             .then(embedFonts)
             .then(inlineImages)
             .then(function (clone) {
-                return makeSvgDataUri(clone, node.scrollWidth, node.scrollHeight);
+                return makeSvgDataUri(clone, options.width ? options.width : node.scrollWidth, options.height ? options.height : node.scrollHeight);
             });
     }
 
@@ -224,8 +226,16 @@
             .then(util.delay(100))
             .then(function (image) {
                 var canvas = document.createElement('canvas');
-                canvas.width = domNode.scrollWidth;
-                canvas.height = domNode.scrollHeight;
+                canvas.width = options.width ? options.width : domNode.scrollWidth;
+                canvas.height = options.height ? options.height : domNode.scrollHeight;
+                
+                if(options.bgColor) {
+                    var ctx = canvas.getContext('2d');
+                    ctx.rect(0,0,canvas.width, canvas.height);
+                    ctx.fillStyle=options.bgColor.toUpperCase();
+                    ctx.fill();                	
+                }
+                
                 canvas.getContext('2d').drawImage(image, 0, 0);
                 return canvas;
             });
