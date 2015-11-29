@@ -102,22 +102,17 @@
         function processClone(original, clone) {
             if (!(clone instanceof Element)) return clone;
 
-            return Promise.resolve({
-                    source: original,
-                    target: clone
-                })
+            return Promise.resolve()
                 .then(cloneStyle)
                 .then(clonePseudoElements)
                 .then(copyUserInput)
-                .then(function (pair) {
-                    return pair.target;
-                })
-                .then(fixNamespace);
+                .then(fixNamespace)
+                .then(function () {
+                    return clone;
+                });
 
-            function cloneStyle(pair) {
-                var style = global.window.getComputedStyle(pair.source);
-                copyStyle(style, pair.target.style);
-                return pair;
+            function cloneStyle() {
+                copyStyle(global.window.getComputedStyle(original), clone.style);
 
                 function copyStyle(source, target) {
                     if (source.cssText) target.cssText = source.cssText;
@@ -135,25 +130,22 @@
                 }
             }
 
-            function clonePseudoElements(pair) {
+            function clonePseudoElements() {
                 [':before', ':after'].forEach(function (element) {
-                    clonePseudoElement(pair, element);
+                    clonePseudoElement(element);
                 });
-                return pair;
 
-                function clonePseudoElement(pair, element) {
-                    var style = global.window.getComputedStyle(pair.source, element);
+                function clonePseudoElement(element) {
+                    var style = global.window.getComputedStyle(original, element);
                     var content = style.getPropertyValue('content');
 
-                    if (content === '' || content === 'none') return pair;
+                    if (content === '' || content === 'none') return;
 
                     var className = util.uid();
-                    pair.target.className = pair.target.className + ' ' + className;
+                    clone.className = clone.className + ' ' + className;
                     var styleElement = global.document.createElement('style');
                     styleElement.appendChild(formatPseudoElementStyle(className, element, style));
-                    pair.target.appendChild(styleElement);
-
-                    return pair;
+                    clone.appendChild(styleElement);
 
                     function formatPseudoElementStyle(className, element, style) {
                         var selector = '.' + className + ':' + element;
@@ -181,14 +173,12 @@
                 }
             }
 
-            function copyUserInput(pair){
-                if (pair.source instanceof HTMLTextAreaElement) pair.target.innerHTML = pair.source.value;
-                return pair;
+            function copyUserInput() {
+                if (original instanceof HTMLTextAreaElement) clone.innerHTML = original.value;
             }
 
-            function fixNamespace(node) {
-                if (node instanceof SVGElement) node.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                return node;
+            function fixNamespace() {
+                if (clone instanceof SVGElement) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
             }
         }
     }
