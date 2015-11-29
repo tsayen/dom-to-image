@@ -182,7 +182,7 @@
             }
 
             function copyUserInput(pair){
-                if (pair.source instanceof HTMLTextAreaElement) pair.target.innerHTML = /*pair.source.innerHTML ||*/ pair.source.value;
+                if (pair.source instanceof HTMLTextAreaElement) pair.target.innerHTML = pair.source.value;
                 return pair;
             }
 
