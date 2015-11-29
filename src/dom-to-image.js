@@ -108,6 +108,7 @@
                 })
                 .then(cloneStyle)
                 .then(clonePseudoElements)
+                .then(copyUserInput)
                 .then(function (pair) {
                     return pair.target;
                 })
@@ -178,6 +179,11 @@
                         }
                     }
                 }
+            }
+
+            function copyUserInput(pair){
+                if (pair.source instanceof HTMLTextAreaElement) pair.target.innerHTML = /*pair.source.innerHTML ||*/ pair.source.value;
+                return pair;
             }
 
             function fixNamespace(node) {

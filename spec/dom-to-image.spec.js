@@ -161,10 +161,24 @@
             });
 
             it('should render line breaks in text area', function (done) {
-                loadTestPage('textarea/dom-node.html', 'textarea/style.css')
+                loadTestPage('textarea/line-breaks.html', 'textarea/style.css')
                     .then(renderToPng)
                     .then(drawDataUrl)
                     .then(assertTextRendered(["TEXT\nWITH\nLINE\nBREAKS"]))
+                    .then(done).catch(error);
+            });
+
+            it('should render user input from textarea', function (done) {
+                this.timeout(10000);
+                loadTestPage('textarea/user-input.html', 'textarea/style.css')
+                    .then(function () {
+                        document.getElementById('input').value = "USER\nINPUT";
+                    })
+                    .then(delay(5000))
+                    .then(renderToPng)
+                    .then(drawDataUrl)
+                    .then(delay(2000))
+                    .then(assertTextRendered(["USER\nINPUT"]))
                     .then(done).catch(error);
             });
 
