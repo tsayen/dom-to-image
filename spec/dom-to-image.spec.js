@@ -173,8 +173,9 @@
 
             it('should not crash when loading external stylesheet causes error', function (done) {
                 loadTestPage('ext-css/dom-node.html', 'ext-css/style.css')
+                    .then(delay(1000))
                     .then(renderToPng)
-                    .then(function(){
+                    .then(function () {
                         done();
                     })
                     .catch(error);
