@@ -175,6 +175,10 @@
 
             function copyUserInput() {
                 if (original instanceof HTMLTextAreaElement) clone.innerHTML = original.value;
+                if (original instanceof HTMLInputElement) {
+                    // does not work
+                    clone.value = original.value;
+                }
             }
 
             function fixNamespace() {
