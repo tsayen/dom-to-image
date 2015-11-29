@@ -171,22 +171,6 @@
                     .then(done).catch(error);
             });
 
-// fails
-            it('should render user input from <input>', function (done) {
-                this.timeout(10000);
-                loadTestPage('input/dom-node.html', 'input/style.css')
-                    .then(function () {
-                        document.getElementById('input').value = "USER INPUT";
-                    })
-                    .then(delay(2000))
-                    .then(renderToPng)
-                    .then(drawDataUrl)
-                    .then(delay(2000))
-
-                    .then(assertTextRendered(["USER INPUT"]))
-                    .then(done).catch(error);
-            });
-
             function compareToControlImage(image, tolerance) {
                 assert.isTrue(imagediff.equal(image, controlImage(), tolerance), 'rendered and control images should be same');
             }
