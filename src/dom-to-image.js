@@ -518,7 +518,11 @@
             function getCssRules(styleSheets) {
                 var cssRules = [];
                 styleSheets.forEach(function (sheet) {
-                    util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
+                    try {
+                        util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
+                    } catch (e) {
+                        console.log('Error while reading CSS rules from ' + sheet.href, e.toString());
+                    }
                 });
                 return cssRules;
             }

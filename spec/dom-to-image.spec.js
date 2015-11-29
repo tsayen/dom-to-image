@@ -171,6 +171,15 @@
                     .then(done).catch(error);
             });
 
+            it('should not crash when loading external stylesheet causes error', function (done) {
+                loadTestPage('ext-css/dom-node.html', 'ext-css/style.css')
+                    .then(renderToPng)
+                    .then(function(){
+                        done();
+                    })
+                    .catch(error);
+            });
+
             function compareToControlImage(image, tolerance) {
                 assert.isTrue(imagediff.equal(image, controlImage(), tolerance), 'rendered and control images should be same');
             }
