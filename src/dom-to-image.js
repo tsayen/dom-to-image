@@ -26,11 +26,9 @@
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
-        options = options || {};
-
         return Promise.resolve(node)
             .then(function (node) {
-                return cloneNode(node, options.filter);
+                return cloneNode(node, (options || {}).filter);
             })
             .then(embedFonts)
             .then(inlineImages)
@@ -223,12 +221,23 @@
             .then(util.makeImage)
             .then(util.delay(100))
             .then(function (image) {
-                var canvas = document.createElement('canvas');
-                canvas.width = domNode.scrollWidth;
-                canvas.height = domNode.scrollHeight;
+                var canvas = prepareCanvas(domNode, options || {});
                 canvas.getContext('2d').drawImage(image, 0, 0);
                 return canvas;
             });
+
+        function prepareCanvas(domNode, options) {
+            var canvas = document.createElement('canvas');
+            canvas.width = domNode.scrollWidth;
+            canvas.height = domNode.scrollHeight;
+            if (options.bgcolor) {
+                var context = canvas.getContext('2d');
+                context.fillStyle = options.bgcolor;
+                context.rect(0, 0, canvas.width, canvas.height);
+                context.fill();
+            }
+            return canvas;
+        }
     }
 
     function newUtil() {

@@ -171,6 +171,17 @@
                     .then(done).catch(error);
             });
 
+            it('should render bgcolor', function (done) {
+                loadTestPage('bgcolor/dom-node.html', 'bgcolor/style.css', 'bgcolor/control-image')
+                    .then(function () {
+                        return domtoimage.toPng(domNode(), {
+                            bgcolor: "#ff0000"
+                        });
+                    })
+                    .then(check)
+                    .then(done).catch(error);
+            });
+
             it('should not crash when loading external stylesheet causes error', function (done) {
                 loadTestPage('ext-css/dom-node.html', 'ext-css/style.css')
                     .then(delay(1000))
