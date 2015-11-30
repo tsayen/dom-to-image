@@ -26,12 +26,17 @@
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
+        options = options || {};
         return Promise.resolve(node)
             .then(function (node) {
-                return cloneNode(node, (options || {}).filter);
+                return cloneNode(node, options.filter);
             })
             .then(embedFonts)
             .then(inlineImages)
+            .then(function (clone) {
+                if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
+                return clone;
+            })
             .then(function (clone) {
                 return makeSvgDataUri(clone, node.scrollWidth, node.scrollHeight);
             });
@@ -43,7 +48,7 @@
      * @return {Promise} - A promise that is fulfilled with a PNG image data URL
      * */
     function toPng(node, options) {
-        return draw(node, options)
+        return draw(node, options || {})
             .then(function (canvas) {
                 return canvas.toDataURL();
             });
@@ -55,7 +60,7 @@
      * @return {Promise} - A promise that is fulfilled with a PNG image blob
      * */
     function toBlob(node, options) {
-        return draw(node, options)
+        return draw(node, options || {})
             .then(util.canvasToBlob);
     }
 
@@ -221,21 +226,15 @@
             .then(util.makeImage)
             .then(util.delay(100))
             .then(function (image) {
-                var canvas = prepareCanvas(domNode, options || {});
+                var canvas = newCanvas(domNode);
                 canvas.getContext('2d').drawImage(image, 0, 0);
                 return canvas;
             });
 
-        function prepareCanvas(domNode, options) {
+        function newCanvas(domNode) {
             var canvas = document.createElement('canvas');
             canvas.width = domNode.scrollWidth;
             canvas.height = domNode.scrollHeight;
-            if (options.bgcolor) {
-                var context = canvas.getContext('2d');
-                context.fillStyle = options.bgcolor;
-                context.rect(0, 0, canvas.width, canvas.height);
-                context.fill();
-            }
             return canvas;
         }
     }
