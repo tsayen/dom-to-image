@@ -2,11 +2,21 @@ module.exports = function (config) {
     config.set({
         basePath: '',
         frameworks: ['mocha', 'chai'],
+        concurrency: 1,
 
-        files: [
-            {pattern: 'spec/resources/**/*', included: false, served: true},
-            {pattern: 'bower_components/fontawesome/fonts/*.*', included: false, served: true},
-            {pattern: 'bower_components/fontawesome/css/*.*', included: false, served: true},
+        files: [{
+                pattern: 'spec/resources/**/*',
+                included: false,
+                served: true
+            }, {
+                pattern: 'bower_components/fontawesome/fonts/*.*',
+                included: false,
+                served: true
+            }, {
+                pattern: 'bower_components/fontawesome/css/*.*',
+                included: false,
+                served: true
+            },
 
             'bower_components/jquery/dist/jquery.js',
             'bower_components/js-imagediff/imagediff.js',

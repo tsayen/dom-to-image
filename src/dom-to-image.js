@@ -262,8 +262,8 @@
              * Only WOFF and EOT mime types for fonts are 'real'
              * see http://www.iana.org/assignments/media-types/media-types.xhtml
              */
-            const WOFF = 'application/font-woff';
-            const JPEG = 'image/jpeg';
+            var WOFF = 'application/font-woff';
+            var JPEG = 'image/jpeg';
 
             return {
                 'woff': WOFF,
@@ -354,7 +354,7 @@
         }
 
         function getAndEncode(url) {
-            const TIMEOUT = 30000;
+            var TIMEOUT = 30000;
 
             return new Promise(function (resolve, reject) {
                 var request = new XMLHttpRequest();
@@ -419,7 +419,7 @@
     }
 
     function newInliner() {
-        const URL_REGEX = /url\(['"]?([^'"]+?)['"]?\)/g;
+        var URL_REGEX = /url\(['"]?([^'"]+?)['"]?\)/g;
 
         return {
             inlineAll: inlineAll,
