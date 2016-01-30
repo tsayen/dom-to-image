@@ -46,8 +46,7 @@ It's tested on latest Chrome and Firefox (44 and 40 respectively at the time of 
 
 ### Source
 Only standard lib is currently used, but make sure your browser supports:  
-* [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)
-* `const` keyword
+* [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)  
 * SVG `<foreignObject>` tag
 
 ### Tests
