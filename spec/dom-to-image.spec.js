@@ -172,12 +172,19 @@
             });
 
             it('should render content from <canvas>', function (done) {
-                loadTestPage('canvas/dom-node.html', 'canvas/style.css', 'canvas/control-image')
+                loadTestPage('canvas/dom-node.html', 'canvas/style.css')
                     .then(function () {
                         var canvas = document.getElementById('content');
-                        canvas.getContext('2d').fillRect(0, 0, canvas.width, canvas.height);
+                        var ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.fillStyle = '#000000';
+                        ctx.font = '100px monospace';
+                        ctx.fillText('o', canvas.width / 2, canvas.height / 2);
                     })
-                    .then(renderAndCheck)
+                    .then(renderToPng)
+                    .then(drawDataUrl)
+                    .then(assertTextRendered(["o"]))
                     .then(done).catch(done);
             });
 
