@@ -74,7 +74,11 @@ This library uses a feature of SVG that allows having arbitrary HTML content ins
 5. Serialize the cloned node to XML
 6. Wrap XML into the `<foreignObject>` tag, then into the SVG, then make it a data URL
 7. Optionally, to get PNG content, create an Image element with the SVG as a source, and render it on an off-screen canvas, that you have also created, then read the content from the canvas
-9. Done!
+9. Done!  
+
+## Things to watch out for  
+* if the DOM node you want to render includes a `<canvas>` element, with something drawn on it, it should be handled fine, unless the canvas is [tainted](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image) - in this case rendering will rather not succeed.  
+* at the time of writing, firefox has a problem with some external stylesheets (see #13). In such case, the error will be caught and logged.  
 
 ## Authors
 Anatolii Saienko, Paul Bakaus (original idea)
