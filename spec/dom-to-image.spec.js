@@ -27,7 +27,7 @@
                         return domtoimage.toSvg(domNode());
                     })
                     .then(check)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render to png', function (done) {
@@ -36,7 +36,7 @@
                         return domtoimage.toPng(domNode());
                     })
                     .then(check)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render to blob', function (done) {
@@ -48,7 +48,7 @@
                         return global.URL.createObjectURL(blob);
                     })
                     .then(check)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render bigger node', function (done) {
@@ -61,19 +61,19 @@
                         }
                     })
                     .then(renderAndCheck)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should handle "#" in colors and attributes', function (done) {
                 loadTestPage('hash/dom-node.html', 'hash/style.css', 'small/control-image')
                     .then(renderAndCheck)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render nested svg with broken namespace', function (done) {
                 loadTestPage('svg-ns/dom-node.html', 'svg-ns/style.css', 'svg-ns/control-image')
                     .then(renderAndCheck)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render whole node when its scrolled', function (done) {
@@ -90,7 +90,7 @@
                         return drawImgElement(image, domNode);
                     })
                     .then(compareToControlImage)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render text nodes', function (done) {
@@ -98,7 +98,7 @@
                     .then(renderToPng)
                     .then(drawDataUrl)
                     .then(assertTextRendered(['SOME TEXT', 'SOME MORE TEXT']))
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should preserve content of ::before and ::after pseudo elements', function (done) {
@@ -107,7 +107,7 @@
                     .then(drawDataUrl)
                     .then(assertTextRendered(["ONLY-BEFORE", "BOTH-BEFORE"]))
                     .then(assertTextRendered(["ONLY-AFTER", "BOTH-AFTER"]))
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should use node filter', function (done) {
@@ -123,14 +123,14 @@
                         });
                     })
                     .then(check)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render with external stylesheet', function (done) {
                 loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
                     .then(delay(1000))
                     .then(renderAndCheck)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render web fonts', function (done) {
@@ -140,7 +140,7 @@
                     .then(renderToPng)
                     .then(drawDataUrl)
                     .then(assertTextRendered(['o']))
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render images', function (done) {
@@ -149,7 +149,7 @@
                     .then(renderToPng)
                     .then(drawDataUrl)
                     .then(assertTextRendered(["PNG", "JPG"]))
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render background images', function (done) {
@@ -157,7 +157,7 @@
                     .then(renderToPng)
                     .then(drawDataUrl)
                     .then(assertTextRendered(["JPG"]))
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render user input from <textarea>', function (done) {
@@ -168,7 +168,7 @@
                     .then(renderToPng)
                     .then(drawDataUrl)
                     .then(assertTextRendered(["USER\nINPUT"]))
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render content from <canvas>', function (done) {
@@ -178,7 +178,7 @@
                         canvas.getContext('2d').fillRect(0, 0, canvas.width, canvas.height);
                     })
                     .then(renderAndCheck)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render bgcolor', function (done) {
@@ -189,7 +189,7 @@
                         });
                     })
                     .then(check)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should render bgcolor in SVG', function (done) {
@@ -200,7 +200,7 @@
                         });
                     })
                     .then(check)
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should not crash when loading external stylesheet causes error', function (done) {
@@ -210,7 +210,7 @@
                     .then(function () {
                         done();
                     })
-                    .catch(error);
+                    .catch(done);
             });
 
             function compareToControlImage(image, tolerance) {
@@ -296,7 +296,7 @@
                     .then(function (result) {
                         assert.equal(result, 'url(data:image/png;base64,AAA), url(foo.com)');
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should resolve urls if base url given', function (done) {
@@ -312,7 +312,7 @@
                     .then(function (result) {
                         assert.equal(result, 'url(data:image/png;base64,AAA)');
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should inline all urls', function (done) {
@@ -330,7 +330,7 @@
                     .then(function (result) {
                         assert.equal(result, 'url(data:image/png;base64,AAA), url("data:application/font-truetype;base64,BBB")');
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
         });
 
@@ -345,7 +345,7 @@
                                 assert.equal(resource, testResource);
                             });
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             it('should parse extension', function () {
@@ -400,7 +400,7 @@
                         assertSomeIncludesAll(sources, ['http://fonts.com/font2.ttf?v1.1.3']);
                         assertSomeIncludesAll(sources, ['data:font/woff2;base64,AAA']);
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
 
             function assertSomeIncludesAll(haystacks, needles) {
@@ -429,7 +429,7 @@
                     .then(function () {
                         assert.equal(img.src, originalSrc);
                     })
-                    .then(done).catch(error);
+                    .then(done).catch(done);
             });
         });
 
@@ -496,10 +496,6 @@
                 };
                 request.send();
             });
-        }
-
-        function error(e) {
-            console.error(e.toString() + '\n' + e.stack);
         }
     });
 })(this);
