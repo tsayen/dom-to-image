@@ -69,15 +69,18 @@
         if (filter && !filter(node)) return Promise.resolve();
 
         return Promise.resolve(node)
-            .then(function (node) {
-                return node.cloneNode(false);
-            })
+            .then(makeNodeCopy)
             .then(function (clone) {
                 return cloneChildren(node, clone, filter);
             })
             .then(function (clone) {
                 return processClone(node, clone);
             });
+
+        function makeNodeCopy(node) {
+            if (node instanceof HTMLCanvasElement) return util.makeImage(node.toDataURL());
+            return node.cloneNode(false);
+        }
 
         function cloneChildren(original, clone, filter) {
             var children = original.childNodes;

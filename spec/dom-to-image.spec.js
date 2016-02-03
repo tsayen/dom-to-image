@@ -171,6 +171,16 @@
                     .then(done).catch(error);
             });
 
+            it('should render content from <canvas>', function (done) {
+                loadTestPage('canvas/dom-node.html', 'canvas/style.css', 'canvas/control-image')
+                    .then(function () {
+                        var canvas = document.getElementById('content');
+                        canvas.getContext('2d').fillRect(0, 0, canvas.width, canvas.height);
+                    })
+                    .then(renderAndCheck)
+                    .then(done).catch(error);
+            });
+
             it('should render bgcolor', function (done) {
                 loadTestPage('bgcolor/dom-node.html', 'bgcolor/style.css', 'bgcolor/control-image')
                     .then(function () {
