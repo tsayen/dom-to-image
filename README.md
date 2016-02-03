@@ -77,8 +77,8 @@ This library uses a feature of SVG that allows having arbitrary HTML content ins
 9. Done!  
 
 ## Things to watch out for  
-* if the DOM node you want to render includes a `<canvas>` element, with something drawn on it, it should be handled fine, unless the canvas is [tainted](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image) - in this case rendering will rather not succeed.  
-* at the time of writing, firefox has a problem with some external stylesheets (see #13). In such case, the error will be caught and logged.  
+* if the DOM node you want to render includes a `<canvas>` element with something drawn on it, it should be handled fine, unless the canvas is [tainted](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image) - in this case rendering will rather not succeed.  
+* at the time of writing, Firefox has a problem with some external stylesheets (see #13). In such case, the error will be caught and logged.  
 
 ## Authors
 Anatolii Saienko, Paul Bakaus (original idea)
