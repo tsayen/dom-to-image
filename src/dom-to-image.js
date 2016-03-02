@@ -373,7 +373,8 @@
                     if (request.readyState !== 4) return;
 
                     if (request.status !== 200) {
-                        reject(new Error('Cannot fetch resource ' + url + ', status: ' + request.status));
+                        console.error('cannot fetch resource ' + url + ', status: ' + request.status);
+                        resolve('');
                         return;
                     }
 

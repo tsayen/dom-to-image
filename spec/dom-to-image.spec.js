@@ -347,12 +347,19 @@
                 var getAndEncode = domtoimage.impl.util.getAndEncode;
                 getResource('util/fontawesome.base64')
                     .then(function (testResource) {
-                        return getAndEncode(BASE_URL + 'util/fontawesome.woff2', 'woff2')
+                        return getAndEncode(BASE_URL + 'util/fontawesome.woff2')
                             .then(function (resource) {
                                 assert.equal(resource, testResource);
                             });
                     })
                     .then(done).catch(done);
+            });
+
+            it('should return empty result if cannot get resourse', function (done) {
+                domtoimage.impl.util.getAndEncode(BASE_URL + 'util/not-found')
+                    .then(function (resource) {
+                        assert.equal(resource, '');
+                    }).then(done).catch(done);
             });
 
             it('should parse extension', function () {
