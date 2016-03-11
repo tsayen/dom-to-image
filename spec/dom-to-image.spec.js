@@ -171,6 +171,17 @@
                     .then(done).catch(done);
             });
 
+            it('should render user input from <input>', function (done) {
+                loadTestPage('input/dom-node.html', 'input/style.css')
+                    .then(function () {
+                        document.getElementById('input').value = "USER INPUT";
+                    })
+                    .then(renderToPng)
+                    .then(drawDataUrl)
+                    .then(assertTextRendered(["USER INPUT"]))
+                    .then(done).catch(done);
+            });
+
             it('should render content from <canvas>', function (done) {
                 loadTestPage('canvas/dom-node.html', 'canvas/style.css')
                     .then(function () {
