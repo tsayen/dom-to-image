@@ -76,6 +76,12 @@
                     .then(done).catch(done);
             });
 
+            it('should render svg <rect> with width and heigth', function (done) {
+                loadTestPage('svg-rect/dom-node.html', 'svg-rect/style.css', 'svg-rect/control-image')
+                    .then(renderAndCheck)
+                    .then(done).catch(done);
+            });
+
             it('should render whole node when its scrolled', function (done) {
                 var domNode;
                 loadTestPage('scroll/dom-node.html', 'scroll/style.css', 'scroll/control-image')
