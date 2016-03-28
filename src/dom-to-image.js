@@ -22,7 +22,7 @@
      * @param {Node} node - The DOM Node object to render
      * @param {Object} options - Rendering options
      * @param {Function} options.filter - Should return true if passed node should be included in the output
-     *          (excluding node means excluding it's children as well)
+     *          (excluding node means excluding it's children as well). Filter is not applied to the root node.
      * @param {String} options.bgcolor - color for the background, any valid CSS color value
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
@@ -30,7 +30,7 @@
         options = options || {};
         return Promise.resolve(node)
             .then(function (node) {
-                return cloneNode(node, options.filter);
+                return cloneNode(node, options.filter, true);
             })
             .then(embedFonts)
             .then(inlineImages)
@@ -65,8 +65,8 @@
             .then(util.canvasToBlob);
     }
 
-    function cloneNode(node, filter) {
-        if (filter && !filter(node)) return Promise.resolve();
+    function cloneNode(node, filter, root) {
+        if (!root && filter && !filter(node)) return Promise.resolve();
 
         return Promise.resolve(node)
             .then(makeNodeCopy)

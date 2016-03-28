@@ -132,6 +132,22 @@
                     .then(done).catch(done);
             });
 
+            it('should not apply node filter to root node', function (done) {
+                function filter(node) {
+                    if (node.classList) return node.classList.contains('include');
+                    return false;
+                }
+
+                loadTestPage('filter/dom-node.html', 'filter/style.css', 'filter/control-image')
+                    .then(function () {
+                        return domtoimage.toPng(domNode(), {
+                            filter: filter
+                        });
+                    })
+                    .then(check)
+                    .then(done).catch(done);
+            });
+
             it('should render with external stylesheet', function (done) {
                 loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
                     .then(delay(1000))
