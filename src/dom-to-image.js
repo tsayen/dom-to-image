@@ -113,7 +113,7 @@
                 .then(cloneStyle)
                 .then(clonePseudoElements)
                 .then(copyUserInput)
-                .then(fixNamespace)
+                .then(fixSvg)
                 .then(function () {
                     return clone;
                 });
@@ -185,8 +185,17 @@
                 if (original instanceof HTMLInputElement) clone.setAttribute("value", original.value);
             }
 
-            function fixNamespace() {
-                if (clone instanceof SVGElement) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            function fixSvg() {
+                if (!(clone instanceof SVGElement)) return;
+                clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+                if (!(clone instanceof SVGRectElement)) return;
+                ['width', 'height'].forEach(function (attribute) {
+                    var value = clone.getAttribute(attribute);
+                    if (!value) return;
+
+                    clone.style.setProperty(attribute, value);
+                });
             }
         }
     }

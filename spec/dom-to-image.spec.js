@@ -77,12 +77,8 @@
             });
 
             it('should render svg <rect> with width and heigth', function (done) {
-                this.timeout(10000);
                 loadTestPage('svg-rect/dom-node.html', 'svg-rect/style.css', 'svg-rect/control-image')
-                    .then(renderToPng)
-                    .then(drawDataUrl)
-                    .then(delay(5000))
-                    .then(compareToControlImage)
+                    .then(renderAndCheck)
                     .then(done).catch(done);
             });
 
