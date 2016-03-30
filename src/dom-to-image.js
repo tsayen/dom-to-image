@@ -370,7 +370,7 @@
         function getAndEncode(url) {
             var TIMEOUT = 30000;
 
-            return new Promise(function (resolve, reject) {
+            return new Promise(function (resolve) {
                 var request = new XMLHttpRequest();
 
                 request.onreadystatechange = done;
@@ -384,8 +384,7 @@
                     if (request.readyState !== 4) return;
 
                     if (request.status !== 200) {
-                        console.error('cannot fetch resource ' + url + ', status: ' + request.status);
-                        resolve('');
+                        fail('cannot fetch resource: ' + url + ', status: ' + request.status);
                         return;
                     }
 
@@ -398,7 +397,12 @@
                 }
 
                 function timeout() {
-                    reject(new Error('Timeout of ' + TIMEOUT + 'ms occured while fetching resource: ' + url));
+                    fail('timeout of ' + TIMEOUT + 'ms occured while fetching resource: ' + url);
+                }
+
+                function fail(message){
+                    console.error(message);
+                    resolve('');
                 }
             });
         }
