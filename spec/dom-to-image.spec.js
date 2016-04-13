@@ -253,6 +253,42 @@
                     .catch(done);
             });
 
+            it('should convert an element to an array of pixels', function(done) {
+                loadTestPage('pixeldata/dom-node.html', 'pixeldata/style.css')
+                    .then(delay(1000))
+                    .then(function() {
+                        return domtoimage.toPixelData(domNode());
+                    })
+                    .then(function(pixels) {
+                        for (var y = 0; y < domNode().scrollHeight; ++y) {
+                            for (var x = 0; x < domNode().scrollWidth; ++x) {
+                                var rgba = [0, 0, 0, 0];
+
+                                if (y < 10) {
+                                    rgba[0] = 255;
+                                } else if (y < 20) {
+                                    rgba[1] = 255;
+                                } else {
+                                    rgba[2] = 255;
+                                }
+
+                                if (x < 10) {
+                                    rgba[3] = 255;
+                                } else if (x < 20) {
+                                    rgba[3] = 0.4 * 255;
+                                } else {
+                                    rgba[3] = 0.2 * 255;
+                                }
+
+                                var offset = (4 * y * domNode().scrollHeight) + (4 * x);
+
+                                assert.deepEqual(pixels.slice(offset, offset + 4), Uint8Array.from(rgba));
+                            }
+                        }
+                    })
+                    .then(done).catch(done);
+            });
+
             function compareToControlImage(image, tolerance) {
                 assert.isTrue(imagediff.equal(image, controlImage(), tolerance), 'rendered and control images should be same');
             }
