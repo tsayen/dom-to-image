@@ -10,6 +10,7 @@
         toSvg: toSvg,
         toPng: toPng,
         toBlob: toBlob,
+        toPixelData: toPixelData,
         impl: {
             fontFaces: fontFaces,
             images: images,
@@ -41,6 +42,22 @@
             .then(function (clone) {
                 return makeSvgDataUri(clone, node.scrollWidth, node.scrollHeight);
             });
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a Uint8Array containing RGBA pixel data.
+     * */
+    function toPixelData(node, options) {
+      return draw(node, options || {})
+          .then(function (canvas) {
+              return canvas.getContext('2d').getImageData(
+                0,
+                0,
+                node.scrollWidth,
+                node.scrollHeight).data;
+          });
     }
 
     /**

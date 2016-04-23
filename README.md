@@ -37,6 +37,21 @@ domtoimage.toSvg(document.getElementById('my-node'), {filter: filter})
         /* do something */
     });
 ```
+Get the raw pixel data as a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array) with every 4 array elements representing the RGBA data of a pixel:
+```javascript
+var node = document.getElementById('my-node');
+
+domtoimage.toPixelData(node)
+    .then(function (pixels) {
+        for (var y = 0; y < node.scrollHeight; ++y) {
+          for (var x = 0; x < node.scrollWidth; ++x) {
+            pixelAtXYOffset = (4 * y * node.scrollHeight) + (4 * x);
+            pixelAtXY = pixels.slice(pixelAtXYOffset, pixelAtXYOffset + 4);
+            /* pixelAtXY is a Uint8Array[4] containing RGBA values of the pixel at (x, y) in the range 0..255 */
+          }
+        }
+    });
+```
 All the functions under `impl` are not public API and are exposed only for unit testing.
 
 ## Browsers
@@ -73,8 +88,8 @@ This library uses a feature of SVG that allows having arbitrary HTML content ins
   * inline images used in `background` CSS property, in a fashion similar to fonts
 5. Serialize the cloned node to XML
 6. Wrap XML into the `<foreignObject>` tag, then into the SVG, then make it a data URL
-7. Optionally, to get PNG content, create an Image element with the SVG as a source, and render it on an off-screen canvas, that you have also created, then read the content from the canvas
-9. Done!  
+7. Optionally, to get PNG content or raw pixel data as a Uint8Array, create an Image element with the SVG as a source, and render it on an off-screen canvas, that you have also created, then read the content from the canvas
+8. Done!  
 
 ## Things to watch out for  
 * if the DOM node you want to render includes a `<canvas>` element with something drawn on it, it should be handled fine, unless the canvas is [tainted](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image) - in this case rendering will rather not succeed.  
