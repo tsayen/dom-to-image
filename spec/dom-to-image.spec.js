@@ -289,8 +289,7 @@
                     .then(done).catch(done);
             });
 
-            it.only('should apply width and height options to node copy being rendered', function (done) {
-                this.timeout(60000);
+            it('should apply width and height options to node copy being rendered', function (done) {
                 loadTestPage('dimensions/dom-node.html', 'dimensions/style.css', 'dimensions/control-image')
                     .then(function () {
                         return domtoimage.toPng(domNode(), {

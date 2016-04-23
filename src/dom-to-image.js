@@ -42,13 +42,9 @@
             .then(embedFonts)
             .then(inlineImages)
             .then(function (clone) {
-                console.log(options);
-                console.log(clone.id);
                 if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
                 if (options.width) clone.style.setProperty('width', options.width + 'px');
                 if (options.height) clone.style.setProperty('height', options.height + 'px');
-                console.log(clone.scrollWidth);
-                console.log(clone.scrollHeight);
                 return clone;
             })
             .then(function (clone) {
@@ -97,14 +93,9 @@
 
     function draw(domNode, options) {
         return toSvg(domNode, options)
-            .then(function(svg){
-                console.log(svg);
-                return svg;
-            })
             .then(util.makeImage)
             .then(util.delay(100))
             .then(function (image) {
-                // console.log(image);
                 var canvas = newCanvas(domNode);
                 canvas.getContext('2d').drawImage(image, 0, 0);
                 return canvas;
@@ -112,8 +103,6 @@
 
         function newCanvas(domNode) {
             var canvas = document.createElement('canvas');
-            console.log(domNode.scrollWidth);
-            console.log(domNode.scrollHeight);
             canvas.width = options.width || domNode.scrollWidth;
             canvas.height = options.height || domNode.scrollHeight;
             return canvas;
