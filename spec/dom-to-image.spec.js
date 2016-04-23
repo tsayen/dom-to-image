@@ -253,13 +253,13 @@
                     .catch(done);
             });
 
-            it('should convert an element to an array of pixels', function(done) {
+            it('should convert an element to an array of pixels', function (done) {
                 loadTestPage('pixeldata/dom-node.html', 'pixeldata/style.css')
                     .then(delay(1000))
-                    .then(function() {
+                    .then(function () {
                         return domtoimage.toPixelData(domNode());
                     })
-                    .then(function(pixels) {
+                    .then(function (pixels) {
                         for (var y = 0; y < domNode().scrollHeight; ++y) {
                             for (var x = 0; x < domNode().scrollWidth; ++x) {
                                 var rgba = [0, 0, 0, 0];
@@ -289,6 +289,22 @@
                     .then(done).catch(done);
             });
 
+            it.only('should apply width and height options to node copy being rendered', function (done) {
+                this.timeout(60000);
+                loadTestPage('dimensions/dom-node.html', 'dimensions/style.css', 'dimensions/control-image')
+                    .then(function () {
+                        return domtoimage.toPng(domNode(), {
+                            width: 200,
+                            height: 200
+                        });
+                    })
+                    .then(function (dataUrl) {
+                        return drawDataUrl(dataUrl, { width: 200, height: 200 });
+                    })
+                    .then(compareToControlImage)
+                    .then(done).catch(done);
+            });
+
             function compareToControlImage(image, tolerance) {
                 assert.isTrue(imagediff.equal(image, controlImage(), tolerance), 'rendered and control images should be same');
             }
@@ -305,10 +321,12 @@
                     .then(compareToControlImage);
             }
 
-            function drawDataUrl(dataUrl) {
+            function drawDataUrl(dataUrl, dimensions) {
                 return Promise.resolve(dataUrl)
                     .then(makeImgElement)
-                    .then(drawImgElement);
+                    .then(function (image) {
+                        return drawImgElement(image, null, dimensions);
+                    });
             }
 
             function assertTextRendered(lines) {
@@ -330,10 +348,11 @@
                 });
             }
 
-            function drawImgElement(image, node) {
+            function drawImgElement(image, node, dimensions) {
                 node = node || domNode();
-                canvas().height = node.offsetHeight.toString();
-                canvas().width = node.offsetWidth.toString();
+                dimensions = dimensions || {};
+                canvas().height = dimensions.height || node.offsetHeight.toString();
+                canvas().width = dimensions.width || node.offsetWidth.toString();
                 canvas().getContext('2d').imageSmoothingEnabled = false;
                 canvas().getContext('2d').drawImage(image, 0, 0);
                 return image;
