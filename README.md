@@ -69,8 +69,24 @@ domtoimage.toPixelData(node)
     });
 ```
 
-All the functions under `impl` are not public API and are exposed only
-for unit testing.
+_All the functions under `impl` are not public API and are exposed only
+for unit testing._
+
+### Rendering options
+
+#### filter
+
+A function taking DOM node as argument. Should return true if passed node
+should be included in the output (excluding node means excluding it's
+children as well). Not called on the root node.
+
+#### bgcolor
+
+A string value for the background color, any valid CSS color value.
+
+#### height, width
+
+Height and width in pixels to be applied to node before rendering.
 
 ## Browsers
 
@@ -78,6 +94,8 @@ It's tested on latest Chrome and Firefox (49 and 45 respectively at the time
 of writing), with Chrome performing  significantly better on big DOM trees,
 possibly due to it's more performant SVG support, and the fact that it supports
  `CSSStyleDeclaration.cssText` property.
+_Internet Explorer is not (and will not be) supported, as it does not support
+SVG `<foreignObject>` tag_
 
 ## Dependencies
 

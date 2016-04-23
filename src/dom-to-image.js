@@ -29,8 +29,10 @@
      * @param {Node} node - The DOM Node object to render
      * @param {Object} options - Rendering options
      * @param {Function} options.filter - Should return true if passed node should be included in the output
-     *          (excluding node means excluding it's children as well). Filter is not applied to the root node.
-     * @param {String} options.bgcolor - color for the background, any valid CSS color value
+     *          (excluding node means excluding it's children as well). Not called on the root node.
+     * @param {String} options.bgcolor - color for the background, any valid CSS color value.
+     * @param {Number} options.width - width to be applied to node before rendering.
+     * @param {Number} options.height - height to be applied to node before rendering.
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
