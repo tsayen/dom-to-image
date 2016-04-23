@@ -6,7 +6,7 @@
     var fontFaces = newFontFaces();
     var images = newImages();
 
-    global.domtoimage = {
+    var domtoimage = {
         toSvg: toSvg,
         toPng: toPng,
         toBlob: toBlob,
@@ -18,6 +18,12 @@
             inliner: inliner
         }
     };
+
+    if (typeof module !== 'undefined')
+        module.exports = domtoimage;
+    else
+        global.domtoimage = domtoimage;
+
 
     /**
      * @param {Node} node - The DOM Node object to render
@@ -50,14 +56,15 @@
      * @return {Promise} - A promise that is fulfilled with a Uint8Array containing RGBA pixel data.
      * */
     function toPixelData(node, options) {
-      return draw(node, options || {})
-          .then(function (canvas) {
-              return canvas.getContext('2d').getImageData(
-                0,
-                0,
-                node.scrollWidth,
-                node.scrollHeight).data;
-          });
+        return draw(node, options || {})
+            .then(function (canvas) {
+                return canvas.getContext('2d').getImageData(
+                    0,
+                    0,
+                    node.scrollWidth,
+                    node.scrollHeight
+                ).data;
+            });
     }
 
     /**
@@ -136,7 +143,7 @@
                 });
 
             function cloneStyle() {
-                copyStyle(global.window.getComputedStyle(original), clone.style);
+                copyStyle(window.getComputedStyle(original), clone.style);
 
                 function copyStyle(source, target) {
                     if (source.cssText) target.cssText = source.cssText;
@@ -160,21 +167,21 @@
                 });
 
                 function clonePseudoElement(element) {
-                    var style = global.window.getComputedStyle(original, element);
+                    var style = window.getComputedStyle(original, element);
                     var content = style.getPropertyValue('content');
 
                     if (content === '' || content === 'none') return;
 
                     var className = util.uid();
                     clone.className = clone.className + ' ' + className;
-                    var styleElement = global.document.createElement('style');
+                    var styleElement = document.createElement('style');
                     styleElement.appendChild(formatPseudoElementStyle(className, element, style));
                     clone.appendChild(styleElement);
 
                     function formatPseudoElementStyle(className, element, style) {
                         var selector = '.' + className + ':' + element;
                         var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
-                        return global.document.createTextNode(selector + '{' + cssText + '}');
+                        return document.createTextNode(selector + '{' + cssText + '}');
 
                         function formatCssText(style) {
                             var content = style.getPropertyValue('content');
@@ -350,7 +357,7 @@
         }
 
         function resolveUrl(url, baseUrl) {
-            var doc = global.document.implementation.createHTMLDocument();
+            var doc = document.implementation.createHTMLDocument();
             var base = doc.createElement('base');
             doc.head.appendChild(base);
             var a = doc.createElement('a');
@@ -417,7 +424,7 @@
                     fail('timeout of ' + TIMEOUT + 'ms occured while fetching resource: ' + url);
                 }
 
-                function fail(message){
+                function fail(message) {
                     console.error(message);
                     resolve('');
                 }
