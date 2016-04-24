@@ -88,6 +88,12 @@ A string value for the background color, any valid CSS color value.
 
 Height and width in pixels to be applied to node before rendering.
 
+#### style
+
+An object whose properties to be copied to node's style before rendering.
+You might want to check [this reference](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Properties_Reference)
+for JavaScript names of CSS properties.
+
 ## Browsers
 
 It's tested on latest Chrome and Firefox (49 and 45 respectively at the time

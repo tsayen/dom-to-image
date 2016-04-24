@@ -304,6 +304,17 @@
                     .then(done).catch(done);
             });
 
+            it('should apply style text to node copy being rendered', function (done) {
+                loadTestPage('style/dom-node.html', 'style/style.css', 'style/control-image')
+                    .then(function () {
+                        return domtoimage.toPng(domNode(), {
+                            style: { 'background-color': 'red', 'transform': 'scale(0.5)' }
+                        });
+                    })
+                    .then(check)
+                    .then(done).catch(done);
+            });
+
             function compareToControlImage(image, tolerance) {
                 assert.isTrue(imagediff.equal(image, controlImage(), tolerance), 'rendered and control images should be same');
             }

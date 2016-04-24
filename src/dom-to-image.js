@@ -33,6 +33,7 @@
      * @param {String} options.bgcolor - color for the background, any valid CSS color value.
      * @param {Number} options.width - width to be applied to node before rendering.
      * @param {Number} options.height - height to be applied to node before rendering.
+     * @param {Object} options.style - an object whose properties to be copied to node's style before rendering.
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
@@ -43,15 +44,27 @@
             })
             .then(embedFonts)
             .then(inlineImages)
+            .then(applyOptions)
             .then(function (clone) {
-                if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
-                if (options.width) clone.style.setProperty('width', options.width + 'px');
-                if (options.height) clone.style.setProperty('height', options.height + 'px');
-                return clone;
-            })
-            .then(function (clone) {
-                return makeSvgDataUri(clone, options.width || node.scrollWidth, options.height || node.scrollHeight);
+                return makeSvgDataUri(clone,
+                    options.width || node.scrollWidth,
+                    options.height || node.scrollHeight
+                );
             });
+
+        function applyOptions(clone) {
+            if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
+
+            if (options.width) clone.style.width = options.width + 'px';
+            if (options.height) clone.style.height = options.height + 'px';
+
+            if (options.style)
+                Object.keys(options.style).forEach(function (property) {
+                    clone.style[property] = options.style[property];
+                });
+
+            return clone;
+        }
     }
 
     /**
