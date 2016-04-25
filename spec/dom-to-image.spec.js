@@ -315,6 +315,25 @@
                     .then(done).catch(done);
             });
 
+            it('should combine dimensions and style', function (done) {
+                loadTestPage('scale/dom-node.html', 'scale/style.css', 'scale/control-image')
+                    .then(function () {
+                        return domtoimage.toPng(domNode(), {
+                            width: 200,
+                            height: 200,
+                            style: {
+                                'transform': 'scale(2)',
+                                'transform-origin': 'top left'
+                            }
+                        });
+                    })
+                    .then(function (dataUrl) {
+                        return drawDataUrl(dataUrl, { width: 200, height: 200 });
+                    })
+                    .then(compareToControlImage)
+                    .then(done).catch(done);
+            });
+
             function compareToControlImage(image, tolerance) {
                 assert.isTrue(imagediff.equal(image, controlImage(), tolerance), 'rendered and control images should be same');
             }
