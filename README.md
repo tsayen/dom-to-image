@@ -3,7 +3,7 @@
 ## What is it
 
 **dom-to-image** is a library which can turn arbitrary DOM node into
-a vector (SVG) or raster (PNG) image, written in JavaScript. It's
+a vector (SVG) or raster (PNG or JPEG) image, written in JavaScript. It's
 based on [domvas by Paul Bakaus](https://github.com/pbakaus/domvas)
 and has been completely rewritten, with some bugs fixed and some new
 features (like web font and image support) added.
@@ -35,6 +35,17 @@ for example):
 domtoimage.toBlob(document.getElementById('my-node'))
     .then(function (blob) {
         window.saveAs(blob, 'my-node.png');
+    });
+```
+
+Save and download a compressed JPEG image:
+```javascript
+domtoimage.toJpeg(document.getElementById('my-node'), {}, 0.95)
+    .then(function (dataUrl) {
+        var link = document.createElement('a');
+        link.download = 'my-image-name.jpeg';
+        link.href = dataUrl;
+        link.click();
     });
 ```
 
