@@ -133,7 +133,7 @@ for JavaScript names of CSS properties.
 
 #### quality
 
-A number between 0 and 1 indicating image quality (e.g. 0.92 => 92%) of the JPEG image
+A number between 0 and 1 indicating image quality (e.g. 0.92 => 92%) of the JPEG image; default 1.0 (100%)
 
 
 ## Browsers
