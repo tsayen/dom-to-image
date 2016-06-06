@@ -100,10 +100,10 @@
     /**
      * @param {Node} node - The DOM Node object to render
      * @param {Object} options - Rendering options, @see {@link toSvg}
-     * @param {Number} quality - quality of the JPEG image
-     * @return {Promise} - A promise that is fulfilled with a PNG image data URL
+     * @return {Promise} - A promise that is fulfilled with a JPEG image data URL
      * */
-    function toJpeg(node, options, quality) {
+    function toJpeg(node, options) {
+        var quality = options.quality || 1.0;
         return draw(node, options || {})
             .then(function (canvas) {
                 return canvas.toDataURL("image/jpeg", quality);
