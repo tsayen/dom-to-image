@@ -39,6 +39,24 @@
                     .then(done).catch(done);
             });
 
+            it('should render to jpeg', function (done) {
+                loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image-jpeg')
+                    .then(function () {
+                        return domtoimage.toJpeg(domNode());
+                    })
+                    .then(check)
+                    .then(done).catch(done);
+            });
+
+            it('should use quality parameter when rendering to jpeg', function (done) {
+                loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image-jpeg-low')
+                    .then(function () {
+                        return domtoimage.toJpeg(domNode(), { quality: 0.5 });
+                    })
+                    .then(check)
+                    .then(done).catch(done);
+            });
+
             it('should render to blob', function (done) {
                 loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
                     .then(function () {
