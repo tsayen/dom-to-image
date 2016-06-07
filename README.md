@@ -14,12 +14,12 @@ features (like web font and image support) added.
 
 `npm install dom-to-image`
 
-Then import the global variable:
+Then load
 
 ```javascript
-/* in ECMAScript 6 */
+/* in ES 6 */
 import domtoimage from 'dom-to-image';
-/* or in ECMAScript 5 */
+/* in ES 5 */
 var domtoimage = require('dom-to-image');
 ```
 
@@ -27,10 +27,8 @@ var domtoimage = require('dom-to-image');
 
 `bower install dom-to-image`
 
-Include the source code in your page and it will make the `domtoimage`
-variable available to the global scope.
-You can include either the source `src/dom-to-image.js`, or the minified version
-in the `dist/dom-to-image.min.js`.
+Include either `src/dom-to-image.js` or `dist/dom-to-image.min.js` in your page
+and it will make the `domtoimage` variable available in the global scope.
 
 ```html
 <script src="path/to/dom-to-image.min.js" />
