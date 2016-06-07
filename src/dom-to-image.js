@@ -9,6 +9,7 @@
     var domtoimage = {
         toSvg: toSvg,
         toPng: toPng,
+        toJpeg: toJpeg,
         toBlob: toBlob,
         toPixelData: toPixelData,
         impl: {
@@ -93,6 +94,19 @@
         return draw(node, options || {})
             .then(function (canvas) {
                 return canvas.toDataURL();
+            });
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a JPEG image data URL
+     * */
+    function toJpeg(node, options) {
+        var quality = options.quality || 1.0;
+        return draw(node, options || {})
+            .then(function (canvas) {
+                return canvas.toDataURL("image/jpeg", quality);
             });
     }
 

@@ -3,10 +3,36 @@
 ## What is it
 
 **dom-to-image** is a library which can turn arbitrary DOM node into
-a vector (SVG) or raster (PNG) image, written in JavaScript. It's
+a vector (SVG) or raster (PNG or JPEG) image, written in JavaScript. It's
 based on [domvas by Paul Bakaus](https://github.com/pbakaus/domvas)
 and has been completely rewritten, with some bugs fixed and some new
 features (like web font and image support) added.
+
+## Latest version
+2.4.0
+
+## Installation
+
+##### NPM
+`npm install dom-to-image`
+
+Then import the global variable:
+```javascript
+//in ECMAScript 6
+import domtoimage from 'dom-to-image';
+//or in ECMAScript 5
+var domtoimage = require('dom-to-image');
+```
+##### Browser global (window object)
+Include the source code in your page and it will make the `domtoimage` variable available to the global scope.
+You can find the source code (`dom-to-image.js`) in the `src` directory or the minified version in the `dist` folder (`dom-to-image.min.js`)
+```html
+<script src="path/to/dom-to-image.min.js" />
+<script>
+  domtoimage.toPng(node)
+  //...
+</script>
+```
 
 ## Usage
 
@@ -35,6 +61,17 @@ for example):
 domtoimage.toBlob(document.getElementById('my-node'))
     .then(function (blob) {
         window.saveAs(blob, 'my-node.png');
+    });
+```
+
+Save and download a compressed JPEG image:
+```javascript
+domtoimage.toJpeg(document.getElementById('my-node'), {}, 0.95)
+    .then(function (dataUrl) {
+        var link = document.createElement('a');
+        link.download = 'my-image-name.jpeg';
+        link.href = dataUrl;
+        link.click();
     });
 ```
 
@@ -93,6 +130,11 @@ Height and width in pixels to be applied to node before rendering.
 An object whose properties to be copied to node's style before rendering.
 You might want to check [this reference](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Properties_Reference)
 for JavaScript names of CSS properties.
+
+#### quality
+
+A number between 0 and 1 indicating image quality (e.g. 0.92 => 92%) of the JPEG image; default 1.0 (100%)
+
 
 ## Browsers
 
