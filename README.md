@@ -23,12 +23,14 @@ import domtoimage from 'dom-to-image';
 var domtoimage = require('dom-to-image');
 ```
 
-### Browser global (window object)
+### Bower
+
+`bower install dom-to-image`
 
 Include the source code in your page and it will make the `domtoimage`
 variable available to the global scope.
-You can find the source code (`dom-to-image.js`) in the `src` directory
-or the minified version in the `dist` folder (`dom-to-image.min.js`)
+You can include either the source `src/dom-to-image.js`, or the minified version
+in the `dist/dom-to-image.min.js`.
 
 ```html
 <script src="path/to/dom-to-image.min.js" />
@@ -71,7 +73,7 @@ domtoimage.toBlob(document.getElementById('my-node'))
 Save and download a compressed JPEG image:
 
 ```javascript
-domtoimage.toJpeg(document.getElementById('my-node'), {}, 0.95)
+domtoimage.toJpeg(document.getElementById('my-node'), { quality: 0.95 })
     .then(function (dataUrl) {
         var link = document.createElement('a');
         link.download = 'my-image-name.jpeg';
