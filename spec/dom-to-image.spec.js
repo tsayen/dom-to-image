@@ -39,8 +39,8 @@
                     .then(done).catch(done);
             });
 
-            it.only('should handle border', function (done) {
-                this.timeout(60000);
+            it('should handle border', function (done) {
+                // this.timeout(60000);
                 loadTestPage('border/dom-node.html', 'border/style.css', 'border/control-image')
                     .then(function () {
                         return domtoimage.toPng(domNode());

@@ -50,8 +50,8 @@
             .then(applyOptions)
             .then(function (clone) {
                 return makeSvgDataUri(clone,
-                    options.width || node.scrollWidth,
-                    options.height || node.scrollHeight
+                    options.width || util.getWidth(node),
+                    options.height || util.getHeight(node)
                 );
             });
 
@@ -81,8 +81,8 @@
                 return canvas.getContext('2d').getImageData(
                     0,
                     0,
-                    node.scrollWidth,
-                    node.scrollHeight
+                    util.getWidth(node),
+                    util.getHeight(node)
                 ).data;
             });
     }
@@ -332,7 +332,9 @@
             delay: delay,
             asArray: asArray,
             escapeXhtml: escapeXhtml,
-            makeImage: makeImage
+            makeImage: makeImage,
+            getWidth: getWidth,
+            getHeight: getHeight
         };
 
         function mimes() {
@@ -498,6 +500,14 @@
 
         function escapeXhtml(string) {
             return string.replace(/#/g, '%23').replace(/\n/g, '%0A');
+        }
+
+        function getWidth(node){
+            return node.scrollWidth;
+        }
+
+        function getHeight(node){
+            return node.scrollHeight;
         }
     }
 
