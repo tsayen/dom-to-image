@@ -39,6 +39,21 @@
                     .then(done).catch(done);
             });
 
+            it.only('should handle border', function (done) {
+                this.timeout(60000);
+                loadTestPage('border/dom-node.html', 'border/style.css', 'border/control-image')
+                    .then(function () {
+                        return domtoimage.toPng(domNode());
+                    })
+                    .then(function(url){
+                        console.log(url);
+                        return url;
+                    })
+                    .then(drawDataUrl);
+                    // .then(check)
+                    // .then(done).catch(done);
+            });
+
             it('should render to jpeg', function (done) {
                 loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image-jpeg')
                     .then(function () {
