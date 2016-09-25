@@ -39,6 +39,12 @@
                     .then(done).catch(done);
             });
 
+            it('should handle border', function (done) {
+                loadTestPage('border/dom-node.html', 'border/style.css', 'border/control-image')
+                    .then(renderAndCheck)
+                    .then(done).catch(done);
+            });
+
             it('should render to jpeg', function (done) {
                 loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image-jpeg')
                     .then(function () {
