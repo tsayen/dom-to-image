@@ -50,8 +50,8 @@
             .then(applyOptions)
             .then(function (clone) {
                 return makeSvgDataUri(clone,
-                    options.width || util.getWidth(node),
-                    options.height || util.getHeight(node)
+                    options.width || util.width(node),
+                    options.height || util.height(node)
                 );
             });
 
@@ -81,8 +81,8 @@
                 return canvas.getContext('2d').getImageData(
                     0,
                     0,
-                    util.getWidth(node),
-                    util.getHeight(node)
+                    util.width(node),
+                    util.height(node)
                 ).data;
             });
     }
@@ -134,8 +134,8 @@
 
         function newCanvas(domNode) {
             var canvas = document.createElement('canvas');
-            canvas.width = options.width || domNode.scrollWidth;
-            canvas.height = options.height || domNode.scrollHeight;
+            canvas.width = options.width || util.width(domNode);
+            canvas.height = options.height || util.height(domNode);
 
             if (options.bgcolor) {
                 var ctx = canvas.getContext('2d');
@@ -333,8 +333,8 @@
             asArray: asArray,
             escapeXhtml: escapeXhtml,
             makeImage: makeImage,
-            getWidth: getWidth,
-            getHeight: getHeight
+            width: width,
+            height: height
         };
 
         function mimes() {
@@ -502,12 +502,21 @@
             return string.replace(/#/g, '%23').replace(/\n/g, '%0A');
         }
 
-        function getWidth(node){
-            return node.scrollWidth;
+        function width(node) {
+            var leftBorder = px(node, 'border-left-width');
+            var rightBorder = px(node, 'border-right-width');
+            return node.scrollWidth + leftBorder + rightBorder;
         }
 
-        function getHeight(node){
-            return node.scrollHeight;
+        function height(node) {
+            var topBorder = px(node, 'border-top-width');
+            var bottomBorder = px(node, 'border-bottom-width');
+            return node.scrollHeight + topBorder + bottomBorder;
+        }
+
+        function px(node, styleProperty) {
+            var value = window.getComputedStyle(node).getPropertyValue(styleProperty);
+            return parseFloat(value.replace('px', ''));
         }
     }
 

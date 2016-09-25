@@ -40,18 +40,9 @@
             });
 
             it('should handle border', function (done) {
-                // this.timeout(60000);
                 loadTestPage('border/dom-node.html', 'border/style.css', 'border/control-image')
-                    .then(function () {
-                        return domtoimage.toPng(domNode());
-                    })
-                    .then(function(url){
-                        console.log(url);
-                        return url;
-                    })
-                    .then(drawDataUrl);
-                    // .then(check)
-                    // .then(done).catch(done);
+                    .then(renderAndCheck)
+                    .then(done).catch(done);
             });
 
             it('should render to jpeg', function (done) {
