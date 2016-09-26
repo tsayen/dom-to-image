@@ -1,6 +1,6 @@
 ### Use case: description, code  
 
-[jsfiddle](https://jsfiddle.net/tsayen/ojb1b31r/)
+[jsfiddle](https://jsfiddle.net/tsayen/ojb1b31r/2/)
 
 ### Expected behavior
 
@@ -10,6 +10,6 @@
 
 ### Browsers
 
-- [] Chrome 49+  
-- [] Firefox 45+  
+- [ ] Chrome 49+  
+- [ ] Firefox 45+  
 
