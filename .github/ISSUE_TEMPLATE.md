@@ -4,7 +4,7 @@
 
 ### Expected behavior
 
-### Actual behavior
+### Actual behavior (stack traces, console logs etc)
 
 ### Library version
 
