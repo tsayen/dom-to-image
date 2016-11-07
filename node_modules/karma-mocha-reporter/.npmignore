@@ -1,0 +1,6 @@
+.git*
+.idea
+.jshintrc
+.travis.yml
+Gruntfile.js
+/demo

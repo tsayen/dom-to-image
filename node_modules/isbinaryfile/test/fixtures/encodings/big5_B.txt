@@ -1,0 +1,22 @@
+OpenVPN HOWTO 中文版 
+作者：liyi 譯 文章出處：openvpn 發布時間：2005-09-16 點擊：3435 字體： 【小 中 大】  
+OpenVPN HOWTO 
+ 
+介紹
+此文檔描述一個典型的Home到Office的通信中OpenVPN的配置。這份HOWTO舉了一個完整的配置實例，在man page手冊頁中有一個更為簡單的例子。 
+
+此HOWTO文檔還有如下格式： 
+
+PDF 
+PostScript 
+
+附加的文檔
+其他的一些很好的文檔及HOWTO 為不同環境下配置OpenVPN而作。 
+
+基本的隧道(Tunnel)類型
+OpenVPN可以創建兩種基本的隧道類型：
+
+Routed IP tunnels -- 適用於不需廣播的點對點IP(point-to-point)通信。比起橋接網絡隧道來略顯得更有效率些而且更易配置。此HOWTO文檔涵蓋了Routed IP tunnels。 
+Bridged Ethernet Tunnels(橋接網絡隧道) -- 能用於IP協議或非IP協議的隧道。這種類型的隧道更適合於使用廣播(broadcast)的應用，比如某些Windows網絡游戲。配置起來稍微復雜些。關於橋接網絡隧道的Mini-HOWTO。 
+Routed IP tunnel HOWTO
+我們會嘗試描述一個完整的系統配置，期間涉及到防火牆，VPN，NAT以及他們彼此間的相互關聯，我們不會孤立的一部分一部分的探討VPN設置。

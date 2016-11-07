@@ -1,0 +1,18 @@
+
+-*- coding: latin-1 -*-
+
+Mit freundlichen Grüßen
+mit freundlichen Grüßen
+
+Das ist ein Äpfel.
+Was können Sie jetzt machen?
+
+Machen wir eine Übung!
+Worüber?
+Darüber.
+
+Das ist euro: €
+Euro: €!
+
+µClinux
+
