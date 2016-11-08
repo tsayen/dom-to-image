@@ -418,7 +418,7 @@
 
         describe('inliner', function () {
 
-            const NO_BASE_URL = null;
+            var NO_BASE_URL = null;
 
             it('should parse urls', function () {
                 var parse = domtoimage.impl.inliner.impl.readUrls;
