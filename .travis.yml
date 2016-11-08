@@ -1,6 +1,9 @@
 dist: trusty
 addons:
     firefox: "49.0"
+    apt:
+        packages:
+            - chromium-browser
 language: node_js
 node_js:
     - 6.2.2
