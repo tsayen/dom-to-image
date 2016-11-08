@@ -1,14 +1,14 @@
 .with-before::before {
-    content: 'ONLY-BEFORE';
+    content: 'ONLYBEFORE';
 }
 .with-after::after {
-    content: 'ONLY-AFTER';
+    content: 'ONLYAFTER';
 }
 .with-both::before {
-    content: 'BOTH-BEFORE';
+    content: 'BOTHBEFORE';
 }
 .with-both::after {
-    content: 'BOTH-AFTER';
+    content: 'BOTHAFTER';
 }
 
 #dom-node {
