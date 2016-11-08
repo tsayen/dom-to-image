@@ -1,5 +1,7 @@
 # DOM to Image
 
+![travis build](https://travis-ci.org/tsayen/dom-to-image.svg?branch=master)
+
 ## What is it
 
 **dom-to-image** is a library which can turn arbitrary DOM node into
