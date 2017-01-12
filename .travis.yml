@@ -5,7 +5,9 @@ language: node_js
 before_install:
     - sudo apt-get update -q
     - sudo apt-get install chromium-browser -y
-    - sudo npm install -g bower
+install:
+    - npm install -g bower
+    - npm install
     - bower install
 before_script:
     - export CHROME_BIN=chromium-browser
