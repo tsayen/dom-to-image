@@ -43,7 +43,7 @@ and it will make the `domtoimage` variable available in the global scope.
 ## Usage
 
 All the top level functions accept DOM node and rendering options,
-and return promises, which are fulfilled with corresponding data URLs.  
+and return promises, which are fulfilled with corresponding data URLs.
 Get a PNG image base64-encoded data URL and display right away:
 
 ```javascript
@@ -147,6 +147,11 @@ for JavaScript names of CSS properties.
 A number between 0 and 1 indicating image quality (e.g. 0.92 => 92%) of the
 JPEG image. Defaults to 1.0 (100%)
 
+### skipFonts
+
+Whether to skip downloading and embedding fonts. This should not be used if
+you use icon fonts or other fonts you need to show in the image. Defaults to false.
+
 ## Browsers
 
 It's tested on latest Chrome and Firefox (49 and 45 respectively at the time
@@ -160,9 +165,9 @@ SVG `<foreignObject>` tag_
 
 ### Source
 
-Only standard lib is currently used, but make sure your browser supports:  
+Only standard lib is currently used, but make sure your browser supports:
 
--   [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)  
+-   [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)
 -   SVG `<foreignObject>` tag
 
 ### Tests
@@ -181,11 +186,11 @@ Most importantly, tests depend on:
 There might some day exist (or maybe already exists?) a simple and standard
 way of exporting parts of the HTML to image (and then this script can only
 serve as an evidence of all the hoops I had to jump through in order to get
-such obvious thing done) but I haven't found one so far.  
+such obvious thing done) but I haven't found one so far.
 
 This library uses a feature of SVG that allows having arbitrary HTML content
 inside of the `<foreignObject>` tag. So, in order to render that DOM node
-for you, following steps are taken:  
+for you, following steps are taken:
 
 1.  Clone the original DOM node recursively
 
@@ -222,17 +227,17 @@ for you, following steps are taken:
     Image element with the SVG as a source, and render it on an off-screen
     canvas, that you have also created, then read the content from the canvas
 
-8.  Done!  
+8.  Done!
 
 ## Things to watch out for
 
 -   if the DOM node you want to render includes a `<canvas>` element with
     something drawn on it, it should be handled fine, unless the canvas is
     [tainted](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image) -
-    in this case rendering will rather not succeed.  
+    in this case rendering will rather not succeed.
 
 -   at the time of writing, Firefox has a problem with some external stylesheets
-    (see issue #13). In such case, the error will be caught and logged.  
+    (see issue #13). In such case, the error will be caught and logged.
 
 ## Authors
 
