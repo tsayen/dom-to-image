@@ -666,18 +666,20 @@
             };
 
             function inline(get) {
-                if (util.isDataUrl(element.src)) return Promise.resolve();
+                var src = element.currentSrc || element.src;
+                if (util.isDataUrl(src)) return Promise.resolve();
 
-                return Promise.resolve(element.src)
+                return Promise.resolve(src)
                     .then(get || util.getAndEncode)
                     .then(function (data) {
-                        return util.dataAsUrl(data, util.mimeType(element.src));
+                        return util.dataAsUrl(data, util.mimeType(src));
                     })
                     .then(function (dataUrl) {
                         return new Promise(function (resolve, reject) {
                             element.onload = resolve;
                             element.onerror = reject;
                             element.src = dataUrl;
+                            element.srcset = '';
                         });
                     });
             }
