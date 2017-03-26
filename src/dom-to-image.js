@@ -7,7 +7,7 @@
     var images = newImages();
 
     var getScale = function() {
-        return Window.devicePixelRatio || 1;
+        return window.devicePixelRatio || 1;
     }
 
     var domtoimage = {
