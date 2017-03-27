@@ -505,13 +505,17 @@
         function width(node) {
             var leftBorder = px(node, 'border-left-width');
             var rightBorder = px(node, 'border-right-width');
-            return node.scrollWidth + leftBorder + rightBorder;
+            var boundingWidth = node.getBoundingClientRect().width;
+            var width = (node.scrollWidth || boundingWidth) + leftBorder + rightBorder;
+            return width;
         }
 
         function height(node) {
             var topBorder = px(node, 'border-top-width');
             var bottomBorder = px(node, 'border-bottom-width');
-            return node.scrollHeight + topBorder + bottomBorder;
+            var boundingHeight = node.getBoundingClientRect().height;
+            var height = (node.scrollHeight || boundingHeight) + topBorder + bottomBorder;
+            return height;
         }
 
         function px(node, styleProperty) {
