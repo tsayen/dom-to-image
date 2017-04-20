@@ -707,7 +707,9 @@
                     };
 
                     function addBaseHrefToUrl(match, p1) {
-                        return 'url(\'' + concatAndResolveUrl(base, p1) + '\')';
+                        var url = /^http/i.test(p1) ?
+                            p1 : concatAndResolveUrl(base, p1)
+                        return 'url(\'' + url + '\')';
                     }
 
                     // Source: http://stackoverflow.com/a/2676231/3786856
