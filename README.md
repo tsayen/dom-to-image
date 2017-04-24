@@ -155,6 +155,7 @@ possibly due to it's more performant SVG support, and the fact that it supports
  `CSSStyleDeclaration.cssText` property.
 _Internet Explorer is not (and will not be) supported, as it does not support
 SVG `<foreignObject>` tag_
+_Safari [is not supported](https://github.com/tsayen/dom-to-image/issues/27), as it uses a stricter security model on `<foreignObject`> tag. Suggested workaround is to use `toSvg` and render on the server._`
 
 ## Dependencies
 
