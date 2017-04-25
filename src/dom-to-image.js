@@ -173,6 +173,7 @@
         }
 
         function cloneChildren(original, clone, filter) {
+            if (clone === null) return null;
             var children = original.childNodes;
             if (children.length === 0) return Promise.resolve(clone);
 
