@@ -41,33 +41,33 @@
      * */
     function toSvg(node, options) {
         options = options || {};
-        return Promise.resolve(node)
-            .then(function (node) {
-                return cloneNode(node, options.filter, true);
+        return Promise.resolve({node: node})
+            .then(function (ctx) {
+                return cloneNode(ctx, options.filter, true);
             })
             .then(embedFonts)
             .then(inlineImages)
-            .then(applyOptions)
-            .then(function (clone) {
-                return makeSvgDataUri(clone,
+            // .then(applyOptions)
+            .then(function (ctx) {
+                return makeSvgDataUri(ctx,
                     options.width || util.width(node),
                     options.height || util.height(node)
                 );
             });
 
-        function applyOptions(clone) {
-            if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
-
-            if (options.width) clone.style.width = options.width + 'px';
-            if (options.height) clone.style.height = options.height + 'px';
-
-            if (options.style)
-                Object.keys(options.style).forEach(function (property) {
-                    clone.style[property] = options.style[property];
-                });
-
-            return clone;
-        }
+        // function applyOptions(clone) {
+        //     if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
+        //
+        //     if (options.width) clone.style.width = options.width + 'px';
+        //     if (options.height) clone.style.height = options.height + 'px';
+        //
+        //     if (options.style)
+        //         Object.keys(options.style).forEach(function (property) {
+        //             clone.style[property] = options.style[property];
+        //         });
+        //
+        //     return clone;
+        // }
     }
 
     /**
@@ -147,49 +147,66 @@
         }
     }
 
-    function cloneNode(node, filter, root) {
+    function cloneNode(ctx, filter, root) {
+        var node = ctx.node;
         if (!root && filter && !filter(node)) return Promise.resolve();
 
-        return Promise.resolve(node)
+        return Promise.resolve(ctx)
             .then(makeNodeCopy)
-            .then(function (clone) {
-                return cloneChildren(node, clone, filter);
+            .then(function (ctx) {
+                return cloneChildren(node, ctx, filter);
             })
-            .then(function (clone) {
-                return processClone(node, clone);
+            .then(function (ctx) {
+                return processClone(node, ctx);
             });
 
-        function makeNodeCopy(node) {
-            if (node instanceof HTMLCanvasElement) return util.makeImage(node.toDataURL());
-            return node.cloneNode(false);
+        function makeNodeCopy(ctx) {
+            ctx.attr = {};
+            if (node.attributes) {
+                util.asArray(node.attributes).forEach(function(item) {
+                    ctx.attr[item.name] = item.value;
+                });
+            }
+            if (node instanceof HTMLCanvasElement) {
+                ctx.nodeName = 'img';
+                ctx.attr.src = node.toDataURL();
+            } else {
+                ctx.nodeName = node.nodeName;
+                if (node instanceof Text) {
+                    ctx.content = node.textContent;
+                }
+            }
+            return ctx;
         }
 
-        function cloneChildren(original, clone, filter) {
-            var children = original.childNodes;
-            if (children.length === 0) return Promise.resolve(clone);
 
-            return cloneChildrenInOrder(clone, util.asArray(children), filter)
+        function cloneChildren(original, ctx, filter) {
+            ctx.children = [];
+            var children = original.childNodes;
+            if (children.length === 0) return Promise.resolve(ctx);
+
+            return cloneChildrenInOrder(ctx, util.asArray(children), filter)
                 .then(function () {
-                    return clone;
+                    return ctx;
                 });
 
-            function cloneChildrenInOrder(parent, children, filter) {
+            function cloneChildrenInOrder(ctx, children, filter) {
                 var done = Promise.resolve();
                 children.forEach(function (child) {
                     done = done
                         .then(function () {
-                            return cloneNode(child, filter);
+                            return cloneNode({node: child}, filter);
                         })
-                        .then(function (childClone) {
-                            if (childClone) parent.appendChild(childClone);
+                        .then(function (childCtx) {
+                            if (childCtx) ctx.children.push(childCtx);
                         });
                 });
                 return done;
             }
         }
 
-        function processClone(original, clone) {
-            if (!(clone instanceof Element)) return clone;
+        function processClone(original, ctx) {
+            if (!(original instanceof Element)) return ctx;
 
             return Promise.resolve()
                 .then(cloneStyle)
@@ -197,26 +214,11 @@
                 .then(copyUserInput)
                 .then(fixSvg)
                 .then(function () {
-                    return clone;
+                    return ctx;
                 });
 
             function cloneStyle() {
-                copyStyle(window.getComputedStyle(original), clone.style);
-
-                function copyStyle(source, target) {
-                    if (source.cssText) target.cssText = source.cssText;
-                    else copyProperties(source, target);
-
-                    function copyProperties(source, target) {
-                        util.asArray(source).forEach(function (name) {
-                            target.setProperty(
-                                name,
-                                source.getPropertyValue(name),
-                                source.getPropertyPriority(name)
-                            );
-                        });
-                    }
-                }
+                ctx.style = window.getComputedStyle(original);
             }
 
             function clonePseudoElements() {
@@ -231,79 +233,96 @@
                     if (content === '' || content === 'none') return;
 
                     var className = util.uid();
-                    clone.className = clone.className + ' ' + className;
-                    var styleElement = document.createElement('style');
-                    styleElement.appendChild(formatPseudoElementStyle(className, element, style));
-                    clone.appendChild(styleElement);
+                    ctx.attr.class = (ctx.attr.class || '') + ' ' + className;
+                    ctx.children.push({
+                        nodeName: 'style',
+                        children: [{
+                            nodeName: '#text',
+                            content: formatPseudoElementStyle(className, element, style)
+                        }]
+                    });
+
+
 
                     function formatPseudoElementStyle(className, element, style) {
                         var selector = '.' + className + ':' + element;
                         var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
-                        return document.createTextNode(selector + '{' + cssText + '}');
+                        return selector + '{' + cssText + '}';
 
-                        function formatCssText(style) {
-                            var content = style.getPropertyValue('content');
-                            return style.cssText + ' content: ' + content + ';';
-                        }
-
-                        function formatCssProperties(style) {
-
-                            return util.asArray(style)
-                                .map(formatProperty)
-                                .join('; ') + ';';
-
-                            function formatProperty(name) {
-                                return name + ': ' +
-                                    style.getPropertyValue(name) +
-                                    (style.getPropertyPriority(name) ? ' !important' : '');
-                            }
-                        }
+                        // return document.createTextNode(selector + '{' + cssText + '}');
+                        //
+                        // function formatCssText(style) {
+                        //     var content = style.getPropertyValue('content');
+                        //     return style.cssText + ' content: ' + content + ';';
+                        // }
+                        //
+                        // function formatCssProperties(style) {
+                        //
+                        //     return util.asArray(style)
+                        //         .map(formatProperty)
+                        //         .join('; ') + ';';
+                        //
+                        //     function formatProperty(name) {
+                        //         return name + ': ' +
+                        //             style.getPropertyValue(name) +
+                        //             (style.getPropertyPriority(name) ? ' !important' : '');
+                        //     }
+                        // }
                     }
                 }
             }
 
             function copyUserInput() {
-                if (original instanceof HTMLTextAreaElement) clone.innerHTML = original.value;
-                if (original instanceof HTMLInputElement) clone.setAttribute("value", original.value);
+                if (original instanceof HTMLTextAreaElement) ctx.children.push({nodeName: '#text', content: original.value});
+                if (original instanceof HTMLInputElement) ctx.attr.value = original.value;
             }
 
             function fixSvg() {
-                if (!(clone instanceof SVGElement)) return;
-                clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                if (!(original instanceof SVGElement)) return;
+                ctx.attr.xmlns = 'http://www.w3.org/2000/svg';
 
-                if (!(clone instanceof SVGRectElement)) return;
+                if (!(original instanceof SVGRectElement)) return;
                 ['width', 'height'].forEach(function (attribute) {
                     var value = clone.getAttribute(attribute);
                     if (!value) return;
 
-                    clone.style.setProperty(attribute, value);
+                    ctx.style.setProperty(attribute, value);
                 });
             }
         }
     }
 
-    function embedFonts(node) {
+    function embedFonts(ctx) {
         return fontFaces.resolveAll()
             .then(function (cssText) {
-                var styleNode = document.createElement('style');
-                node.appendChild(styleNode);
-                styleNode.appendChild(document.createTextNode(cssText));
-                return node;
+                ctx.children.push({
+                    nodeName: 'style',
+                    children: [{
+                        nodeName: '#text',
+                        content: cssText
+                    }]
+                });
+                return ctx;
+                // var styleNode = document.createElement('style');
+                // node.appendChild(styleNode);
+                // styleNode.appendChild(document.createTextNode(cssText));
+                // return node;
             });
     }
 
-    function inlineImages(node) {
-        return images.inlineAll(node)
+    function inlineImages(ctx) {
+        return images.inlineAll(ctx)
             .then(function () {
-                return node;
+                return ctx;
             });
     }
 
-    function makeSvgDataUri(node, width, height) {
-        return Promise.resolve(node)
-            .then(function (node) {
-                node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-                return new XMLSerializer().serializeToString(node);
+    function makeSvgDataUri(ctx, width, height) {
+        return Promise.resolve(ctx)
+            .then(function (ctx) {
+                ctx.attr.xmlns = 'http://www.w3.org/1999/xhtml';
+                return serializeToString(ctx);
+                // return new XMLSerializer().serializeToString(node);
             })
             .then(util.escapeXhtml)
             .then(function (xhtml) {
@@ -316,6 +335,34 @@
             .then(function (svg) {
                 return 'data:image/svg+xml;charset=utf-8,' + svg;
             });
+
+        function serializeToString(ctx) {
+            var str = [];
+            serializeCtx(ctx, str);
+            return str.join('');
+
+            function serializeCtx(ctx, str) {
+                if (ctx.nodeName === '#text') {
+                    str.push(ctx.content);
+                } else {
+                    str.push('<', ctx.nodeName);
+                    serializeAttrs(ctx, str);
+                    str.push('>');
+                    ctx.children.forEach(function(child) {
+                        serializeCtx(child, str);
+                    });
+                    str.push('</', ctx.nodeName, '>');
+                }
+
+                function serializeAttrs(ctx, str) {
+                    if (ctx.style) ctx.attr.style = ctx.style.cssText.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                    for (var i in ctx.attr) {
+                        str.push(' ', i, '="', ctx.attr[i], '"');
+                    }
+                }
+            }
+        }
+
     }
 
     function newUtil() {
@@ -660,7 +707,8 @@
             }
         };
 
-        function newImage(element) {
+        function newImage(ctx) {
+            var element = ctx.node;
             return {
                 inline: inline
             };
@@ -674,45 +722,42 @@
                         return util.dataAsUrl(data, util.mimeType(element.src));
                     })
                     .then(function (dataUrl) {
-                        return new Promise(function (resolve, reject) {
-                            element.onload = resolve;
-                            element.onerror = reject;
-                            element.src = dataUrl;
-                        });
+                        ctx.attr.src = dataUrl;
                     });
             }
         }
 
-        function inlineAll(node) {
-            if (!(node instanceof Element)) return Promise.resolve(node);
+        function inlineAll(ctx) {
+            var node = ctx.node;
+            if (!(node instanceof Element)) return Promise.resolve(ctx);
 
-            return inlineBackground(node)
+            return inlineBackground(ctx)
                 .then(function () {
                     if (node instanceof HTMLImageElement)
-                        return newImage(node).inline();
+                        return newImage(ctx).inline();
                     else
                         return Promise.all(
-                            util.asArray(node.childNodes).map(function (child) {
+                            ctx.children.map(function (child) {
                                 return inlineAll(child);
                             })
                         );
                 });
 
-            function inlineBackground(node) {
-                var background = node.style.getPropertyValue('background');
+            function inlineBackground(ctx) {
+                var background = ctx.node.style.getPropertyValue('background');
 
-                if (!background) return Promise.resolve(node);
+                if (!background) return Promise.resolve(ctx);
 
                 return inliner.inlineAll(background)
                     .then(function (inlined) {
-                        node.style.setProperty(
+                        ctx.style.setProperty(
                             'background',
                             inlined,
                             node.style.getPropertyPriority('background')
                         );
                     })
                     .then(function () {
-                        return node;
+                        return ctx;
                     });
             }
         }
