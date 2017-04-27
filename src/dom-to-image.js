@@ -170,8 +170,8 @@
             if (node instanceof HTMLCanvasElement) {
                 ctx.nodeName = 'img';
                 ctx.attr.src = node.toDataURL();
-            } else {
-                ctx.nodeName = node.nodeName;
+            } else if (!(node instanceof HTMLScriptElement)) {
+                ctx.nodeName = node.nodeName.toLowerCase();
                 if (node instanceof Text) {
                     ctx.content = node.textContent;
                 }
@@ -246,28 +246,29 @@
 
                     function formatPseudoElementStyle(className, element, style) {
                         var selector = '.' + className + ':' + element;
-                        var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
+                        var cssText = style.cssText;
+                        cssText = cssText ? cssText + getContent(style) : formatCssProperties(style);
                         return selector + '{' + cssText + '}';
 
                         // return document.createTextNode(selector + '{' + cssText + '}');
-                        //
-                        // function formatCssText(style) {
-                        //     var content = style.getPropertyValue('content');
-                        //     return style.cssText + ' content: ' + content + ';';
-                        // }
-                        //
-                        // function formatCssProperties(style) {
-                        //
-                        //     return util.asArray(style)
-                        //         .map(formatProperty)
-                        //         .join('; ') + ';';
-                        //
-                        //     function formatProperty(name) {
-                        //         return name + ': ' +
-                        //             style.getPropertyValue(name) +
-                        //             (style.getPropertyPriority(name) ? ' !important' : '');
-                        //     }
-                        // }
+
+                        function getContent(style) {
+                            var content = style.getPropertyValue('content');
+                            return ' content: ' + content + ';';
+                        }
+
+                        function formatCssProperties(style) {
+
+                            return util.asArray(style)
+                                .map(formatProperty)
+                                .join('; ') + ';';
+
+                            function formatProperty(name) {
+                                return name + ': ' +
+                                    style.getPropertyValue(name) +
+                                    (style.getPropertyPriority(name) ? ' !important' : '');
+                            }
+                        }
                     }
                 }
             }
@@ -286,7 +287,7 @@
                     var value = clone.getAttribute(attribute);
                     if (!value) return;
 
-                    ctx.style.setProperty(attribute, value);
+                    ctx.styleText = [ctx.styleText || '', attribute, ':', value, ';'].join('');
                 });
             }
         }
@@ -355,7 +356,12 @@
                 }
 
                 function serializeAttrs(ctx, str) {
-                    if (ctx.style) ctx.attr.style = ctx.style.cssText.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                    if (ctx.style || ctx.styleText) {
+                        ctx.attr.style = '';
+                        if (ctx.style) ctx.attr.style = ctx.style.cssText;
+                        if (ctx.styleText) ctx.attr.style += ctx.styleText;
+                        ctx.attr.style = ctx.attr.style.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                    }
                     for (var i in ctx.attr) {
                         str.push(' ', i, '="', ctx.attr[i], '"');
                     }
@@ -744,17 +750,14 @@
                 });
 
             function inlineBackground(ctx) {
-                var background = ctx.node.style.getPropertyValue('background');
+                var background = ctx.style.getPropertyValue('background');
 
                 if (!background) return Promise.resolve(ctx);
 
                 return inliner.inlineAll(background)
                     .then(function (inlined) {
-                        ctx.style.setProperty(
-                            'background',
-                            inlined,
-                            node.style.getPropertyPriority('background')
-                        );
+                        var priority = node.style.getPropertyPriority('background') ? ' !important' : '';
+                        ctx.styleText = [ctx.styleText || '', ' background: ', inlined, priority, ';'].join('');
                     })
                     .then(function () {
                         return ctx;
