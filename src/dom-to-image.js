@@ -149,7 +149,9 @@
 
     function cloneNode(ctx, filter, root) {
         var node = ctx.node;
-        if (!root && filter && !filter(node)) return Promise.resolve();
+        if ((!root && filter && !filter(node))
+            || (node instanceof HTMLScriptElement)
+            || (node instanceof Comment)) return Promise.resolve();
 
         return Promise.resolve(ctx)
             .then(makeNodeCopy)
@@ -170,7 +172,7 @@
             if (node instanceof HTMLCanvasElement) {
                 ctx.nodeName = 'img';
                 ctx.attr.src = node.toDataURL();
-            } else if (!(node instanceof HTMLScriptElement)) {
+            } else {
                 ctx.nodeName = node.nodeName.toLowerCase();
                 if (node instanceof Text) {
                     ctx.content = node.textContent;
@@ -344,7 +346,7 @@
 
             function serializeCtx(ctx, str) {
                 if (ctx.nodeName === '#text') {
-                    str.push(ctx.content);
+                    str.push(ctx.content.replace(/&/g, '&amp;'));
                 } else {
                     str.push('<', ctx.nodeName);
                     serializeAttrs(ctx, str);
@@ -360,10 +362,9 @@
                         ctx.attr.style = '';
                         if (ctx.style) ctx.attr.style = ctx.style.cssText;
                         if (ctx.styleText) ctx.attr.style += ctx.styleText;
-                        ctx.attr.style = ctx.attr.style.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
                     }
                     for (var i in ctx.attr) {
-                        str.push(' ', i, '="', ctx.attr[i], '"');
+                        str.push(' ', i, '="', ctx.attr[i].replace(/&/g, '&amp;').replace(/"/g, '&quot;'), '"');
                     }
                 }
             }
