@@ -47,7 +47,7 @@
             })
             .then(embedFonts)
             .then(inlineImages)
-            // .then(applyOptions)
+            .then(applyOptions)
             .then(function (ctx) {
                 return makeSvgDataUri(ctx,
                     options.width || util.width(node),
@@ -55,19 +55,31 @@
                 );
             });
 
-        // function applyOptions(clone) {
-        //     if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
-        //
-        //     if (options.width) clone.style.width = options.width + 'px';
-        //     if (options.height) clone.style.height = options.height + 'px';
-        //
-        //     if (options.style)
-        //         Object.keys(options.style).forEach(function (property) {
-        //             clone.style[property] = options.style[property];
-        //         });
-        //
-        //     return clone;
-        // }
+        function applyOptions(ctx) {
+            var str = [ctx.styleText || ''];
+            if (options.bgcolor) pushStyle(str, 'background-color', options.bgcolor);
+
+            if (options.width) pushStyle(str, 'width', options.width + 'px');
+            if (options.height) pushStyle(str, 'height', options.height + 'px');
+
+            if (options.style)
+                Object.keys(options.style).forEach(function (property) {
+                    pushStyle(str, kebabCase(property), options.style[property]);
+                });
+
+            ctx.styleText = str.join('');
+            return ctx;
+
+            function pushStyle(str, k, v) {
+                str.push(' ', k, ': ', v, ';');
+            }
+
+            function kebabCase(s) {
+                return s.replace(/[A-Z]/g, function(m) {
+                    return '-' + m.toLowerCase();
+                });
+            }
+        }
     }
 
     /**
