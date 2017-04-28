@@ -20,7 +20,7 @@ module.exports = function (config) {
 
             'bower_components/jquery/dist/jquery.js',
             'bower_components/js-imagediff/imagediff.js',
-            'bower_components/ocrad-bower/ocrad.js',
+            'https://cdn.rawgit.com/naptha/tesseract.js/1.0.10/dist/tesseract.js',
 
             'src/dom-to-image.js',
             'spec/dom-to-image.spec.js'
