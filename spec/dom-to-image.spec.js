@@ -388,9 +388,7 @@
                 return function () {
                     return new Promise(function (resolve, reject) {
                         Tesseract.recognize(canvas())
-                            // .progress(function(p) { console.debug('progress', p) })
                             .then(function(result) {
-                                // console.debug('ocr:', result.text);
                                 lines.forEach(function(line) {
                                     try {
                                         assert.include(result.text, line);
