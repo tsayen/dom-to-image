@@ -575,14 +575,13 @@
             it('should not inline images with data url', function (done) {
                 var originalSrc = 'data:image/jpeg;base64,AAA';
 
-                var img = new Image();
-                img.src = originalSrc;
+                var ctx = { attr: { src: originalSrc } };
 
-                domtoimage.impl.images.impl.newImage({node: img}).inline(function () {
+                domtoimage.impl.images.impl.newImage(ctx).inline(function () {
                         return Promise.resolve('XXX');
                     })
                     .then(function () {
-                        assert.equal(img.src, originalSrc);
+                        assert.equal(ctx.attr.src, originalSrc);
                     })
                     .then(done).catch(done);
             });

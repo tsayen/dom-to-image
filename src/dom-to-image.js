@@ -752,18 +752,17 @@
         };
 
         function newImage(ctx) {
-            var element = ctx.node;
             return {
                 inline: inline
             };
 
             function inline(get) {
-                if (util.isDataUrl(element.src)) return Promise.resolve();
+                if (util.isDataUrl(ctx.attr.src)) return Promise.resolve();
 
-                return Promise.resolve(element.src)
+                return Promise.resolve(ctx.attr.src)
                     .then(get || util.getAndEncode)
                     .then(function (data) {
-                        return util.dataAsUrl(data, util.mimeType(element.src));
+                        return util.dataAsUrl(data, util.mimeType(ctx.attr.src));
                     })
                     .then(function (dataUrl) {
                         ctx.attr.src = dataUrl;
@@ -772,22 +771,25 @@
         }
 
         function inlineAll(ctx) {
-            var node = ctx.node;
-            if (!(node instanceof Element)) return Promise.resolve(ctx);
 
             return inlineBackground(ctx)
                 .then(function () {
-                    if (node instanceof HTMLImageElement)
+                    if (ctx.nodeName === 'img')
                         return newImage(ctx).inline();
-                    else
+                    else if (ctx.children) {
                         return Promise.all(
                             ctx.children.map(function (child) {
                                 return inlineAll(child);
                             })
                         );
+                    } else {
+                        return Promise.resolve();
+                    }
                 });
 
             function inlineBackground(ctx) {
+                if (!ctx.style) return Promise.resolve(ctx);
+
                 var backgroundObj = ctx.style['background-image'];
                 var background = backgroundObj && backgroundObj.value;
 
