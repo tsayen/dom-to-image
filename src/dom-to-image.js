@@ -298,7 +298,7 @@
 
                 if (!(original instanceof SVGRectElement)) return;
                 ['width', 'height'].forEach(function (attribute) {
-                    var value = clone.getAttribute(attribute);
+                    var value = original.getAttribute(attribute);
                     if (!value) return;
 
                     ctx.styleText = [ctx.styleText || '', attribute, ':', value, ';'].join('');
