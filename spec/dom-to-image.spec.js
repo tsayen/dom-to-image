@@ -578,7 +578,7 @@
                 var img = new Image();
                 img.src = originalSrc;
 
-                domtoimage.impl.images.impl.newImage(img).inline(function () {
+                domtoimage.impl.images.impl.newImage({node: img}).inline(function () {
                         return Promise.resolve('XXX');
                     })
                     .then(function () {
