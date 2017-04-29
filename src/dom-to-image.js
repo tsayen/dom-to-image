@@ -232,7 +232,17 @@
                 });
 
             function cloneStyle() {
-                ctx.style = window.getComputedStyle(original);
+                copyStyle(window.getComputedStyle(original), ctx);
+
+                function copyStyle(source, ctx) {
+                    ctx.style = {};
+                    util.asArray(source).forEach(function (name) {
+                        ctx.style[name] = {
+                            value: source.getPropertyValue(name),
+                            priority: source.getPropertyPriority(name)
+                        };
+                    });
+                }
             }
 
             function clonePseudoElements() {
@@ -370,13 +380,28 @@
                 }
 
                 function serializeAttrs(ctx, str) {
-                    if (ctx.style || ctx.styleText) {
-                        ctx.attr.style = '';
-                        if (ctx.style) ctx.attr.style = ctx.style.cssText;
-                        if (ctx.styleText) ctx.attr.style += ctx.styleText;
-                    }
+                    createStyleAttr(ctx);
+
                     for (var i in ctx.attr) {
-                        str.push(' ', i, '="', ctx.attr[i].replace(/&/g, '&amp;').replace(/"/g, '&quot;'), '"');
+                        var val = ctx.attr[i].replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                        str.push(' ', i, '="', val, '"');
+                    }
+
+                    function createStyleAttr(ctx) {
+                        if (ctx.style || ctx.styleText) {
+                            var styles = [];
+                            if (ctx.style) serializeCssObj(ctx.style, styles);
+                            if (ctx.styleText) styles.push(ctx.styleText);
+                            ctx.attr.style = styles.join('');
+                        }
+
+                        function serializeCssObj(o, styles) {
+                            for (var i in o) {
+                                styles.push(i, ': ', o[i].value);
+                                if (o[i].priority) styles.push(' !important');
+                                styles.push('; ');
+                            }
+                        }
                     }
                 }
             }
@@ -763,14 +788,15 @@
                 });
 
             function inlineBackground(ctx) {
-                var background = ctx.style.getPropertyValue('background');
+                var backgroundObj = ctx.style['background-image'];
+                var background = backgroundObj && backgroundObj.value;
 
-                if (!background) return Promise.resolve(ctx);
+                if (!background || background === 'none') return Promise.resolve(ctx);
 
                 return inliner.inlineAll(background)
                     .then(function (inlined) {
-                        var priority = node.style.getPropertyPriority('background') ? ' !important' : '';
-                        ctx.styleText = [ctx.styleText || '', ' background: ', inlined, priority, ';'].join('');
+                        var priority = (backgroundObj && backgroundObj.priority) ? ' !important' : '';
+                        ctx.styleText = [ctx.styleText || '', ' background-image: ', inlined, priority, ';'].join('');
                     })
                     .then(function () {
                         return ctx;
