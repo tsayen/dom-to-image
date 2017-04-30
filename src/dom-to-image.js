@@ -375,7 +375,7 @@
 
             function serializeCtx(ctx, str) {
                 if (ctx.nodeName === '#text') {
-                    str.push(ctx.content.replace(/&/g, '&amp;'));
+                    str.push(util.xmlEncode(ctx.content));
                 } else {
                     str.push('<', ctx.nodeName);
                     serializeAttrs(ctx, str);
@@ -390,7 +390,7 @@
                     createStyleAttr(ctx);
 
                     for (var i in ctx.attr) {
-                        var val = ctx.attr[i].replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                        var val = util.xmlEncode(ctx.attr[i]);
                         str.push(' ', i, '="', val, '"');
                     }
 
@@ -430,6 +430,7 @@
             delay: delay,
             asArray: asArray,
             escapeXhtml: escapeXhtml,
+            xmlEncode: xmlEncode,
             makeImage: makeImage,
             width: width,
             height: height
@@ -598,6 +599,23 @@
 
         function escapeXhtml(string) {
             return string.replace(/#/g, '%23').replace(/\n/g, '%0A');
+        }
+
+        function xmlEncode(unsafe) {
+            return unsafe.replace(/[<>&'"]/g, function(c) {
+                switch (c) {
+                    case '<':
+                        return '&lt;';
+                    case '>':
+                        return '&gt;';
+                    case '&':
+                        return '&amp;';
+                    case '\'':
+                        return '&apos;';
+                    case '"':
+                        return '&quot;';
+                }
+            });
         }
 
         function width(node) {
