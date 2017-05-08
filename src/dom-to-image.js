@@ -277,8 +277,6 @@
                         cssText = cssText ? cssText + getContent(style) : formatCssProperties(style);
                         return selector + '{' + cssText + '}';
 
-                        // return document.createTextNode(selector + '{' + cssText + '}');
-
                         function getContent(style) {
                             var content = style.getPropertyValue('content');
                             return ' content: ' + content + ';';
@@ -331,10 +329,6 @@
                     }]
                 });
                 return ctx;
-                // var styleNode = document.createElement('style');
-                // node.appendChild(styleNode);
-                // styleNode.appendChild(document.createTextNode(cssText));
-                // return node;
             });
     }
 
@@ -350,7 +344,6 @@
             .then(function (ctx) {
                 ctx.attr.xmlns = 'http://www.w3.org/1999/xhtml';
                 return serializeToString(ctx);
-                // return new XMLSerializer().serializeToString(node);
             })
             .then(util.escapeXhtml)
             .then(function (xhtml) {
