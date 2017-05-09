@@ -491,8 +491,7 @@
                     if (request.status !== 200) {
                         if(placeholder) {
                             resolve(placeholder);
-                        }
-                        else {
+                        } else {
                             fail('cannot fetch resource: ' + url + ', status: ' + request.status);
                         }
 
@@ -510,8 +509,7 @@
                 function timeout() {
                     if(placeholder) {
                         resolve(placeholder);
-                    }
-                    else {
+                    } else {
                         fail('timeout of ' + TIMEOUT + 'ms occured while fetching resource: ' + url);
                     }
                 }
