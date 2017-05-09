@@ -435,6 +435,9 @@
 
         function getAndEncode(url) {
             var TIMEOUT = 30000;
+            // Cache bypass so we dont have CORS issues with cached images
+            // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
+            url += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime();
 
             return new Promise(function (resolve) {
                 var request = new XMLHttpRequest();
