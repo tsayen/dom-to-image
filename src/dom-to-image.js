@@ -117,7 +117,8 @@
      * @return {Promise} - A promise that is fulfilled with a JPEG image data URL
      * */
     function toJpeg(node, options) {
-        return draw(node, options || {})
+        options = options || {};
+        return draw(node, options)
             .then(function (canvas) {
                 return canvas.toDataURL('image/jpeg', options.quality || 1.0);
             });
