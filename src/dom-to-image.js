@@ -480,8 +480,8 @@
                 var placeholder;
                 if(domtoimage.impl.options.placeholder) {
                     var split = domtoimage.impl.options.placeholder.split(/,/);
-                    if(split[0]) {
-                        placeholder = split[0];
+                    if(split && split[1]) {
+                        placeholder = split[1];
                     }
                 }
 
