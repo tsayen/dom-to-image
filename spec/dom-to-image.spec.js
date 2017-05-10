@@ -496,10 +496,21 @@
                     .then(done).catch(done);
             });
 
-            it('should return empty result if cannot get resourse', function (done) {
+            it('should return placeholder result if cannot get resource', function (done) {
+                domtoimage.impl.util.getAndEncode(BASE_URL + 'util/not-found')
+                    .then(function (resource) {
+                        var placeholderData = domtoimage.impl.options.placeholder.split(/,/)[1];
+                        assert.equal(resource, placeholderData);
+                    }).then(done).catch(done);
+            });
+
+            it('should return empty result if cannot get resource and placeholder set to undefined', function (done) {
+                var original = domtoimage.impl.options.placeholder;
+                domtoimage.impl.options.placeholder = undefined;
                 domtoimage.impl.util.getAndEncode(BASE_URL + 'util/not-found')
                     .then(function (resource) {
                         assert.equal(resource, '');
+                        domtoimage.impl.options.placeholder = original;
                     }).then(done).catch(done);
             });
 
