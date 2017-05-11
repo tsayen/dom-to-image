@@ -186,9 +186,9 @@
 
     function cloneNode(ctx, filter, root) {
         var node = ctx.node;
-        if ((!root && filter && !filter(node))
-            || (node instanceof HTMLScriptElement)
-            || (node instanceof Comment)) return Promise.resolve();
+        if ((!root && filter && !filter(node)) ||
+            (node instanceof HTMLScriptElement) ||
+            (node instanceof Comment)) return Promise.resolve();
 
         return Promise.resolve(ctx)
             .then(makeNodeCopy)
