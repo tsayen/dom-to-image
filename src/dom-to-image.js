@@ -7,6 +7,7 @@
     var images = newImages();
 
     var domtoimage = {
+        scan: scan,
         toSvg: toSvg,
         toPng: toPng,
         toJpeg: toJpeg,
@@ -27,10 +28,38 @@
 
 
     /**
+     * Scans the DOM to capture the information needed to perform rendering and returns this
+     * information. This object can then be passed to other to* functions to perform final
+     * rendering. The source DOM is no longer required to be present after this function completes.
+     * This is useful if you're running in a batch situation where you want to load the
+     * next DOM as soon as possible, and allow final rendering to take advantage of non-blocking
+     * effects to provide higher overall throughput and a better user experience.
+     *
      * @param {Node} node - The DOM Node object to render
      * @param {Object} options - Rendering options
      * @param {Function} options.filter - Should return true if passed node should be included in the output
-     *          (excluding node means excluding it's children as well). Not called on the root node.
+     *          (excluding node means excluding its children as well). Not called on the root node.
+     * @return {Promise} - A promise that is fulfilled with an object to be passed to a to* function for final rendering
+     * */
+    function scan(node, options) {
+       options = options || {};
+       return Promise.resolve({node: node})
+           .then(function (ctx) {
+               return cloneNode(ctx, options.filter, true);
+           })
+           .then(embedFonts)
+           .then(function(ctx) {
+              ctx.nodeHeight = util.height(node);
+              ctx.nodeWidth = util.width(node);
+              return ctx;
+           });
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render, or the result of @see {@link scan}
+     * @param {Object} options - Rendering options
+     * @param {Function} options.filter - Should return true if passed node should be included in the output
+     *          (excluding node means excluding its children as well). Not called on the root node.
      * @param {String} options.bgcolor - color for the background, any valid CSS color value.
      * @param {Number} options.width - width to be applied to node before rendering.
      * @param {Number} options.height - height to be applied to node before rendering.
@@ -41,11 +70,9 @@
      * */
     function toSvg(node, options) {
         options = options || {};
-        return Promise.resolve({node: node})
-            .then(function (ctx) {
-                return cloneNode(ctx, options.filter, true);
-            })
-            .then(embedFonts)
+        // If Element then scan it, otherwise it's a context object (output from scan) so continue on
+        var promise = (node instanceof Element) ? scan(node, options) : Promise.resolve(node);
+        return promise
             .then(inlineImages)
             .then(applyOptions)
             .then(function (ctx) {
@@ -81,7 +108,7 @@
     }
 
     /**
-     * @param {Node} node - The DOM Node object to render
+     * @param {Node} node - The DOM Node object to render, or the result of @see {@link scan}
      * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a Uint8Array containing RGBA pixel data.
      * */
@@ -98,7 +125,7 @@
     }
 
     /**
-     * @param {Node} node - The DOM Node object to render
+     * @param {Node} node - The DOM Node object to render, or the result of @see {@link scan}
      * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a PNG image data URL
      * */
@@ -110,7 +137,7 @@
     }
 
     /**
-     * @param {Node} node - The DOM Node object to render
+     * @param {Node} node - The DOM Node object to render, or the result of @see {@link scan}
      * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a JPEG image data URL
      * */
@@ -123,7 +150,7 @@
     }
 
     /**
-     * @param {Node} node - The DOM Node object to render
+     * @param {Node} node - The DOM Node object to render, or the result of @see {@link scan}
      * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a PNG image blob
      * */
@@ -599,12 +626,18 @@
         }
 
         function width(node) {
+            // if it's a context object it will have nodeWidth
+            if (node.nodeWidth) return node.nodeWidth;
+
             var leftBorder = px(node, 'border-left-width');
             var rightBorder = px(node, 'border-right-width');
             return node.scrollWidth + leftBorder + rightBorder;
         }
 
         function height(node) {
+            // if it's a context object it will have nodeHeight
+            if (node.nodeHeight) return node.nodeHeight;
+
             var topBorder = px(node, 'border-top-width');
             var bottomBorder = px(node, 'border-bottom-width');
             return node.scrollHeight + topBorder + bottomBorder;

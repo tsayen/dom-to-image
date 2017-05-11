@@ -39,6 +39,33 @@
                     .then(done).catch(done);
             });
 
+            it.only('should render different DOMS appropriately when using scan()', function (done) {
+                var first = {};
+                loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
+                    .then(function () {
+                        return domtoimage.scan(domNode());
+                    })
+                    .then(function (firstCtx) {
+                        first.ctx = firstCtx;
+                        first.controlImage = controlImage().outerHTML;
+                        purgePage();
+                        return loadTestPage('border/dom-node.html', 'border/style.css', 'border/control-image');
+                    })
+                    .then(function () {
+                        return domtoimage.scan(domNode());
+                    })
+                    .then(function (secondCtx) {
+                        return domtoimage.toPng(secondCtx);
+                    })
+                    .then(check)
+                    .then(function () {
+                        controlImage().outerHTML = first.controlImage;
+                        return domtoimage.toPng(first.ctx);
+                    })
+                    .then(check)
+                    .then(done).catch(done);
+            });
+
             it('should handle border', function (done) {
                 loadTestPage('border/dom-node.html', 'border/style.css', 'border/control-image')
                     .then(renderAndCheck)
