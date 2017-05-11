@@ -39,7 +39,7 @@
                     .then(done).catch(done);
             });
 
-            it.only('should render different DOMS appropriately when using scan()', function (done) {
+            it('should render different DOMS appropriately when using scan()', function (done) {
                 var first = {};
                 loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
                     .then(function () {
