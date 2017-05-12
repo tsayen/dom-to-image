@@ -46,7 +46,7 @@
                 return cloneNode(node, options.filter, true);
             })
             .then(embedFonts)
-            .then(inlineImages)
+            .then(function(node){return inlineImages(node, options)})
             .then(applyOptions)
             .then(function (clone) {
                 return makeSvgDataUri(clone,
@@ -292,8 +292,8 @@
             });
     }
 
-    function inlineImages(node) {
-        return images.inlineAll(node)
+    function inlineImages(node, options) {
+        return images.inlineAll(node, options)
             .then(function () {
                 return node;
             });
@@ -660,7 +660,7 @@
             }
         };
 
-        function newImage(element) {
+        function newImage(element, options) {
             return {
                 inline: inline
             };
@@ -676,34 +676,38 @@
                     .then(function (dataUrl) {
                         return new Promise(function (resolve, reject) {
                             element.onload = resolve;
-                            element.onerror = reject;
+                            if (options.ignoreImageErrors) {
+                              element.onerror = resolve;
+                            } else {
+                              element.onerror = reject;
+                            }
                             element.src = dataUrl;
                         });
                     });
             }
         }
 
-        function inlineAll(node) {
+        function inlineAll(node, options) {
             if (!(node instanceof Element)) return Promise.resolve(node);
 
             return inlineBackground(node)
                 .then(function () {
                     if (node instanceof HTMLImageElement)
-                        return newImage(node).inline();
+                        return newImage(node, options).inline();
                     else
                         return Promise.all(
                             util.asArray(node.childNodes).map(function (child) {
-                                return inlineAll(child);
+                                return inlineAll(child, options);
                             })
                         );
                 });
 
-            function inlineBackground(node) {
+            function inlineBackground(node, options) {
                 var background = node.style.getPropertyValue('background');
 
                 if (!background) return Promise.resolve(node);
 
-                return inliner.inlineAll(background)
+                return inliner.inlineAll(background, options)
                     .then(function (inlined) {
                         node.style.setProperty(
                             'background',
