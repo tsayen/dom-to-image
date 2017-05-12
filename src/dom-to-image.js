@@ -37,13 +37,18 @@
      * @param {Object} options.style - an object whose properties to be copied to node's style before rendering.
      * @param {Number} options.quality - a Number between 0 and 1 indicating image quality (applicable to JPEG only),
                 defaults to 1.0.
+     * @param {Function} [options.onClone] - A custom callback which is fired for each original element. If this
+                function returns a valid value (Promise, or Element), it is resolved instead of using the default
+                element clone. This can be used to extend the functionality of this library without having to build
+                a custom version. It intentionally supports Promises to allow for async cloning (when it's not
+                possible to clone the element synchronously - e.g. iframes).
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
         options = options || {};
         return Promise.resolve(node)
             .then(function (node) {
-                return cloneNode(node, options.filter, true);
+                return cloneNode(node, options, true);
             })
             .then(embedFonts)
             .then(inlineImages)
@@ -147,7 +152,8 @@
         }
     }
 
-    function cloneNode(node, filter, root) {
+    function cloneNode(node, options, root) {
+        var filter = options.filter;
         if (!root && filter && !filter(node)) return Promise.resolve();
 
         return Promise.resolve(node)
@@ -160,11 +166,14 @@
             });
 
         function makeNodeCopy(node) {
+            var hook = options.onClone && options.onClone(node);
+            if (hook) return Promise.resolve(hook);
             if (node instanceof HTMLCanvasElement) return util.makeImage(node.toDataURL());
             return node.cloneNode(false);
         }
 
         function cloneChildren(original, clone, filter) {
+            if (clone === null) return null;
             var children = original.childNodes;
             if (children.length === 0) return Promise.resolve(clone);
 
@@ -178,7 +187,7 @@
                 children.forEach(function (child) {
                     done = done
                         .then(function () {
-                            return cloneNode(child, filter);
+                            return cloneNode(child, options);
                         })
                         .then(function (childClone) {
                             if (childClone) parent.appendChild(childClone);
