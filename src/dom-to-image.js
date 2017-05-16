@@ -8,10 +8,10 @@
 
     // Default impl options
     var defaultOptions = {
-        // Default placeholder is a 1x1 gray square
-        placeholder: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY7h79y4ABTICmGnXPbMAAAAASUVORK5CYII=",
-        // Default cache bust is true
-        cacheBust: true
+        // Default is to fail on error, no placeholder
+        imagePlaceholder: undefined,
+        // Default cache bust is false, it will use the cache
+        cacheBust: false
     };
 
     var domtoimage = {
@@ -46,7 +46,7 @@
      * @param {Object} options.style - an object whose properties to be copied to node's style before rendering.
      * @param {Number} options.quality - a Number between 0 and 1 indicating image quality (applicable to JPEG only),
                 defaults to 1.0.
-     * @param {String} options.placeholder - dataURL to use as a placeholder for failed images, pass null to fail fast on images we can't fetch
+     * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
@@ -136,10 +136,10 @@
 
     function copyOptions(options) {
         // Copy options to impl options for use in impl
-        if(typeof(options.placeholder) === 'undefined') {
-            domtoimage.impl.options.placeholder = defaultOptions.placeholder;
+        if(typeof(options.imagePlaceholder) === 'undefined') {
+            domtoimage.impl.options.imagePlaceholder = defaultOptions.imagePlaceholder;
         } else {
-            domtoimage.impl.options.placeholder = options.placeholder;
+            domtoimage.impl.options.imagePlaceholder = options.imagePlaceholder;
         }
 
         if(typeof(options.cacheBust) === 'undefined') {
@@ -479,8 +479,8 @@
                 request.send();
 
                 var placeholder;
-                if(domtoimage.impl.options.placeholder) {
-                    var split = domtoimage.impl.options.placeholder.split(/,/);
+                if(domtoimage.impl.options.imagePlaceholder) {
+                    var split = domtoimage.impl.options.imagePlaceholder.split(/,/);
                     if(split && split[1]) {
                         placeholder = split[1];
                     }
