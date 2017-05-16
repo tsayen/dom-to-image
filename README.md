@@ -149,11 +149,11 @@ JPEG image. Defaults to 1.0 (100%)
 
 #### cacheBust
 
-Set to true to append the current time as a query string to URL requests to enable cache busting. Defaults to true
+Set to true to append the current time as a query string to URL requests to enable cache busting. Defaults to false
 
-#### placeholder
+#### imagePlaceholder
 
-A data URL for a placeholder image that will be used when fetching an image fails. Defaults to grey 1x1 image
+A data URL for a placeholder image that will be used when fetching an image fails. Defaults to undefined and will throw an error on failed images
 
 ## Browsers
 
