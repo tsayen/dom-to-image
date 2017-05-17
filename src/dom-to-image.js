@@ -48,11 +48,13 @@
                return cloneNode(ctx, options.filter, true);
            })
            .then(embedFonts)
-           .then(function(ctx) {
+           .then(captureDimensions);
+
+           function captureDimensions(ctx) {
               ctx.nodeHeight = util.height(node);
               ctx.nodeWidth = util.width(node);
               return ctx;
-           });
+           }
     }
 
     /**
@@ -288,15 +290,9 @@
 
                     var className = util.uid();
                     ctx.attr.class = (ctx.attr.class || '') + ' ' + className;
-                    ctx.children.push({
-                        nodeName: 'style',
-                        children: [{
-                            nodeName: '#text',
-                            content: formatPseudoElementStyle(className, element, style)
-                        }]
-                    });
-
-
+                    ctx.children.push(
+                        util.makeStyle(
+                            formatPseudoElementStyle(className, element, style)));
 
                     function formatPseudoElementStyle(className, element, style) {
                         var selector = '.' + className + ':' + element;
@@ -348,13 +344,7 @@
     function embedFonts(ctx) {
         return fontFaces.resolveAll()
             .then(function (cssText) {
-                ctx.children.push({
-                    nodeName: 'style',
-                    children: [{
-                        nodeName: '#text',
-                        content: cssText
-                    }]
-                });
+                ctx.children.push(util.makeStyle(cssText));
                 return ctx;
             });
     }
@@ -439,6 +429,7 @@
             escapeXhtml: escapeXhtml,
             xmlEncode: xmlEncode,
             makeImage: makeImage,
+            makeStyle: makeStyle,
             width: width,
             height: height
         };
@@ -537,6 +528,16 @@
                 image.onerror = reject;
                 image.src = uri;
             });
+        }
+
+        function makeStyle(content) {
+            return {
+                nodeName: 'style',
+                children: [{
+                    nodeName: '#text',
+                    content: content
+                }]
+            };
         }
 
         function getAndEncode(url) {
