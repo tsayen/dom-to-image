@@ -151,6 +151,7 @@
             });
 
             it('should render text nodes', function (done) {
+                this.timeout(10000);
                 loadTestPage('text/dom-node.html', 'text/style.css')
                     .then(renderToPng)
                     .then(drawDataUrl)
@@ -159,11 +160,12 @@
             });
 
             it('should preserve content of ::before and ::after pseudo elements', function (done) {
+                this.timeout(10000);
                 loadTestPage('pseudo/dom-node.html', 'pseudo/style.css')
                     .then(renderToPng)
                     .then(drawDataUrl)
-                    .then(assertTextRendered(["ONLYBEFORE", "BOTHBEFORE"]))
-                    .then(assertTextRendered(["ONLYAFTER", "BOTHAFTER"]))
+                    .then(assertTextRendered(["JUSTBEFORE", "BOTHBEFORE"]))
+                    .then(assertTextRendered(["JUSTAFTER", "BOTHAFTER"]))
                     .then(done).catch(done);
             });
 
@@ -212,7 +214,7 @@
                     .then(delay(1000))
                     .then(renderToPng)
                     .then(drawDataUrl)
-                    .then(assertTextRendered(['o']))
+                    .then(assertTextRendered(['O']))
                     .then(done).catch(done);
             });
 
@@ -264,11 +266,11 @@
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         ctx.fillStyle = '#000000';
                         ctx.font = '100px monospace';
-                        ctx.fillText('o', canvas.width / 2, canvas.height / 2);
+                        ctx.fillText('0', canvas.width / 2, canvas.height / 2);
                     })
                     .then(renderToPng)
                     .then(drawDataUrl)
-                    .then(assertTextRendered(["o"]))
+                    .then(assertTextRendered(['0']))
                     .then(done).catch(done);
             });
 
@@ -411,9 +413,18 @@
 
             function assertTextRendered(lines) {
                 return function () {
-                    var renderedText = ocr(canvas());
-                    lines.forEach(function (line) {
-                        assert.include(renderedText, line);
+                    return new Promise(function (resolve, reject) {
+                        Tesseract.recognize(canvas())
+                            .then(function(result) {
+                                lines.forEach(function(line) {
+                                    try {
+                                        assert.include(result.text, line);
+                                    } catch(e) {
+                                        reject(e);
+                                    }
+                                });
+                                resolve();
+                            });
                     });
                 };
             }
