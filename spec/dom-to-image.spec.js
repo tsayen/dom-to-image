@@ -5,7 +5,6 @@
     var imagediff = global.imagediff;
     var domtoimage = global.domtoimage;
     var Promise = global.Promise;
-    var ocr = global.OCRAD;
 
     var delay = domtoimage.impl.util.delay;
 
