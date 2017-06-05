@@ -147,6 +147,14 @@ for JavaScript names of CSS properties.
 A number between 0 and 1 indicating image quality (e.g. 0.92 => 92%) of the
 JPEG image. Defaults to 1.0 (100%)
 
+#### cacheBust
+
+Set to true to append the current time as a query string to URL requests to enable cache busting. Defaults to false
+
+#### imagePlaceholder
+
+A data URL for a placeholder image that will be used when fetching an image fails. Defaults to undefined and will throw an error on failed images
+
 ## Browsers
 
 It's tested on latest Chrome and Firefox (49 and 45 respectively at the time
