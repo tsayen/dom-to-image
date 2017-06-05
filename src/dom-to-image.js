@@ -231,8 +231,12 @@
                 copyStyle(window.getComputedStyle(original), clone.style);
 
                 function copyStyle(source, target) {
-                    if (source.cssText) target.cssText = source.cssText;
-                    else copyProperties(source, target);
+                    // Chrome not cloning <rect> shapes due to width and height properties,
+                    // strip these properties from cssText string if element is a <rect>.
+                    if (source.cssText)
+                        target.cssText = (clone.tagName === 'rect') ? source.cssText.replace(/(^|\s)(width|height).*?\;/gi, '') : source.cssText;
+                    else
+                        copyProperties(source, target);
 
                     function copyProperties(source, target) {
                         util.asArray(source).forEach(function (name) {
