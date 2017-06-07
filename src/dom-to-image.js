@@ -15,6 +15,7 @@
     };
 
     var domtoimage = {
+        scan: scan,
         toSvg: toSvg,
         toPng: toPng,
         toJpeg: toJpeg,
@@ -36,10 +37,40 @@
 
 
     /**
+     * Scans the DOM to capture the information needed to perform rendering and returns this
+     * information. This object can then be passed to other to* functions to perform final
+     * rendering. The source DOM is no longer required to be present after this function completes.
+     * This is useful if you're running in a batch situation where you want to load the
+     * next DOM as soon as possible, and allow final rendering to take advantage of non-blocking
+     * effects to provide higher overall throughput and a better user experience.
+     *
      * @param {Node} node - The DOM Node object to render
      * @param {Object} options - Rendering options
      * @param {Function} options.filter - Should return true if passed node should be included in the output
-     *          (excluding node means excluding it's children as well). Not called on the root node.
+     *          (excluding node means excluding its children as well). Not called on the root node.
+     * @return {Promise} - A promise that is fulfilled with an object to be passed to a to* function for final rendering
+     * */
+    function scan(node, options) {
+       options = options || {};
+       return Promise.resolve({node: node})
+           .then(function (ctx) {
+               return cloneNode(ctx, options.filter, true);
+           })
+           .then(embedFonts)
+           .then(captureDimensions);
+
+           function captureDimensions(ctx) {
+              ctx.nodeHeight = util.height(node);
+              ctx.nodeWidth = util.width(node);
+              return ctx;
+           }
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render, or the result of @see {@link scan}
+     * @param {Object} options - Rendering options
+     * @param {Function} options.filter - Should return true if passed node should be included in the output
+     *          (excluding node means excluding its children as well). Not called on the root node.
      * @param {String} options.bgcolor - color for the background, any valid CSS color value.
      * @param {Number} options.width - width to be applied to node before rendering.
      * @param {Number} options.height - height to be applied to node before rendering.
@@ -53,37 +84,45 @@
     function toSvg(node, options) {
         options = options || {};
         copyOptions(options);
-        return Promise.resolve(node)
-            .then(function (node) {
-                return cloneNode(node, options.filter, true);
-            })
-            .then(embedFonts)
+        // If Element then scan it, otherwise it's a context object (output from scan) so continue on
+        var promise = (node instanceof Element) ? scan(node, options) : Promise.resolve(node);
+        return promise
             .then(inlineImages)
             .then(applyOptions)
-            .then(function (clone) {
-                return makeSvgDataUri(clone,
+            .then(function (ctx) {
+                return makeSvgDataUri(ctx,
                     options.width || util.width(node),
                     options.height || util.height(node)
                 );
             });
 
-        function applyOptions(clone) {
-            if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
+        function applyOptions(ctx) {
+            if (options.bgcolor) pushStyle(ctx.cssOverrides, 'background-color', options.bgcolor);
 
-            if (options.width) clone.style.width = options.width + 'px';
-            if (options.height) clone.style.height = options.height + 'px';
+            if (options.width) pushStyle(ctx.cssOverrides, 'width', options.width + 'px');
+            if (options.height) pushStyle(ctx.cssOverrides, 'height', options.height + 'px');
 
             if (options.style)
                 Object.keys(options.style).forEach(function (property) {
-                    clone.style[property] = options.style[property];
+                    pushStyle(ctx.cssOverrides, kebabCase(property), options.style[property]);
                 });
 
-            return clone;
+            return ctx;
+
+            function pushStyle(buffer, k, v) {
+                buffer.push(k, ': ', v, '; ');
+            }
+
+            function kebabCase(s) {
+                return s.replace(/[A-Z]/g, function(m) {
+                    return '-' + m.toLowerCase();
+                });
+            }
         }
     }
 
     /**
-     * @param {Node} node - The DOM Node object to render
+     * @param {Node} node - The DOM Node object to render, or the result of @see {@link scan}
      * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a Uint8Array containing RGBA pixel data.
      * */
@@ -100,7 +139,7 @@
     }
 
     /**
-     * @param {Node} node - The DOM Node object to render
+     * @param {Node} node - The DOM Node object to render, or the result of @see {@link scan}
      * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a PNG image data URL
      * */
@@ -112,7 +151,7 @@
     }
 
     /**
-     * @param {Node} node - The DOM Node object to render
+     * @param {Node} node - The DOM Node object to render, or the result of @see {@link scan}
      * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a JPEG image data URL
      * */
@@ -125,7 +164,7 @@
     }
 
     /**
-     * @param {Node} node - The DOM Node object to render
+     * @param {Node} node - The DOM Node object to render, or the result of @see {@link scan}
      * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a PNG image blob
      * */
@@ -174,49 +213,68 @@
         }
     }
 
-    function cloneNode(node, filter, root) {
-        if (!root && filter && !filter(node)) return Promise.resolve();
+    function cloneNode(ctx, filter, root) {
+        var node = ctx.node;
+        if ((!root && filter && !filter(node)) ||
+            (node instanceof HTMLScriptElement) ||
+            (node instanceof Comment)) return Promise.resolve();
 
-        return Promise.resolve(node)
+        return Promise.resolve(ctx)
             .then(makeNodeCopy)
-            .then(function (clone) {
-                return cloneChildren(node, clone, filter);
+            .then(function (ctx) {
+                return cloneChildren(node, ctx, filter);
             })
-            .then(function (clone) {
-                return processClone(node, clone);
+            .then(function (ctx) {
+                return processClone(node, ctx);
             });
 
-        function makeNodeCopy(node) {
-            if (node instanceof HTMLCanvasElement) return util.makeImage(node.toDataURL());
-            return node.cloneNode(false);
+        function makeNodeCopy(ctx) {
+            ctx.attr = {};
+            if (node.attributes) {
+                util.asArray(node.attributes).forEach(function(item) {
+                    ctx.attr[item.name] = item.value;
+                });
+            }
+            if (node instanceof HTMLCanvasElement) {
+                ctx.nodeName = 'img';
+                ctx.attr.src = node.toDataURL();
+            } else {
+                ctx.nodeName = node.nodeName.toLowerCase();
+                if (node instanceof Text) {
+                    ctx.content = node.textContent;
+                }
+            }
+            return ctx;
         }
 
-        function cloneChildren(original, clone, filter) {
-            var children = original.childNodes;
-            if (children.length === 0) return Promise.resolve(clone);
 
-            return cloneChildrenInOrder(clone, util.asArray(children), filter)
+        function cloneChildren(original, ctx, filter) {
+            ctx.children = [];
+            var children = original.childNodes;
+            if (children.length === 0) return Promise.resolve(ctx);
+
+            return cloneChildrenInOrder(ctx, util.asArray(children), filter)
                 .then(function () {
-                    return clone;
+                    return ctx;
                 });
 
-            function cloneChildrenInOrder(parent, children, filter) {
+            function cloneChildrenInOrder(ctx, children, filter) {
                 var done = Promise.resolve();
                 children.forEach(function (child) {
                     done = done
                         .then(function () {
-                            return cloneNode(child, filter);
+                            return cloneNode({node: child}, filter);
                         })
-                        .then(function (childClone) {
-                            if (childClone) parent.appendChild(childClone);
+                        .then(function (childCtx) {
+                            if (childCtx) ctx.children.push(childCtx);
                         });
                 });
                 return done;
             }
         }
 
-        function processClone(original, clone) {
-            if (!(clone instanceof Element)) return clone;
+        function processClone(original, ctx) {
+            if (!(original instanceof Element)) return ctx;
 
             return Promise.resolve()
                 .then(cloneStyle)
@@ -224,25 +282,25 @@
                 .then(copyUserInput)
                 .then(fixSvg)
                 .then(function () {
-                    return clone;
+                    return ctx;
                 });
 
             function cloneStyle() {
-                copyStyle(window.getComputedStyle(original), clone.style);
+                var style = window.getComputedStyle(original);
+                ctx.cssText = style.cssText || '';
+                ctx.cssOverrides = [];
+                if (!ctx.cssText) pushStyles(ctx.cssOverrides, style);
+                ctx.backgroundImage = {
+                    value: style.getPropertyValue('background-image'),
+                    priority: style.getPropertyPriority('background-image')
+                };
 
-                function copyStyle(source, target) {
-                    if (source.cssText) target.cssText = source.cssText;
-                    else copyProperties(source, target);
-
-                    function copyProperties(source, target) {
-                        util.asArray(source).forEach(function (name) {
-                            target.setProperty(
-                                name,
-                                source.getPropertyValue(name),
-                                source.getPropertyPriority(name)
-                            );
-                        });
-                    }
+                function pushStyles(buffer, style) {
+                    util.asArray(style).forEach(function (name) {
+                        buffer.push(name, ': ', style.getPropertyValue(name));
+                        if (style.getPropertyPriority(name)) buffer.push(' !important');
+                        buffer.push('; ');
+                    });
                 }
             }
 
@@ -258,19 +316,20 @@
                     if (content === '' || content === 'none') return;
 
                     var className = util.uid();
-                    clone.className = clone.className + ' ' + className;
-                    var styleElement = document.createElement('style');
-                    styleElement.appendChild(formatPseudoElementStyle(className, element, style));
-                    clone.appendChild(styleElement);
+                    ctx.attr.class = (ctx.attr.class || '') + ' ' + className;
+                    ctx.children.push(
+                        util.makeStyle(
+                            formatPseudoElementStyle(className, element, style)));
 
                     function formatPseudoElementStyle(className, element, style) {
                         var selector = '.' + className + ':' + element;
-                        var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
-                        return document.createTextNode(selector + '{' + cssText + '}');
+                        var cssText = style.cssText;
+                        cssText = cssText ? cssText + getContent(style) : formatCssProperties(style);
+                        return selector + '{' + cssText + '}';
 
-                        function formatCssText(style) {
+                        function getContent(style) {
                             var content = style.getPropertyValue('content');
-                            return style.cssText + ' content: ' + content + ';';
+                            return ' content: ' + content + ';';
                         }
 
                         function formatCssProperties(style) {
@@ -290,47 +349,45 @@
             }
 
             function copyUserInput() {
-                if (original instanceof HTMLTextAreaElement) clone.innerHTML = original.value;
-                if (original instanceof HTMLInputElement) clone.setAttribute("value", original.value);
+                if (original instanceof HTMLTextAreaElement) ctx.children.push({nodeName: '#text', content: original.value});
+                if (original instanceof HTMLInputElement) ctx.attr.value = original.value;
             }
 
             function fixSvg() {
-                if (!(clone instanceof SVGElement)) return;
-                clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                if (!(original instanceof SVGElement)) return;
+                ctx.attr.xmlns = 'http://www.w3.org/2000/svg';
 
-                if (!(clone instanceof SVGRectElement)) return;
+                if (!(original instanceof SVGRectElement)) return;
                 ['width', 'height'].forEach(function (attribute) {
-                    var value = clone.getAttribute(attribute);
+                    var value = original.getAttribute(attribute);
                     if (!value) return;
 
-                    clone.style.setProperty(attribute, value);
+                    ctx.cssOverrides.push(attribute, ':', value, '; ');
                 });
             }
         }
     }
 
-    function embedFonts(node) {
+    function embedFonts(ctx) {
         return fontFaces.resolveAll()
             .then(function (cssText) {
-                var styleNode = document.createElement('style');
-                node.appendChild(styleNode);
-                styleNode.appendChild(document.createTextNode(cssText));
-                return node;
+                ctx.children.push(util.makeStyle(cssText));
+                return ctx;
             });
     }
 
-    function inlineImages(node) {
-        return images.inlineAll(node)
+    function inlineImages(ctx) {
+        return images.inlineAll(ctx)
             .then(function () {
-                return node;
+                return ctx;
             });
     }
 
-    function makeSvgDataUri(node, width, height) {
-        return Promise.resolve(node)
-            .then(function (node) {
-                node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-                return new XMLSerializer().serializeToString(node);
+    function makeSvgDataUri(ctx, width, height) {
+        return Promise.resolve(ctx)
+            .then(function (ctx) {
+                ctx.attr.xmlns = 'http://www.w3.org/1999/xhtml';
+                return serializeToString(ctx);
             })
             .then(util.escapeXhtml)
             .then(function (xhtml) {
@@ -343,6 +400,44 @@
             .then(function (svg) {
                 return 'data:image/svg+xml;charset=utf-8,' + svg;
             });
+
+        function serializeToString(ctx) {
+            var str = [];
+            serializeCtx(ctx, str);
+            return str.join('');
+
+            function serializeCtx(ctx, str) {
+                if (ctx.nodeName === '#text') {
+                    str.push(util.xmlEncode(ctx.content));
+                } else {
+                    str.push('<', ctx.nodeName);
+                    serializeAttrs(ctx, str);
+                    str.push('>');
+                    ctx.children.forEach(function(child) {
+                        serializeCtx(child, str);
+                    });
+                    str.push('</', ctx.nodeName, '>');
+                }
+
+                function serializeAttrs(ctx, str) {
+                    createStyleAttr(ctx);
+
+                    for (var i in ctx.attr) {
+                        var val = util.xmlEncode(ctx.attr[i]);
+                        str.push(' ', i, '="', val, '"');
+                    }
+
+                    function createStyleAttr(ctx) {
+                        if (ctx.cssText || (ctx.cssOverrides && ctx.cssOverrides.length)) {
+                            var buffer = ctx.cssOverrides || [];
+                            buffer.unshift(ctx.cssText || '');
+                            ctx.attr.style = buffer.join('');
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     function newUtil() {
@@ -359,7 +454,9 @@
             delay: delay,
             asArray: asArray,
             escapeXhtml: escapeXhtml,
+            xmlEncode: xmlEncode,
             makeImage: makeImage,
+            makeStyle: makeStyle,
             width: width,
             height: height
         };
@@ -460,6 +557,16 @@
             });
         }
 
+        function makeStyle(content) {
+            return {
+                nodeName: 'style',
+                children: [{
+                    nodeName: '#text',
+                    content: content
+                }]
+            };
+        }
+
         function getAndEncode(url) {
             var TIMEOUT = 30000;
             if(domtoimage.impl.options.cacheBust) {
@@ -551,13 +658,36 @@
             return string.replace(/#/g, '%23').replace(/\n/g, '%0A');
         }
 
+        function xmlEncode(unsafe) {
+            return unsafe.replace(/[<>&'"]/g, function(c) {
+                switch (c) {
+                    case '<':
+                        return '&lt;';
+                    case '>':
+                        return '&gt;';
+                    case '&':
+                        return '&amp;';
+                    case '\'':
+                        return '&apos;';
+                    case '"':
+                        return '&quot;';
+                }
+            });
+        }
+
         function width(node) {
+            // if it's a context object it will have nodeWidth
+            if (node.nodeWidth) return node.nodeWidth;
+
             var leftBorder = px(node, 'border-left-width');
             var rightBorder = px(node, 'border-right-width');
             return node.scrollWidth + leftBorder + rightBorder;
         }
 
         function height(node) {
+            // if it's a context object it will have nodeHeight
+            if (node.nodeHeight) return node.nodeHeight;
+
             var topBorder = px(node, 'border-top-width');
             var bottomBorder = px(node, 'border-bottom-width');
             return node.scrollHeight + topBorder + bottomBorder;
@@ -709,59 +839,55 @@
             }
         };
 
-        function newImage(element) {
+        function newImage(ctx) {
             return {
                 inline: inline
             };
 
             function inline(get) {
-                if (util.isDataUrl(element.src)) return Promise.resolve();
+                if (util.isDataUrl(ctx.attr.src)) return Promise.resolve();
 
-                return Promise.resolve(element.src)
+                return Promise.resolve(ctx.attr.src)
                     .then(get || util.getAndEncode)
                     .then(function (data) {
-                        return util.dataAsUrl(data, util.mimeType(element.src));
+                        return util.dataAsUrl(data, util.mimeType(ctx.attr.src));
                     })
                     .then(function (dataUrl) {
-                        return new Promise(function (resolve, reject) {
-                            element.onload = resolve;
-                            element.onerror = reject;
-                            element.src = dataUrl;
-                        });
+                        ctx.attr.src = dataUrl;
                     });
             }
         }
 
-        function inlineAll(node) {
-            if (!(node instanceof Element)) return Promise.resolve(node);
+        function inlineAll(ctx) {
 
-            return inlineBackground(node)
+            return inlineBackground(ctx)
                 .then(function () {
-                    if (node instanceof HTMLImageElement)
-                        return newImage(node).inline();
-                    else
+                    if (ctx.nodeName === 'img')
+                        return newImage(ctx).inline();
+                    else if (ctx.children) {
                         return Promise.all(
-                            util.asArray(node.childNodes).map(function (child) {
+                            ctx.children.map(function (child) {
                                 return inlineAll(child);
                             })
                         );
+                    } else {
+                        return Promise.resolve();
+                    }
                 });
 
-            function inlineBackground(node) {
-                var background = node.style.getPropertyValue('background');
+            function inlineBackground(ctx) {
+                var backgroundObj = ctx.backgroundImage;
+                var background = backgroundObj && backgroundObj.value;
 
-                if (!background) return Promise.resolve(node);
+                if (!background || background === 'none') return Promise.resolve(ctx);
 
                 return inliner.inlineAll(background)
                     .then(function (inlined) {
-                        node.style.setProperty(
-                            'background',
-                            inlined,
-                            node.style.getPropertyPriority('background')
-                        );
+                        var priority = (backgroundObj && backgroundObj.priority) ? ' !important' : '';
+                        ctx.cssOverrides.push('background-image: ', inlined, priority, '; ');
                     })
                     .then(function () {
-                        return node;
+                        return ctx;
                     });
             }
         }

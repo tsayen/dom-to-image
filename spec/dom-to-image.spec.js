@@ -38,6 +38,33 @@
                     .then(done).catch(done);
             });
 
+            it('should render different DOMS appropriately when using scan()', function (done) {
+                var first = {};
+                loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image')
+                    .then(function () {
+                        return domtoimage.scan(domNode());
+                    })
+                    .then(function (firstCtx) {
+                        first.ctx = firstCtx;
+                        first.controlImage = controlImage().outerHTML;
+                        purgePage();
+                        return loadTestPage('border/dom-node.html', 'border/style.css', 'border/control-image');
+                    })
+                    .then(function () {
+                        return domtoimage.scan(domNode());
+                    })
+                    .then(function (secondCtx) {
+                        return domtoimage.toPng(secondCtx);
+                    })
+                    .then(check)
+                    .then(function () {
+                        controlImage().outerHTML = first.controlImage;
+                        return domtoimage.toPng(first.ctx);
+                    })
+                    .then(check)
+                    .then(done).catch(done);
+            });
+
             it('should handle border', function (done) {
                 loadTestPage('border/dom-node.html', 'border/style.css', 'border/control-image')
                     .then(renderAndCheck)
@@ -597,14 +624,13 @@
             it('should not inline images with data url', function (done) {
                 var originalSrc = 'data:image/jpeg;base64,AAA';
 
-                var img = new Image();
-                img.src = originalSrc;
+                var ctx = { attr: { src: originalSrc } };
 
-                domtoimage.impl.images.impl.newImage(img).inline(function () {
+                domtoimage.impl.images.impl.newImage(ctx).inline(function () {
                         return Promise.resolve('XXX');
                     })
                     .then(function () {
-                        assert.equal(img.src, originalSrc);
+                        assert.equal(ctx.attr.src, originalSrc);
                     })
                     .then(done).catch(done);
             });

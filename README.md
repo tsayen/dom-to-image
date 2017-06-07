@@ -113,6 +113,33 @@ domtoimage.toPixelData(node)
     });
 ```
 
+Scan the DOM but do not render yet. The DOM can now be updated / destroyed, such as in a batch situation, and the next DOM can be scanned while rendering is simultaneously completed on the first one. This enables higher throughput thanks to the non-blocking nature of the rendering process:
+
+```javascript
+var nodes = [...];
+var count = nodes.length;
+var images = [];
+
+function next() {
+    if (nodes.length) {
+        var i = nodes.length - 1;
+        domtoimage.scan(nodes.pop())          // scan the DOM but don't render
+            .then(function (data) {
+                next();                       // start scanning the next DOM immediately
+                domtoimage.toPng(data)        // rendering can now be done independent of the DOM
+                    .then(function(dataUrl) {
+                        images[i] = dataUrl;  // maintain correct ordering
+                        if (! --count) {
+                            resolve(images);  // done
+                        }
+                    });
+            });
+    }
+}
+
+next();                                       // kick off
+```
+
 * * *
 
 _All the functions under `impl` are not public API and are exposed only
