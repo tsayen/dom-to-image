@@ -117,6 +117,7 @@ Scan the DOM but do not render yet. The DOM can now be updated / destroyed, such
 
 ```javascript
 var nodes = [...];
+var count = nodes.length;
 var images = [];
 
 function next() {
@@ -128,7 +129,7 @@ function next() {
                 domtoimage.toPng(data)        // rendering can now be done independent of the DOM
                     .then(function(dataUrl) {
                         images[i] = dataUrl;  // maintain correct ordering
-                        if (images[0]) {
+                        if (! --count) {
                             resolve(images);  // done
                         }
                     });
