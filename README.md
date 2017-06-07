@@ -173,14 +173,25 @@ for JavaScript names of CSS properties.
 A number between 0 and 1 indicating image quality (e.g. 0.92 => 92%) of the
 JPEG image. Defaults to 1.0 (100%)
 
+#### cacheBust
+
+Set to true to append the current time as a query string to URL requests to enable cache busting. Defaults to false
+
+#### imagePlaceholder
+
+A data URL for a placeholder image that will be used when fetching an image fails. Defaults to undefined and will throw an error on failed images
+
 ## Browsers
 
 It's tested on latest Chrome and Firefox (49 and 45 respectively at the time
 of writing), with Chrome performing  significantly better on big DOM trees,
 possibly due to it's more performant SVG support, and the fact that it supports
- `CSSStyleDeclaration.cssText` property.
+ `CSSStyleDeclaration.cssText` property.  
+
 _Internet Explorer is not (and will not be) supported, as it does not support
-SVG `<foreignObject>` tag_
+SVG `<foreignObject>` tag_  
+
+_Safari [is not supported](https://github.com/tsayen/dom-to-image/issues/27), as it uses a stricter security model on `<foreignObject`> tag. Suggested workaround is to use `toSvg` and render on the server._`
 
 ## Dependencies
 

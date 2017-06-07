@@ -5,7 +5,6 @@
     var imagediff = global.imagediff;
     var domtoimage = global.domtoimage;
     var Promise = global.Promise;
-    var ocr = global.OCRAD;
 
     var delay = domtoimage.impl.util.delay;
 
@@ -534,10 +533,22 @@
                     .then(done).catch(done);
             });
 
-            it('should return empty result if cannot get resourse', function (done) {
+            it('should return empty result if cannot get resource', function (done) {
                 domtoimage.impl.util.getAndEncode(BASE_URL + 'util/not-found')
                     .then(function (resource) {
                         assert.equal(resource, '');
+                    }).then(done).catch(done);
+            });
+
+            it('should return placeholder result if cannot get resource and placeholder is provided', function (done) {
+                var placeholder = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY7h79y4ABTICmGnXPbMAAAAASUVORK5CYII=";
+                var original = domtoimage.impl.options.imagePlaceholder;
+                domtoimage.impl.options.imagePlaceholder = placeholder;
+                domtoimage.impl.util.getAndEncode(BASE_URL + 'util/not-found')
+                    .then(function (resource) {
+                        var placeholderData = placeholder.split(/,/)[1];
+                        assert.equal(resource, placeholderData);
+                        domtoimage.impl.options.imagePlaceholder = original;
                     }).then(done).catch(done);
             });
 
