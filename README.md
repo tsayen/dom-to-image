@@ -136,6 +136,10 @@ A string value for the background color, any valid CSS color value.
 
 Height and width in pixels to be applied to node before rendering.
 
+#### dpi
+
+Dots per inch to be applied when rasterizing image.
+
 #### style
 
 An object whose properties to be copied to node's style before rendering.

@@ -246,6 +246,17 @@
                     .then(done).catch(done);
             });
 
+            it('should render higher dpi', function (done) {
+              loadTestPage('small/dom-node.html', 'small/style.css', 'small/control-image-dpi')
+                    .then(function () {
+                        return domtoimage.toPng(domNode(), {
+                            dpi: 96 * 3
+                        })
+                    })
+                    .then(check)
+                    .then(done).catch(done);
+            });
+
             it('should render bgcolor', function (done) {
                 loadTestPage('bgcolor/dom-node.html', 'bgcolor/style.css', 'bgcolor/control-image')
                     .then(function () {
