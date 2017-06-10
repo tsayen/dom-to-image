@@ -215,10 +215,12 @@
             }
         }
 
-        function processClone(original, clone) {
+        function processClone(original, originalClone) {
+            var clone = originalClone;
             if (!(clone instanceof Element)) return clone;
 
             return Promise.resolve()
+                .then(renderVideo)
                 .then(cloneStyle)
                 .then(clonePseudoElements)
                 .then(copyUserInput)
@@ -226,6 +228,31 @@
                 .then(function () {
                     return clone;
                 });
+
+            function renderVideo() {
+                if (clone instanceof HTMLVideoElement) {
+                    var dimensions = window.getComputedStyle(original);
+                    var canvas = document.createElement('canvas');
+                    canvas.width = parseInt(dimensions.width, 10); // parseInt trims off the trailing "px"
+                    canvas.height = parseInt(dimensions.height, 10);
+                    var ratio = Math.max(original.videoWidth / canvas.width, original.videoHeight / canvas.height);
+                    // Calculate the width/height to render the video at
+                    var width = original.videoWidth / ratio;
+                    var height = original.videoHeight / ratio;
+                    // Calculate the x/y offset (as <video> center & middle aligns video)
+                    var x = (canvas.width / 2) - (width / 2);
+                    var y = (canvas.height / 2) - (height / 2);
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(original, x, y, width, height);
+                    var image = clone = document.createElement('img');
+                    try {
+                        image.src = canvas.toDataURL();
+                    } catch (err) {
+                        // Default the image to a transparent pixel (to prevent browser broken image)
+                        image.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+                    }
+                }
+            }
 
             function cloneStyle() {
                 copyStyle(window.getComputedStyle(original), clone.style);
