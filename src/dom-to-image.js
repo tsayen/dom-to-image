@@ -11,7 +11,9 @@
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
         // Default cache bust is false, it will use the cache
-        cacheBust: false
+        cacheBust: false,
+        // Default scroll fix is false, it will not try to fix scrollbars
+        scrollFix: false
     };
 
     var domtoimage = {
@@ -147,6 +149,12 @@
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
         }
+
+        if(typeof(options.scrollFix) === 'undefined') {
+            domtoimage.impl.options.scrollFix = defaultOptions.scrollFix;
+        } else {
+            domtoimage.impl.options.scrollFix = options.scrollFix;
+        }
     }
 
     function draw(domNode, options) {
@@ -242,6 +250,81 @@
                                 source.getPropertyPriority(name)
                             );
                         });
+                    }
+                }
+
+                if(domtoimage.impl.options.scrollFix &&
+                    (original.scrollTop || original.scrollLeft)) {
+                    // Setup container for absolute positioning of children
+                    clone.style.position = 'relative';
+                    clone.style.overflow = 'hidden';
+                    clone.style.width = original.offsetWidth + 'px';
+                    clone.style.height = original.offsetHeight + 'px';
+                    var scrollTopRemaining = original.scrollTop > 0 ? original.scrollTop : null;
+                    var scrollLeftRemaining = original.scrollLeft > 0 ? original.scrollLeft : null;
+                    var originalOffsetTop = original.offsetTop;
+                    var originalOffsetLeft = original.offsetLeft;
+
+                    var childTop, childTop2, childLeft, childLeft2, isStackingLeft, isStackingTop;
+                    // Loop through children and set position based on original
+                    // childs position and original contains scroll position
+                    for(var i = 0; i < clone.children.length; i++) {
+                        // Make sure this element is stylable
+                        if(typeof(clone.children[i]) === 'undefined' ||
+                            clone.children[i] === null ||
+                            typeof(clone.children[i].style) === 'undefined') {
+
+                            continue;
+                        }
+
+                        // Set child to absolute positioning relative to parent (container)
+                        clone.children[i].style.position = 'absolute';
+                        if(typeof(original.children[i - 1]) !== 'undefined') {
+                            childTop = original.children[i - 1].offsetTop;
+                            childTop2 = original.children[i].offsetTop;
+
+                            childLeft = original.children[i - 1].offsetLeft;
+                            childLeft2 = original.children[i].offsetLeft;
+
+                            // isStackingLeft is true when elements are being displayed inline
+                            isStackingLeft = childLeft !== childLeft2;
+                            // isStackingLeft is true when elements are being displayed block
+                            isStackingTop = childTop !== childTop2;
+
+                            if(scrollTopRemaining && isStackingTop) {
+                                // Subtract the previous child's height from the scroll top
+                                // so that our current child will display underneath it
+                                scrollTopRemaining -= original.children[i - 1].offsetHeight;
+                            }
+                            if(scrollLeftRemaining && isStackingLeft) {
+                                // Subtract the previous child's width from the scroll left
+                                // so that our current child will display beside it
+                                scrollLeftRemaining -= original.children[i - 1].offsetWidth;
+                            }
+                        }
+
+
+                        if(scrollTopRemaining) {
+                            clone.children[i].style.top = -scrollTopRemaining + 'px';
+                        }
+                        else {
+                            // We don't have a scroll top, but we still need to set
+                            // the top positioning so that our absolute elements don't
+                            // appear overlapping vertically
+                            childTop2 = original.children[i].offsetTop;
+                            clone.children[i].style.top = (childTop2 - originalOffsetTop) + 'px';
+                        }
+
+                        if(scrollLeftRemaining) {
+                            clone.children[i].style.left = -scrollLeftRemaining + 'px';
+                        }
+                        else {
+                            // We don't have a scroll left, but we still need to set
+                            // the left positioning so that our absolute elements don't
+                            // appear overlapping horizontally
+                            childLeft2 = original.children[i].offsetLeft;
+                            clone.children[i].style.left = (childLeft2 - originalOffsetLeft) + 'px';
+                        }
                     }
                 }
             }
