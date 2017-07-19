@@ -149,7 +149,7 @@
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
         }
-
+      
         if(typeof(options.scrollFix) === 'undefined') {
             domtoimage.impl.options.scrollFix = defaultOptions.scrollFix;
         } else {
