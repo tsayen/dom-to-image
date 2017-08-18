@@ -33,8 +33,7 @@
         "raster",
         "render",
         "html",
-        "canvas",
-        "svg"
+        "canvas",        
     ],
     "author": "Anatolii Saienko <anatoly.sayenko@gmail.com>",
     "license": "MIT",
