@@ -18,6 +18,7 @@
         toSvg: toSvg,
         toPng: toPng,
         toJpeg: toJpeg,
+        toWebp: toWebp,
         toBlob: toBlob,
         toPixelData: toPixelData,
         impl: {
@@ -121,6 +122,19 @@
         return draw(node, options)
             .then(function (canvas) {
                 return canvas.toDataURL('image/jpeg', options.quality || 1.0);
+            });
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a WebP image data URL
+     * */
+    function toWebp(node, options) {
+        options = options || {};
+        return draw(node, options)
+            .then(function (canvas) {
+                return canvas.toDataURL('image/webp', options.quality || 1.0);
             });
     }
 
