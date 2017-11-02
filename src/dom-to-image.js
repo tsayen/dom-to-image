@@ -298,7 +298,7 @@
                 if (!(clone instanceof SVGElement)) return;
                 clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 
-                if (!(clone instanceof SVGRectElement)) return;
+                if (!(clone instanceof SVGRectElement) && !(clone instanceof SVGImageElement)) return;
                 ['width', 'height'].forEach(function (attribute) {
                     var value = clone.getAttribute(attribute);
                     if (!value) return;
@@ -715,18 +715,24 @@
             };
 
             function inline(get) {
-                if (util.isDataUrl(element.src)) return Promise.resolve();
+                var src = (element instanceof SVGImageElement) ? element.href.baseVal : element.src;
 
-                return Promise.resolve(element.src)
+                if (util.isDataUrl(src)) return Promise.resolve();
+
+                return Promise.resolve(src)
                     .then(get || util.getAndEncode)
                     .then(function (data) {
-                        return util.dataAsUrl(data, util.mimeType(element.src));
+                        return util.dataAsUrl(data, util.mimeType(src));
                     })
                     .then(function (dataUrl) {
                         return new Promise(function (resolve, reject) {
                             element.onload = resolve;
                             element.onerror = reject;
-                            element.src = dataUrl;
+                            if (element instanceof SVGImageElement) {
+                                element.href.baseVal = dataUrl;
+                            } else {
+                                element.src = dataUrl;
+                            }
                         });
                     });
             }
@@ -737,7 +743,7 @@
 
             return inlineBackground(node)
                 .then(function () {
-                    if (node instanceof HTMLImageElement)
+                    if (node instanceof HTMLImageElement || node instanceof SVGImageElement)
                         return newImage(node).inline();
                     else
                         return Promise.all(
