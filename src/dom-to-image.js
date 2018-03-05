@@ -231,8 +231,22 @@
                 copyStyle(window.getComputedStyle(original), clone.style);
 
                 function copyStyle(source, target) {
-                    if (source.cssText) target.cssText = source.cssText;
-                    else copyProperties(source, target);
+                    if (source.cssText) {
+                        // This is fix for some elements with 100% width and height,
+                        // because "auto" is not good when make image
+                        var cssText = source.cssText;
+                        if (target.width == "100%") {
+                            cssText = cssText.replace("width: auto; ", "");
+                        }
+                        if (target.height == "100%") {
+                            cssText = cssText.replace("height: auto; ", "");
+                        }
+
+                        target.cssText = cssText;
+
+                    } else {
+                        copyProperties(source, target);
+                    }
 
                     function copyProperties(source, target) {
                         util.asArray(source).forEach(function (name) {
