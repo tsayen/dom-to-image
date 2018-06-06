@@ -29,7 +29,7 @@
         }
     };
 
-    if (typeof module !== 'undefined')
+    if (typeof exports === "object" && typeof module === "object")
         module.exports = domtoimage;
     else
         global.domtoimage = domtoimage;
