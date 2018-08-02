@@ -242,6 +242,12 @@
                     if (source.cssText) target.cssText = source.cssText;
                     else copyProperties(source, target);
 
+                    // Chrome returns fontStretch from getComputedStyle in percent
+                    // but it does not accept a percent value when using the short hand
+                    // font = ....
+                    // Thus we have to reset fontStretch or we lose all our font styles
+                    target.fontStretch = 'normal';
+
                     function copyProperties(source, target) {
                         util.asArray(source).forEach(function (name) {
                             target.setProperty(
