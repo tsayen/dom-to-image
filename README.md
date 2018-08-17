@@ -1,12 +1,16 @@
 # DOM to Image
 
-[![Build Status](https://travis-ci.org/tsayen/dom-to-image.svg?branch=master)](https://travis-ci.org/tsayen/dom-to-image)
+[![Build Status](https://travis-ci.org/idisposable/dom-to-image-more.svg?branch=master)](https://travis-ci.org/idisposable/dom-to-image-more)
 
 ## What is it
 
-**dom-to-image** is a library which can turn arbitrary DOM node into
-a vector (SVG) or raster (PNG or JPEG) image, written in JavaScript. It's
-based on [domvas by Paul Bakaus](https://github.com/pbakaus/domvas)
+**dom-to-image-more** is a library which can turn arbitrary DOM node into
+a vector (SVG) or raster (PNG or JPEG) image, written in JavaScript.
+
+This fork of [dom-to-image by Anatolii Saienko (tsayen)](https://github.com/tsayen/dom-to-image)
+with some important fixes merged. We are eternally grateful for his starting point.
+
+Anatolii's version was based on [domvas by Paul Bakaus](https://github.com/pbakaus/domvas)
 and has been completely rewritten, with some bugs fixed and some new
 features (like web font and image support) added.
 
@@ -14,26 +18,26 @@ features (like web font and image support) added.
 
 ### NPM
 
-`npm install dom-to-image`
+`npm install dom-to-image-more`
 
 Then load
 
 ```javascript
 /* in ES 6 */
-import domtoimage from 'dom-to-image';
+import domtoimage from 'dom-to-image-more';
 /* in ES 5 */
-var domtoimage = require('dom-to-image');
+var domtoimage = require('dom-to-image-more');
 ```
 
 ### Bower
 
-`bower install dom-to-image`
+`bower install dom-to-image-more`
 
-Include either `src/dom-to-image.js` or `dist/dom-to-image.min.js` in your page
+Include either `src/dom-to-image-more.js` or `dist/dom-to-image-more.min.js` in your page
 and it will make the `domtoimage` variable available in the global scope.
 
 ```html
-<script src="path/to/dom-to-image.min.js" />
+<script src="path/to/dom-to-image-more.min.js" />
 <script>
   domtoimage.toPng(node)
   //...
@@ -173,17 +177,17 @@ _Safari [is not supported](https://github.com/tsayen/dom-to-image/issues/27), as
 
 Only standard lib is currently used, but make sure your browser supports:  
 
--   [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)  
--   SVG `<foreignObject>` tag
+- [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)  
+- SVG `<foreignObject>` tag
 
 ### Tests
 
 Most importantly, tests depend on:
 
--   [js-imagediff](https://github.com/HumbleSoftware/js-imagediff),
+- [js-imagediff](https://github.com/HumbleSoftware/js-imagediff),
     to compare rendered and control images
 
--   [ocrad.js](https://github.com/antimatter15/ocrad.js), for the
+- [ocrad.js](https://github.com/antimatter15/ocrad.js), for the
     parts when you can't compare images (due to the browser
     rendering differences) and just have to test whether the text is rendered
 
@@ -198,56 +202,56 @@ This library uses a feature of SVG that allows having arbitrary HTML content
 inside of the `<foreignObject>` tag. So, in order to render that DOM node
 for you, following steps are taken:  
 
-1.  Clone the original DOM node recursively
+1. Clone the original DOM node recursively
 
-2.  Compute the style for the node and each sub-node and copy it to
-    corresponding clone
+1. Compute the style for the node and each sub-node and copy it to
+   corresponding clone
 
-    -   and don't forget to recreate pseudo-elements, as they are not
-        cloned in any way, of course
+    - and don't forget to recreate pseudo-elements, as they are not
+      cloned in any way, of course
 
-3.  Embed web fonts
+1. Embed web fonts
 
-    -   find all the `@font-face` declarations that might represent web fonts
+    - find all the `@font-face` declarations that might represent web fonts
 
-    -   parse file URLs, download corresponding files
+    - parse file URLs, download corresponding files
 
-    -   base64-encode and inline content as `data:` URLs
+    - base64-encode and inline content as `data:` URLs
 
-    -   concatenate all the processed CSS rules and put them into one `<style>`
+    - concatenate all the processed CSS rules and put them into one `<style>`
         element, then attach it to the clone
 
-4.  Embed images
+1. Embed images
 
-    -   embed image URLs in `<img>` elements
+    - embed image URLs in `<img>` elements
 
-    -   inline images used in `background` CSS property, in a fashion similar to
-        fonts
+    - inline images used in `background` CSS property, in a fashion similar to
+      fonts
 
-5.  Serialize the cloned node to XML
+1. Serialize the cloned node to XML
 
-6.  Wrap XML into the `<foreignObject>` tag, then into the SVG, then make it a
-    data URL
+1. Wrap XML into the `<foreignObject>` tag, then into the SVG, then make it a
+   data URL
 
-7.  Optionally, to get PNG content or raw pixel data as a Uint8Array, create an
-    Image element with the SVG as a source, and render it on an off-screen
-    canvas, that you have also created, then read the content from the canvas
+1. Optionally, to get PNG content or raw pixel data as a Uint8Array, create an
+   Image element with the SVG as a source, and render it on an off-screen
+   canvas, that you have also created, then read the content from the canvas
 
-8.  Done!  
+1. Done!  
 
 ## Things to watch out for
 
--   if the DOM node you want to render includes a `<canvas>` element with
+- if the DOM node you want to render includes a `<canvas>` element with
     something drawn on it, it should be handled fine, unless the canvas is
     [tainted](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image) -
     in this case rendering will rather not succeed.  
 
--   at the time of writing, Firefox has a problem with some external stylesheets
+- at the time of writing, Firefox has a problem with some external stylesheets
     (see issue #13). In such case, the error will be caught and logged.  
 
 ## Authors
 
-Anatolii Saienko, Paul Bakaus (original idea)
+Marc Brooks, Anatolii Saienko (original dom-to-image), Paul Bakaus (original idea)
 
 ## License
 

@@ -1,4 +1,4 @@
-module.exports = function (config) {
+module.exports = function(config) {
     config.set({
         basePath: '',
         frameworks: ['mocha', 'chai'],
@@ -22,8 +22,8 @@ module.exports = function (config) {
             'bower_components/js-imagediff/imagediff.js',
             'test-lib/tesseract-1.0.10.js',
 
-            'src/dom-to-image.js',
-            'spec/dom-to-image.spec.js'
+            'src/dom-to-image-more.js',
+            'spec/dom-to-image-more.spec.js'
         ],
 
         exclude: [],
