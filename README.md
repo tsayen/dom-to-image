@@ -117,6 +117,15 @@ domtoimage.toPixelData(node)
     });
 ```
 
+Get a canvas object:
+
+```javascript
+domtoimage.toCanvas(document.getElementById('my-node'))
+    .then(function (canvas) {
+        console.log('canvas', canvas.width, canvas.height);
+    });
+```
+
 * * *
 
 _All the functions under `impl` are not public API and are exposed only
