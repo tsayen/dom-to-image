@@ -7,7 +7,7 @@
         "Anatolii Saienko <anatoly.sayenko@gmail.com>"
     ],
     "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
-    "main": "src/dom-to-image.js",
+    "main": "src/dom-to-image-more.js",
     "moduleType": [
         "globals"
     ],

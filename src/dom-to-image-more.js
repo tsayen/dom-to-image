@@ -29,11 +29,10 @@
         }
     };
 
-    if (typeof module !== 'undefined')
+    if (typeof exports === "object" && typeof module === "object")
         module.exports = domtoimage;
     else
         global.domtoimage = domtoimage;
-
 
     /**
      * @param {Node} node - The DOM Node object to render
@@ -46,6 +45,7 @@
      * @param {Object} options.style - an object whose properties to be copied to node's style before rendering.
      * @param {Number} options.quality - a Number between 0 and 1 indicating image quality (applicable to JPEG only),
                 defaults to 1.0.
+     * @param {Number} options.scale - a Number multiplier to scale up the canvas before rendering to reduce fuzzy images, defaults to 1.0.
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
@@ -69,7 +69,6 @@
 
         function applyOptions(clone) {
             if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
-
             if (options.width) clone.style.width = options.width + 'px';
             if (options.height) clone.style.height = options.height + 'px';
 
@@ -154,17 +153,18 @@
             .then(util.makeImage)
             .then(util.delay(100))
             .then(function(image) {
-                var canvas = newCanvas(domNode);
+                var scale = typeof(options.scale) !== 'number' ? 1 : options.scale;
+                var canvas = newCanvas(domNode, scale);
                 var ctx = canvas.getContext('2d');
-                ctx.scale(2, 2);
+                ctx.scale(scale, scale);
                 ctx.drawImage(image, 0, 0);
                 return canvas;
             });
 
-        function newCanvas(domNode) {
+        function newCanvas(domNode, scale) {
             var canvas = document.createElement('canvas');
-            canvas.width = (options.width || util.width(domNode)) * 2;
-            canvas.height = (options.height || util.height(domNode)) * 2;
+            canvas.width = (options.width || util.width(domNode)) * scale;
+            canvas.height = (options.height || util.height(domNode)) * scale;
 
             if (options.bgcolor) {
                 var ctx = canvas.getContext('2d');
@@ -682,10 +682,12 @@
             function getCssRules(styleSheets) {
                 var cssRules = [];
                 styleSheets.forEach(function(sheet) {
-                    try {
-                        util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
-                    } catch (e) {
-                        console.log('Error while reading CSS rules from ' + sheet.href, e.toString());
+                    if (sheet.hasOwnProperty("cssRules")) {
+                        try {
+                            util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
+                        } catch (e) {
+                            console.log('Error while reading CSS rules from ' + sheet.href, e.toString());
+                        }
                     }
                 });
                 return cssRules;
