@@ -731,7 +731,8 @@
                     .then(function(dataUrl) {
                         return new Promise(function(resolve, reject) {
                             element.onload = resolve;
-                            element.onerror = reject;
+                            // for any image with invalid src(such as <img src />), just ignore it
+                            element.onerror = resolve;
                             element.src = dataUrl;
                         });
                     });
