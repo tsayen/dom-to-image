@@ -68,6 +68,11 @@
             });
 
         function applyOptions(clone) {
+            // Handle style options only if target element has a style property.
+            if (typeof clone.style !== 'undefined') {
+                return clone;
+            }
+
             if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
 
             if (options.width) clone.style.width = options.width + 'px';
@@ -228,6 +233,11 @@
                 });
 
             function cloneStyle() {
+                // Clone style only if target element has a style property.
+                if (typeof clone.style === 'undefined') {
+                    return;
+                }
+
                 copyStyle(window.getComputedStyle(original), clone.style);
 
                 function copyStyle(source, target) {
@@ -299,6 +309,12 @@
                 clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 
                 if (!(clone instanceof SVGRectElement)) return;
+
+                // Carry on only if target element has a style property.
+                if (typeof clone.style === 'undefined') {
+                    return;
+                }
+
                 ['width', 'height'].forEach(function (attribute) {
                     var value = clone.getAttribute(attribute);
                     if (!value) return;
@@ -748,6 +764,11 @@
                 });
 
             function inlineBackground(node) {
+                // Carry on only if target element has a style property.
+                if (typeof node.style === 'undefined') {
+                    return Promise.resolve(node);
+                }
+
                 var background = node.style.getPropertyValue('background');
 
                 if (!background) return Promise.resolve(node);
