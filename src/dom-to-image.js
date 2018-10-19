@@ -11,7 +11,9 @@
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
         // Default cache bust is false, it will use the cache
-        cacheBust: false
+        cacheBust: false,
+        // Default proxy config is false
+        proxy: false
     };
 
     var domtoimage = {
@@ -146,6 +148,12 @@
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
+        }
+
+        if(typeof(options.proxy) === 'undefined') {
+            domtoimage.impl.options.proxy = defaultOptions.proxy;
+        } else {
+            domtoimage.impl.options.proxy = options.proxy;
         }
     }
 
@@ -461,11 +469,20 @@
         }
 
         function getAndEncode(url) {
+
+            function getRootUrl() {
+                return window.location.origin?window.location.origin+'/':window.location.protocol+'/'+window.location.host+'/';
+            }
+
             var TIMEOUT = 30000;
             if(domtoimage.impl.options.cacheBust) {
                 // Cache bypass so we dont have CORS issues with cached images
                 // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
                 url += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime();
+            }
+
+            if(domtoimage.impl.options.proxy) {
+                url = `${domtoimage.impl.options.proxy}?${ (/^http[s]?\:\/\//).test(url) ? url :  (getRootUrl() + url)}`
             }
 
             return new Promise(function (resolve) {
