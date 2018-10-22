@@ -155,6 +155,10 @@ Set to true to append the current time as a query string to URL requests to enab
 
 A data URL for a placeholder image that will be used when fetching an image fails. Defaults to undefined and will throw an error on failed images
 
+#### proxy
+
+A proxy url in order to avoid CORS problems.
+
 ## Browsers
 
 It's tested on latest Chrome and Firefox (49 and 45 respectively at the time
