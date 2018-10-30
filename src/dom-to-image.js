@@ -21,6 +21,7 @@
         toPng: toPng,
         toJpeg: toJpeg,
         toBlob: toBlob,
+        toCanvas: toCanvas,
         toPixelData: toPixelData,
         impl: {
             fontFaces: fontFaces,
@@ -134,6 +135,15 @@
     function toBlob(node, options) {
         return draw(node, options || {})
             .then(util.canvasToBlob);
+    }
+
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a canvas object
+     * */
+    function toCanvas(node, options) {
+        return draw(node, options || {});
     }
 
     function copyOptions(options) {
