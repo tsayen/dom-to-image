@@ -473,6 +473,7 @@
                 image.onload = function () {
                     resolve(image);
                 };
+                console.error('[dom2img] makeImage', reject);
                 image.onerror = reject;
                 image.src = uri;
             });
@@ -758,6 +759,7 @@
                     .then(function (dataUrl) {
                         return new Promise(function (resolve, reject) {
                             element.onload = resolve;
+                            console.log('[dom2img] newImage - inline', reject);
                             element.onerror = reject;
                             element.src = dataUrl;
                         });
