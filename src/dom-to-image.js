@@ -482,7 +482,7 @@
             }
 
             if(domtoimage.impl.options.proxy) {
-                url = `${domtoimage.impl.options.proxy}?${ (/^http[s]?\:\/\//).test(url) ? url :  (getRootUrl() + url)}`
+                url = domtoimage.impl.options.proxy + '?' + ((/^http[s]?\:\/\//).test(url) ? url :  (getRootUrl() + url));
             }
 
             return new Promise(function (resolve) {
@@ -520,6 +520,12 @@
                     encoder.onloadend = function () {
                         var content = encoder.result.split(/,/)[1];
                         resolve(content);
+                    };
+                    encoder.onerror = function (err) {
+                        console.error('[dom2img] error', err);
+                    };
+                    encoder.onabort = function (err) {
+                        console.error('[dom2img] abort', err);
                     };
                     encoder.readAsDataURL(request.response);
                 }
