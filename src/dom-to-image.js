@@ -14,6 +14,7 @@
         cacheBust: false,
         // Default proxy config is false
         proxy: false,
+        // Default proxy config is false
         debug: false
     };
 
@@ -533,13 +534,15 @@
                         } else {
                             fail('cannot fetch resource: ' + url + ', status: ' + request.status);
                         }
-
                         return;
                     }
 
                     var encoder = new FileReader();
                     encoder.onloadend = function () {
                         var content = encoder.result.split(/,/)[1];
+                        if(domtoimage.impl.options.debug) {
+                            console.log('[dom2img] encoder - content resolved', content);
+                        }
                         resolve(content);
                     };
                     encoder.onerror = function (err) {
