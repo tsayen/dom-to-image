@@ -13,7 +13,8 @@
         // Default cache bust is false, it will use the cache
         cacheBust: false,
         // Default proxy config is false
-        proxy: false
+        proxy: false,
+        debug: false
     };
 
     var domtoimage = {
@@ -164,6 +165,12 @@
             domtoimage.impl.options.proxy = defaultOptions.proxy;
         } else {
             domtoimage.impl.options.proxy = options.proxy;
+        }
+
+        if(typeof(options.debug) === 'undefined') {
+            domtoimage.impl.options.debug = defaultOptions.debug;
+        } else {
+            domtoimage.impl.options.debug = options.debug;
         }
     }
 
@@ -492,7 +499,11 @@
             }
 
             if(domtoimage.impl.options.proxy) {
-                url = domtoimage.impl.options.proxy + '?' + ((/^http[s]?\:\/\//).test(url) ? url :  (getRootUrl() + url));
+                url = domtoimage.impl.options.proxy + '?' + ((/^http[s]?\:\/\//).test(url) ? url : (getRootUrl() + url));
+            }
+            
+            if(domtoimage.impl.options.debug) {
+                console.log('[dom2img] imgURL', url)
             }
 
             return new Promise(function (resolve) {
