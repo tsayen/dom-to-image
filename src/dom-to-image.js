@@ -514,7 +514,6 @@
                 request.ontimeout = timeout;
                 request.responseType = 'blob';
                 request.timeout = TIMEOUT;
-                request.withCredentials = true;
                 request.open('GET', url, true);
                 request.send();
 
