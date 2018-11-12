@@ -500,11 +500,11 @@
             }
 
             if(domtoimage.impl.options.proxy) {
-                url = domtoimage.impl.options.proxy + '?' + ((/^http[s]?\:\/\//).test(url) ? url : (getRootUrl() + url));
+                url = domtoimage.impl.options.proxy + ((/^http[s]?\:\/\//).test(url) ? url : (getRootUrl() + url));
             }
             
             if(domtoimage.impl.options.debug) {
-                console.log('[dom2img] imgURL', url)
+                console.log('[dom2img] imgURL', url);
             }
 
             return new Promise(function (resolve) {
@@ -514,6 +514,7 @@
                 request.ontimeout = timeout;
                 request.responseType = 'blob';
                 request.timeout = TIMEOUT;
+                request.withCredentials = true;
                 request.open('GET', url, true);
                 request.send();
 
