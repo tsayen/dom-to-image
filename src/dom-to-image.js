@@ -528,7 +528,7 @@
                 function done() {
                     if (request.readyState !== 4) return;
 
-                    if (request.status !== 200) {
+                    if (request.status !== 200 || !(request.response instanceof Blob)) {
                         if(placeholder) {
                             resolve(placeholder);
                         } else {
