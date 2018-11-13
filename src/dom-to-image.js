@@ -420,7 +420,7 @@
 
         function mimeType(url) {
             var extension = parseExtension(url).toLowerCase();
-            return mimes()[extension] || '';
+            return mimes()[extension] || null;
         }
 
         function isDataUrl(url) {
@@ -528,7 +528,7 @@
                 function done() {
                     if (request.readyState !== 4) return;
 
-                    if (request.status !== 200 || !(request.response instanceof Blob)) {
+                    if (request.status !== 200) {
                         if(placeholder) {
                             resolve(placeholder);
                         } else {
@@ -570,6 +570,7 @@
         }
 
         function dataAsUrl(content, type) {
+            if (!type) return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH4gsNCyY2EtMAuQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAALSURBVAjXY2AAAgAABQAB4iYFmwAAAABJRU5ErkJggg=='
             return 'data:' + type + ';base64,' + content;
         }
 
