@@ -414,7 +414,9 @@
 
         function parseExtension(url) {
             var match = /\.([^\.\/]*?)$/g.exec(url);
+            var tile = /(\/[0-9]\/[0-9]\/[0-9])/g.exec(url)
             if (match) return match[1];
+            else if (tile) return 'jpeg';
             else return '';
         }
 
