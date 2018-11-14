@@ -409,7 +409,8 @@
                 'gif': 'image/gif',
                 'tiff': 'image/tiff',
                 'tile': '',
-                'svg': 'image/svg+xml'
+                'svg': 'image/svg+xml',
+                'undef': null
             };
         }
 
@@ -418,12 +419,12 @@
             var tile = /(\/[0-9]\/[0-9]\/[0-9])/g.exec(url)
             if (match) return match[1];
             else if (tile) return 'tile';
-            else return '';
+            else return 'undef';
         }
 
         function mimeType(url) {
             var extension = parseExtension(url).toLowerCase();
-            return mimes()[extension] || null;
+            return mimes()[extension];
         }
 
         function isDataUrl(url) {
