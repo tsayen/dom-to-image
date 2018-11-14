@@ -408,6 +408,7 @@
                 'jpeg': JPEG,
                 'gif': 'image/gif',
                 'tiff': 'image/tiff',
+                'tile': '',
                 'svg': 'image/svg+xml'
             };
         }
@@ -416,7 +417,7 @@
             var match = /\.([^\.\/]*?)$/g.exec(url);
             var tile = /(\/[0-9]\/[0-9]\/[0-9])/g.exec(url)
             if (match) return match[1];
-            else if (tile) return 'jpeg';
+            else if (tile) return 'tile';
             else return '';
         }
 
@@ -572,7 +573,7 @@
         }
 
         function dataAsUrl(content, type) {
-            if (!type) return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH4gsNCyY2EtMAuQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAALSURBVAjXY2AAAgAABQAB4iYFmwAAAABJRU5ErkJggg=='
+            if (type === null) return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH4gsNCyY2EtMAuQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAALSURBVAjXY2AAAgAABQAB4iYFmwAAAABJRU5ErkJggg=='
             return 'data:' + type + ';base64,' + content;
         }
 
