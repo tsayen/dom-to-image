@@ -2,6 +2,11 @@ dist: trusty
 addons:
     firefox: "49.0"
 language: node_js
+node_js:
+    - "node"
+    - "10"
+    - "8"
+    - "6"
 before_install:
     - sudo apt-get update -q
     - sudo apt-get install chromium-browser -y
