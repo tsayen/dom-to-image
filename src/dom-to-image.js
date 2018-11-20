@@ -11,7 +11,11 @@
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
         // Default cache bust is false, it will use the cache
-        cacheBust: false
+        cacheBust: false,
+        // Default proxy config is false
+        proxy: false,
+        // Default proxy config is false
+        debug: false
     };
 
     var domtoimage = {
@@ -19,6 +23,7 @@
         toPng: toPng,
         toJpeg: toJpeg,
         toBlob: toBlob,
+        toCanvas: toCanvas,
         toPixelData: toPixelData,
         impl: {
             fontFaces: fontFaces,
@@ -134,6 +139,15 @@
             .then(util.canvasToBlob);
     }
 
+    /**
+     * @param {Node} node - The DOM Node object to render
+     * @param {Object} options - Rendering options, @see {@link toSvg}
+     * @return {Promise} - A promise that is fulfilled with a canvas object
+     * */
+    function toCanvas(node, options) {
+        return draw(node, options || {});
+    }
+
     function copyOptions(options) {
         // Copy options to impl options for use in impl
         if(typeof(options.imagePlaceholder) === 'undefined') {
@@ -146,6 +160,18 @@
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
+        }
+
+        if(typeof(options.proxy) === 'undefined') {
+            domtoimage.impl.options.proxy = defaultOptions.proxy;
+        } else {
+            domtoimage.impl.options.proxy = options.proxy;
+        }
+
+        if(typeof(options.debug) === 'undefined') {
+            domtoimage.impl.options.debug = defaultOptions.debug;
+        } else {
+            domtoimage.impl.options.debug = options.debug;
         }
     }
 
@@ -382,19 +408,24 @@
                 'jpeg': JPEG,
                 'gif': 'image/gif',
                 'tiff': 'image/tiff',
-                'svg': 'image/svg+xml'
+                'tile': '',
+                'svg': 'image/svg+xml',
+                'undef': null
             };
         }
 
         function parseExtension(url) {
             var match = /\.([^\.\/]*?)$/g.exec(url);
+            var tile = /\/[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{1,2}$/g.exec(url);
             if (match) return match[1];
-            else return '';
+            else if (tile) return 'tile';
+            else return 'undef';
         }
 
-        function mimeType(url) {
+        function mimeType(url, headerMimeType) {
+            if (headerMimeType) return headerMimeType;
             var extension = parseExtension(url).toLowerCase();
-            return mimes()[extension] || '';
+            return mimes()[extension];
         }
 
         function isDataUrl(url) {
@@ -461,11 +492,24 @@
         }
 
         function getAndEncode(url) {
+
+            function getRootUrl() {
+                return window.location.origin?window.location.origin+'/':window.location.protocol+'/'+window.location.host+'/';
+            }
+
             var TIMEOUT = 30000;
             if(domtoimage.impl.options.cacheBust) {
                 // Cache bypass so we dont have CORS issues with cached images
                 // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
                 url += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime();
+            }
+
+            if(domtoimage.impl.options.proxy) {
+                url = domtoimage.impl.options.proxy + ((/^http[s]?\:\/\//).test(url) ? url : (getRootUrl() + url));
+            }
+            
+            if(domtoimage.impl.options.debug) {
+                console.log('[dom2img] imgURL', url);
             }
 
             return new Promise(function (resolve) {
@@ -495,14 +539,22 @@
                         } else {
                             fail('cannot fetch resource: ' + url + ', status: ' + request.status);
                         }
-
                         return;
                     }
 
                     var encoder = new FileReader();
                     encoder.onloadend = function () {
                         var content = encoder.result.split(/,/)[1];
-                        resolve(content);
+                        if(domtoimage.impl.options.debug) {
+                            console.log('[dom2img] encoder - content resolved', content);
+                        }
+                        resolve([content, request.getResponseHeader('Content-Type')]);
+                    };
+                    encoder.onerror = function (err) {
+                        console.error('[dom2img] error', err);
+                    };
+                    encoder.onabort = function (err) {
+                        console.error('[dom2img] abort', err);
                     };
                     encoder.readAsDataURL(request.response);
                 }
@@ -523,6 +575,8 @@
         }
 
         function dataAsUrl(content, type) {
+            console.log('[dom2image] dataasUrl => ', type)
+            if (!type && type !== '') return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH4gsNCyY2EtMAuQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAALSURBVAjXY2AAAgAABQAB4iYFmwAAAABJRU5ErkJggg=='
             return 'data:' + type + ';base64,' + content;
         }
 
@@ -603,7 +657,7 @@
                 })
                 .then(get || util.getAndEncode)
                 .then(function (data) {
-                    return util.dataAsUrl(data, util.mimeType(url));
+                    return util.dataAsUrl(data.length ? data[0] : data, util.mimeType(url, data.length ? data[1] : null));
                 })
                 .then(function (dataUrl) {
                     return string.replace(urlAsRegex(url), '$1' + dataUrl + '$3');
@@ -720,7 +774,7 @@
                 return Promise.resolve(element.src)
                     .then(get || util.getAndEncode)
                     .then(function (data) {
-                        return util.dataAsUrl(data, util.mimeType(element.src));
+                        return util.dataAsUrl(data.length ? data[0] : data, util.mimeType(element.src, data.length ? data[1] : null));
                     })
                     .then(function (dataUrl) {
                         return new Promise(function (resolve, reject) {

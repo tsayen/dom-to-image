@@ -113,6 +113,14 @@ domtoimage.toPixelData(node)
     });
 ```
 
+Get a canvas object:
+```javascript
+domtoimage.toCanvas(document.getElementById('my-node'))
+    .then(function (canvas) {
+        console.log('canvas', canvas.width, canvas.height);
+    });
+```
+
 * * *
 
 _All the functions under `impl` are not public API and are exposed only
@@ -154,6 +162,10 @@ Set to true to append the current time as a query string to URL requests to enab
 #### imagePlaceholder
 
 A data URL for a placeholder image that will be used when fetching an image fails. Defaults to undefined and will throw an error on failed images
+
+#### proxy
+
+A proxy url in order to avoid CORS problems.
 
 ## Browsers
 
