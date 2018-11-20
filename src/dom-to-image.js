@@ -422,7 +422,8 @@
             else return 'undef';
         }
 
-        function mimeType(url) {
+        function mimeType(url, headerMimeType) {
+            if (headerMimeType) return headerMimeType;
             var extension = parseExtension(url).toLowerCase();
             return mimes()[extension];
         }
@@ -547,7 +548,7 @@
                         if(domtoimage.impl.options.debug) {
                             console.log('[dom2img] encoder - content resolved', content);
                         }
-                        resolve(content);
+                        resolve([content, request.getResponseHeader('Content-Type')]);
                     };
                     encoder.onerror = function (err) {
                         console.error('[dom2img] error', err);
@@ -656,7 +657,7 @@
                 })
                 .then(get || util.getAndEncode)
                 .then(function (data) {
-                    return util.dataAsUrl(data, util.mimeType(url));
+                    return util.dataAsUrl(data[0], util.mimeType(url, data[1]));
                 })
                 .then(function (dataUrl) {
                     return string.replace(urlAsRegex(url), '$1' + dataUrl + '$3');
