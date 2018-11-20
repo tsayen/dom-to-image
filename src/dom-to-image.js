@@ -657,7 +657,7 @@
                 })
                 .then(get || util.getAndEncode)
                 .then(function (data) {
-                    return util.dataAsUrl(data[0], util.mimeType(url, data[1]));
+                    return util.dataAsUrl(data.length ? data[0] : data, util.mimeType(url, data.length ? data[1] : null));
                 })
                 .then(function (dataUrl) {
                     return string.replace(urlAsRegex(url), '$1' + dataUrl + '$3');
@@ -774,7 +774,7 @@
                 return Promise.resolve(element.src)
                     .then(get || util.getAndEncode)
                     .then(function (data) {
-                        return util.dataAsUrl(data, util.mimeType(element.src));
+                        return util.dataAsUrl(data.length ? data[0] : data, util.mimeType(url, data.length ? data[1] : null));
                     })
                     .then(function (dataUrl) {
                         return new Promise(function (resolve, reject) {
