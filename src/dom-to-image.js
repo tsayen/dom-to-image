@@ -774,7 +774,7 @@
                 return Promise.resolve(element.src)
                     .then(get || util.getAndEncode)
                     .then(function (data) {
-                        return util.dataAsUrl(data.length ? data[0] : data, util.mimeType(url, data.length ? data[1] : null));
+                        return util.dataAsUrl(data.length ? data[0] : data, util.mimeType(element.src, data.length ? data[1] : null));
                     })
                     .then(function (dataUrl) {
                         return new Promise(function (resolve, reject) {
