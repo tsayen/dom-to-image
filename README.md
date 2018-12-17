@@ -86,7 +86,7 @@ Get an SVG data URL, but filter out all the `<i>` elements:
 
 ```javascript
 function filter (node) {
-    return (node.tagName !== 'i');
+    return (node.tagName !== 'I');
 }
 
 domtoimage.toSvg(document.getElementById('my-node'), {filter: filter})
