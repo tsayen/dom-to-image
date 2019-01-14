@@ -11,7 +11,9 @@
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
         // Default cache bust is false, it will use the cache
-        cacheBust: false
+        cacheBust: false,
+        // Use (existing) authentication credentials for external URIs (CORS requests)
+        useCredentials: false
     };
 
     var domtoimage = {
@@ -48,6 +50,7 @@
                 defaults to 1.0.
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
+     * @param {Boolean} options.useCredentials - set to true to send (existing) authentication credentials to external URIs (CORS requests)
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
@@ -146,6 +149,12 @@
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
+        }
+
+        if(typeof(options.useCredentials) === 'undefined') {
+            domtoimage.impl.options.useCredentials = defaultOptions.useCredentials;
+        } else {
+            domtoimage.impl.options.useCredentials = options.useCredentials;
         }
     }
 
@@ -452,6 +461,9 @@
         function makeImage(uri) {
             return new Promise(function (resolve, reject) {
                 var image = new Image();
+                if(domtoimage.impl.options.useCredentials) {
+                    image.crossOrigin = 'use-credentials';
+                }
                 image.onload = function () {
                     resolve(image);
                 };
@@ -475,6 +487,9 @@
                 request.ontimeout = timeout;
                 request.responseType = 'blob';
                 request.timeout = TIMEOUT;
+                if(domtoimage.impl.options.useCredentials) {
+                    request.withCredentials = true;
+                }
                 request.open('GET', url, true);
                 request.send();
 
