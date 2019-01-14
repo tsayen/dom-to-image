@@ -21,7 +21,7 @@ module.exports = function (grunt) {
             },
             dist: {
                 files: {
-                    'dist/<%= pkg.name %>.min.js': ['src/dom-to-image.js']
+                    'dist/<%= pkg.name.substring(pkg.name.lastIndexOf("/")+1) %>.min.js': ['src/dom-to-image.js']
                 }
             }
         },
