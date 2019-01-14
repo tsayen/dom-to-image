@@ -2,6 +2,8 @@
 .tags
 .tags*
 *.bak
+*.tgz
+bower_components/
 node_modules/
 .idea/
 .settings/
