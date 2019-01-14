@@ -1,3 +1,7 @@
 *.iml
 .tags
 .tags*
+*.bak
+node_modules/
+.idea/
+.settings/
