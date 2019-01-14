@@ -1,6 +1,6 @@
 # DOM to Image
 
-[![Build Status](https://travis-ci.org/tsayen/dom-to-image.svg?branch=master)](https://travis-ci.org/tsayen/dom-to-image)
+<!-- [![Build Status](https://travis-ci.org/tsayen/dom-to-image.svg?branch=master)](https://travis-ci.org/tsayen/dom-to-image) -->
 
 ## What is it
 
@@ -10,19 +10,25 @@ based on [domvas by Paul Bakaus](https://github.com/pbakaus/domvas)
 and has been completely rewritten, with some bugs fixed and some new
 features (like web font and image support) added.
 
+**This is a fork** of the original [dom-to-image repo of tsayen](https://github.com/tsayen/dom-to-image).
+This fork contains the following enhancements and fixes:
+* [feature] Add _useCredentials_ option to send authentication credentials for CORS HTTP requests to external (image, font, etc.) URIs that need (existing) authentication data sent with the HTTP request. ([#255][i255])
+
+[i255]: https://github.com/tsayen/dom-to-image/issues/255
+
 ## Installation
 
 ### NPM
 
-`npm install dom-to-image`
+`npm install @iqdoq/dom-to-image`
 
 Then load
 
 ```javascript
 /* in ES 6 */
-import domtoimage from 'dom-to-image';
+import domtoimage from '@iqdoq/dom-to-image';
 /* in ES 5 */
-var domtoimage = require('dom-to-image');
+var domtoimage = require('@iqdoq/dom-to-image');
 ```
 
 ### Bower
@@ -247,7 +253,7 @@ for you, following steps are taken:
 
 ## Authors
 
-Anatolii Saienko, Paul Bakaus (original idea)
+[IQDoQ GmbH](https://www.iqdoq.com), Anatolii Saienko (original dom-to-image), Paul Bakaus (original idea)
 
 ## License
 
