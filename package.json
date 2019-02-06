@@ -1,6 +1,6 @@
 {
     "name": "dom-to-image-more",
-    "version": "2.7.4",
+    "version": "2.7.5",
     "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
     "main": "src/dom-to-image-more.js",
     "dependencies": {},
@@ -37,6 +37,11 @@
         "svg"
     ],
     "author": "Marc Brooks <idisposable@gmail.com>",
+    "contributors": [
+        "Anatolii Saienko <anatoly.sayenko@gmail.com>",
+        "Marc Brooks <idisposable@gmail.com>",
+        "Daniel Fischer <daniel.fischer@iqdoq.de>"
+    ],
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/1904labs/dom-to-image-more/issues"
