@@ -11,7 +11,9 @@
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
         // Default cache bust is false, it will use the cache
-        cacheBust: false
+        cacheBust: false,
+        // Use (existing) authentication credentials for external URIs (CORS requests)
+        useCredentials: false
     };
 
     var domtoimage = {
@@ -155,6 +157,12 @@
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
+        }
+
+        if(typeof(options.useCredentials) === 'undefined') {
+            domtoimage.impl.options.useCredentials = defaultOptions.useCredentials;
+        } else {
+            domtoimage.impl.options.useCredentials = options.useCredentials;
         }
     }
 
@@ -466,6 +474,9 @@
         function makeImage(uri) {
             return new Promise(function(resolve, reject) {
                 var image = new Image();
+                if(domtoimage.impl.options.useCredentials) {
+                    image.crossOrigin = 'use-credentials';
+                }
                 image.onload = function() {
                     resolve(image);
                 };
@@ -489,6 +500,9 @@
                 request.ontimeout = timeout;
                 request.responseType = 'blob';
                 request.timeout = TIMEOUT;
+                if(domtoimage.impl.options.useCredentials) {
+                    request.withCredentials = true;
+                }
                 request.open('GET', url, true);
                 request.send();
 
