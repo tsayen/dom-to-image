@@ -1,6 +1,6 @@
 ### Use case: description, code  
 
-[jsfiddle](hhttps://jsfiddle.net/IDisposable/emjL1ow8/)
+[jsfiddle](https://jsfiddle.net/IDisposable/emjL1ow8/)
 
 ### Expected behavior
 
