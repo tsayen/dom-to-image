@@ -1,6 +1,8 @@
 dist: trusty
+node_js:
+    "8"
 addons:
-    firefox: "49.0"
+    firefox: "latest"
 language: node_js
 before_install:
     - sudo apt-get update -q
