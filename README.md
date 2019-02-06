@@ -1,6 +1,6 @@
 # DOM to Image
 
-[![Build Status](https://travis-ci.org/IDisposable/dom-to-image-more.svg?branch=master)](https://travis-ci.org/IDisposable/dom-to-image-more)
+[![Build Status](https://travis-ci.org/1904labs/dom-to-image-more.svg?branch=master)](https://travis-ci.org/1904labs/dom-to-image-more)
 
 ## What is it
 
@@ -13,6 +13,8 @@ with some important fixes merged. We are eternally grateful for his starting poi
 Anatolii's version was based on [domvas by Paul Bakaus](https://github.com/pbakaus/domvas)
 and has been completely rewritten, with some bugs fixed and some new
 features (like web font and image support) added.
+
+Moved to [1904labs organization](https://github.com/1904labs/) from my repositories 2019-02-06 as of version 2.7.3
 
 ## Installation
 
