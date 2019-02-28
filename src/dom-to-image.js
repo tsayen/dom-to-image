@@ -236,7 +236,8 @@
                 });
 
             function cloneStyle() {
-                copyStyle(window.getComputedStyle(original), clone.style);
+                var originalStyle = window.getComputedStyle(original);
+                copyStyle(originalStyle, clone.style);
 
                 function copyStyle(source, target) {
                     if (source.cssText) target.cssText = source.cssText;
@@ -270,10 +271,11 @@
                     var scrollLeftRemaining = original.scrollLeft > 0 ? original.scrollLeft : null;
                     var originalOffsetTop = original.offsetTop;
                     var originalOffsetLeft = original.offsetLeft;
-
+                    var originalIsPositionRelative = originalStyle['position'] === 'relative';
                     var childTop, childTop2, childLeft, childLeft2, isStackingLeft, isStackingTop;
+                    var computedStylesCache = {};
                     // Loop through children and set position based on original
-                    // childs position and original contains scroll position
+                    // childs position and original containers scroll position
                     for(var i = 0; i < clone.children.length; i++) {
                         // Make sure this element is stylable
                         if(typeof(clone.children[i]) === 'undefined' ||
@@ -282,33 +284,73 @@
 
                             continue;
                         }
+                        var originalChildStyles = computedStylesCache[i] || window.getComputedStyle(original.children[i]);
+                        computedStylesCache[i] = originalChildStyles;
 
                         // Set child to absolute positioning relative to parent (container)
                         clone.children[i].style.position = 'absolute';
-                        if(typeof(original.children[i - 1]) !== 'undefined') {
-                            childTop = original.children[i - 1].offsetTop;
+
+                        // Take into account the fact that there may be children which were already
+                        // positioned absolute relative to its parent, thus we need to use the original position
+                        if (originalIsPositionRelative && originalChildStyles['position'] === 'absolute') {
+                            var top = parseInt(originalChildStyles['top']);
+                            var left = parseInt(originalChildStyles['left']);
+                            var finalTop = isNaN(top) ? 0 : top;
+                            var finalLeft = isNaN(left) ? 0 : left;
+                            finalTop -= original.scrollTop;
+                            finalLeft -= original.scrollLeft;
+                            clone.children[i].style.top = finalTop + 'px';
+                            clone.children[i].style.left = finalLeft + 'px';
+                            continue;
+                        }
+
+                        var lastChild, lastChildStyles;
+                        for(var lastChildIndex = i - 1; lastChildIndex >= 0; lastChildIndex--) {
+                            var childStyles = computedStylesCache[i] || window.getComputedStyle(original.children[lastChildIndex]);
+                            computedStylesCache[lastChildIndex] = childStyles;
+                            if (childStyles['position'] !== 'absolute') {
+                                lastChild = original.children[lastChildIndex];
+                                lastChildStyles = childStyles;
+                                break;
+                            }
+                        }
+                        
+                        if(typeof(lastChild) !== 'undefined') {
+                            childTop = lastChild.offsetTop;
                             childTop2 = original.children[i].offsetTop;
 
-                            childLeft = original.children[i - 1].offsetLeft;
+                            childLeft = lastChild.offsetLeft;
                             childLeft2 = original.children[i].offsetLeft;
 
                             // isStackingLeft is true when elements are being displayed inline
                             isStackingLeft = childLeft !== childLeft2;
-                            // isStackingLeft is true when elements are being displayed block
+                            // isStackingTop is true when elements are being displayed block
                             isStackingTop = childTop !== childTop2;
 
                             if(scrollTopRemaining && isStackingTop) {
                                 // Subtract the previous child's height from the scroll top
                                 // so that our current child will display underneath it
-                                scrollTopRemaining -= original.children[i - 1].offsetHeight;
+                                // TODO: Need better height calculation, look into getBoundingClientRect()
+                                var lastChildRealHeight = lastChild.offsetHeight;
+                                var marginTop = parseInt(lastChildStyles['margin-top']);
+                                var marginBottom = parseInt(lastChildStyles['margin-bottom']);
+                                lastChildRealHeight += isNaN(marginTop) ? 0 : marginTop;
+                                lastChildRealHeight += isNaN(marginBottom) ? 0 : marginBottom;
+                                scrollTopRemaining -= lastChildRealHeight;
                             }
                             if(scrollLeftRemaining && isStackingLeft) {
                                 // Subtract the previous child's width from the scroll left
                                 // so that our current child will display beside it
-                                scrollLeftRemaining -= original.children[i - 1].offsetWidth;
+                                // TODO: Need better width calculation, look into getBoundingClientRect()
+                                // Problem is inline elements are spaced like text and we need to capture the word spacing
+                                var lastChildRealWidth = lastChild.offsetWidth;
+                                var marginLeft = parseInt(lastChildStyles['margin-left']);
+                                var marginRight = parseInt(lastChildStyles['margin-right']);
+                                lastChildRealWidth += isNaN(marginLeft) ? 0 : marginLeft;
+                                lastChildRealWidth += isNaN(marginRight) ? 0 : marginRight;
+                                scrollLeftRemaining -= lastChildRealWidth;
                             }
                         }
-
 
                         if(scrollTopRemaining) {
                             clone.children[i].style.top = -scrollTopRemaining + 'px';
@@ -318,6 +360,7 @@
                             // the top positioning so that our absolute elements don't
                             // appear overlapping vertically
                             childTop2 = original.children[i].offsetTop;
+                            // TODO: offsetTop is different if the parent is position relative
                             clone.children[i].style.top = (childTop2 - originalOffsetTop) + 'px';
                         }
 
@@ -329,6 +372,7 @@
                             // the left positioning so that our absolute elements don't
                             // appear overlapping horizontally
                             childLeft2 = original.children[i].offsetLeft;
+                            // TODO: offsetLeft is different if the parent is position relative
                             clone.children[i].style.left = (childLeft2 - originalOffsetLeft) + 'px';
                         }
                     }
