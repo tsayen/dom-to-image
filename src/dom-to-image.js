@@ -269,11 +269,10 @@
                     clone.style.height = original.offsetHeight + 'px';
                     var scrollTopRemaining = original.scrollTop > 0 ? original.scrollTop : null;
                     var scrollLeftRemaining = original.scrollLeft > 0 ? original.scrollLeft : null;
-                    var originalOffsetTop = original.offsetTop;
-                    var originalOffsetLeft = original.offsetLeft;
                     var originalIsPositionRelative = originalStyle['position'] === 'relative';
-                    var childTop, childTop2, childLeft, childLeft2, isStackingLeft, isStackingTop;
                     var computedStylesCache = {};
+                    var boundingRectCache = {};
+                    
                     // Loop through children and set position based on original
                     // childs position and original containers scroll position
                     for(var i = 0; i < clone.children.length; i++) {
@@ -304,77 +303,40 @@
                             continue;
                         }
 
-                        var lastChild, lastChildStyles;
-                        for(var lastChildIndex = i - 1; lastChildIndex >= 0; lastChildIndex--) {
-                            var childStyles = computedStylesCache[i] || window.getComputedStyle(original.children[lastChildIndex]);
+                        var currentChildBoundingRect = boundingRectCache[i] || original.children[i].getBoundingClientRect();
+                        boundingRectCache[i] = currentChildBoundingRect;
+
+                        // Find last child that was not position absolute
+                        var lastChild, lastChildIndex, lastChildBoundingRect;
+                        for(lastChildIndex = i - 1; lastChildIndex >= 0; lastChildIndex--) {
+                            var childStyles = computedStylesCache[lastChildIndex] || window.getComputedStyle(original.children[lastChildIndex]);
                             computedStylesCache[lastChildIndex] = childStyles;
                             if (childStyles['position'] !== 'absolute') {
                                 lastChild = original.children[lastChildIndex];
-                                lastChildStyles = childStyles;
                                 break;
                             }
                         }
                         
+                        // If we found a child then subtract its height/width from the scroll position
                         if(typeof(lastChild) !== 'undefined') {
-                            childTop = lastChild.offsetTop;
-                            childTop2 = original.children[i].offsetTop;
-
-                            childLeft = lastChild.offsetLeft;
-                            childLeft2 = original.children[i].offsetLeft;
-
-                            // isStackingLeft is true when elements are being displayed inline
-                            isStackingLeft = childLeft !== childLeft2;
+                            lastChildBoundingRect = boundingRectCache[lastChildIndex] || lastChild.getBoundingClientRect();
+                            boundingRectCache[lastChildIndex] = lastChildBoundingRect;
+                            
                             // isStackingTop is true when elements are being displayed block
-                            isStackingTop = childTop !== childTop2;
-
-                            if(scrollTopRemaining && isStackingTop) {
-                                // Subtract the previous child's height from the scroll top
-                                // so that our current child will display underneath it
-                                // TODO: Need better height calculation, look into getBoundingClientRect()
-                                var lastChildRealHeight = lastChild.offsetHeight;
-                                var marginTop = parseInt(lastChildStyles['margin-top']);
-                                var marginBottom = parseInt(lastChildStyles['margin-bottom']);
-                                lastChildRealHeight += isNaN(marginTop) ? 0 : marginTop;
-                                lastChildRealHeight += isNaN(marginBottom) ? 0 : marginBottom;
-                                scrollTopRemaining -= lastChildRealHeight;
+                            if(lastChildBoundingRect.top !== currentChildBoundingRect.top) {
+                                // Subtract last child real height to get the next items position
+                                scrollTopRemaining -= (currentChildBoundingRect.top - lastChildBoundingRect.top);
                             }
-                            if(scrollLeftRemaining && isStackingLeft) {
-                                // Subtract the previous child's width from the scroll left
-                                // so that our current child will display beside it
-                                // TODO: Need better width calculation, look into getBoundingClientRect()
-                                // Problem is inline elements are spaced like text and we need to capture the word spacing
-                                var lastChildRealWidth = lastChild.offsetWidth;
-                                var marginLeft = parseInt(lastChildStyles['margin-left']);
-                                var marginRight = parseInt(lastChildStyles['margin-right']);
-                                lastChildRealWidth += isNaN(marginLeft) ? 0 : marginLeft;
-                                lastChildRealWidth += isNaN(marginRight) ? 0 : marginRight;
-                                scrollLeftRemaining -= lastChildRealWidth;
+                            // isStackingLeft is true when elements are being displayed inline
+                            if(lastChildBoundingRect.left !== currentChildBoundingRect.left) {
+                                // Subtract the last child real width to get the next items position
+                                scrollLeftRemaining -= (currentChildBoundingRect.left - lastChildBoundingRect.left);
                             }
                         }
 
-                        if(scrollTopRemaining) {
-                            clone.children[i].style.top = -scrollTopRemaining + 'px';
-                        }
-                        else {
-                            // We don't have a scroll top, but we still need to set
-                            // the top positioning so that our absolute elements don't
-                            // appear overlapping vertically
-                            childTop2 = original.children[i].offsetTop;
-                            // TODO: offsetTop is different if the parent is position relative
-                            clone.children[i].style.top = (childTop2 - originalOffsetTop) + 'px';
-                        }
-
-                        if(scrollLeftRemaining) {
-                            clone.children[i].style.left = -scrollLeftRemaining + 'px';
-                        }
-                        else {
-                            // We don't have a scroll left, but we still need to set
-                            // the left positioning so that our absolute elements don't
-                            // appear overlapping horizontally
-                            childLeft2 = original.children[i].offsetLeft;
-                            // TODO: offsetLeft is different if the parent is position relative
-                            clone.children[i].style.left = (childLeft2 - originalOffsetLeft) + 'px';
-                        }
+                        // Set the childs positon based on our current scroll position
+                        clone.children[i].style.top = -scrollTopRemaining + 'px';
+                        clone.children[i].style.left = -scrollLeftRemaining + 'px';
                     }
                 }
             }
