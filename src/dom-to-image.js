@@ -135,6 +135,8 @@
     }
 
     function copyOptions(options) {
+        // get user specifiy fontFamily
+        domtoimage.impl.options.fontFamily = options.fontFamily || []
         // Copy options to impl options for use in impl
         if(typeof(options.imagePlaceholder) === 'undefined') {
             domtoimage.impl.options.imagePlaceholder = defaultOptions.imagePlaceholder;
@@ -677,9 +679,24 @@
 
             function getCssRules(styleSheets) {
                 var cssRules = [];
+                let flag = false;
                 styleSheets.forEach(function (sheet) {
                     try {
-                        util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
+                        util.asArray(sheet.cssRules || []).forEach(rule => {
+                            flag = false
+                            if (rule.cssText.indexOf('@font-face') !== -1) {
+                                // filter fonts by specific fontFamily to void download all fonts
+                                for (let i = 0; domtoimage.impl.options.fontFamily[i]; i++) {
+                                    if (rule.cssText.indexOf(domtoimage.impl.options.fontFamily[i]) !== -1) {
+                                        flag = true
+                                        break
+                                    }
+                                }
+                            }
+                            if (flag) {
+                                cssRules.push(rule)
+                            }
+                        });
                     } catch (e) {
                         console.log('Error while reading CSS rules from ' + sheet.href, e.toString());
                     }
