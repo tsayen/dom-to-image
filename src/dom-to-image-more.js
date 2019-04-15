@@ -174,8 +174,10 @@
                 var scale = typeof(options.scale) !== 'number' ? 1 : options.scale;
                 var canvas = newCanvas(domNode, scale);
                 var ctx = canvas.getContext('2d');
-                ctx.scale(scale, scale);
-                ctx.drawImage(image, 0, 0);
+                if (image) {
+                    ctx.scale(scale, scale);
+                    ctx.drawImage(image, 0, 0);
+                }
                 return canvas;
             });
 
@@ -472,6 +474,7 @@
         }
 
         function makeImage(uri) {
+            if (uri === 'data:,') return Promise.resolve();
             return new Promise(function(resolve, reject) {
                 var image = new Image();
                 if(domtoimage.impl.options.useCredentials) {
