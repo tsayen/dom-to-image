@@ -1,0 +1,11 @@
+#dom-node {
+    height: 100px;
+    width: 200px;
+    background-color: lightgrey;
+    text-align: center;
+    padding: 1em;
+}
+
+#result {
+    margin-top: 10px;
+}

@@ -5,7 +5,8 @@
     "authors": [
         "Marc Brooks <idisposable@gmail.com>",
         "Daniel Fischer <daniel.fischer@iqdoq.de>",
-        "Anatolii Saienko <anatoly.sayenko@gmail.com>"
+        "Anatolii Saienko <anatoly.sayenko@gmail.com>",
+        "Aidas Klimas"
     ],
     "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
     "main": "src/dom-to-image-more.js",

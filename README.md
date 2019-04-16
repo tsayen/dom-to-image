@@ -262,7 +262,8 @@ for you, following steps are taken:
 
 ## Authors
 
-Marc Brooks, Anatolii Saienko (original dom-to-image), Paul Bakaus (original idea)
+Marc Brooks, Anatolii Saienko (original dom-to-image), Paul Bakaus (original idea),
+Aidas Klimas (fixes)
 
 ## License
 

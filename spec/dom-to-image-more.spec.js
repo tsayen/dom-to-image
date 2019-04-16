@@ -253,6 +253,20 @@
                     .then(done).catch(done);
             });
 
+            it('should handle zero-width <canvas>', function(done) {
+                loadTestPage('canvas/empty-data.html', 'canvas/empty-style.css')
+                    .then(function() {
+                        var node = document.getElementById('dom-node');
+                            domtoimage.toSvg(node)
+                            .then(function(dataUrl) {
+                                var img = new Image();
+                                document.getElementById('result').appendChild(img);
+                                img.src = dataUrl;
+                            });
+                    })
+                    .then(done).catch(done);
+            });
+
             it('should render bgcolor', function(done) {
                 loadTestPage('bgcolor/dom-node.html', 'bgcolor/style.css', 'bgcolor/control-image')
                     .then(function() {
