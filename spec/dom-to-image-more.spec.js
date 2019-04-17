@@ -321,14 +321,13 @@
                                 if (x < 10) {
                                     rgba[3] = 255;
                                 } else if (x < 20) {
-                                    rgba[3] = 0.4 * 255;
+                                    rgba[3] = parseInt(0.4 * 255);
                                 } else {
-                                    rgba[3] = 0.2 * 255;
+                                    rgba[3] = parseInt(0.2 * 255);
                                 }
 
                                 var offset = (4 * y * domNode().scrollHeight) + (4 * x);
-
-                                assert.deepEqual(pixels.slice(offset, offset + 4), Uint8Array.from(rgba));
+                                assert.deepEqual(Uint8Array.from(pixels.slice(offset, offset + 4)), Uint8Array.from(rgba));
                             }
                         }
                     })
