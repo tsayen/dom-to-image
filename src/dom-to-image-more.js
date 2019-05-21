@@ -411,7 +411,7 @@
         }
 
         function parseExtension(url) {
-            var match = /\.([^\.\/]*?)$/g.exec(url);
+            var match = /\.([^\.\/]*?)(\?|$)/g.exec(url);
             if (match) return match[1];
             else return '';
         }
