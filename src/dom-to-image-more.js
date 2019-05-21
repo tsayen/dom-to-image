@@ -282,7 +282,11 @@
                     if (content === '' || content === 'none') return;
 
                     var className = util.uid();
-                    clone.className = clone.className + ' ' + className;
+                    var currentClass = clone.getAttribute('class');
+                    if (currentClass) {
+                        clone.setAttribute('class', currentClass + ' ' + className);
+                    }
+
                     var styleElement = document.createElement('style');
                     styleElement.appendChild(formatPseudoElementStyle(className, element, style));
                     clone.appendChild(styleElement);
