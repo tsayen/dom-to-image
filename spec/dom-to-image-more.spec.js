@@ -198,6 +198,7 @@
             });
 
             it('should render images', function(done) {
+                this.timeout(10000);
                 loadTestPage('images/dom-node.html', 'images/style.css')
                     .then(delay(500))
                     .then(renderToPng)
