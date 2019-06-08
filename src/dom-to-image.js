@@ -295,12 +295,12 @@
                         if (originalIsPositionRelative && originalChildStyles['position'] === 'absolute') {
                             var top = parseInt(originalChildStyles['top']);
                             var left = parseInt(originalChildStyles['left']);
-                            var finalTop = isNaN(top) ? 0 : top;
-                            var finalLeft = isNaN(left) ? 0 : left;
-                            finalTop -= original.scrollTop;
-                            finalLeft -= original.scrollLeft;
-                            cloneChild.style.top = finalTop + 'px';
-                            cloneChild.style.left = finalLeft + 'px';
+                            top = isNaN(top) ? 0 : top;
+                            left = isNaN(left) ? 0 : left;
+                            top -= original.scrollTop;
+                            left -= original.scrollLeft;
+                            cloneChild.style.top = top + 'px';
+                            cloneChild.style.left = left + 'px';
                             continue;
                         }
 
