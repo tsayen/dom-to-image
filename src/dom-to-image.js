@@ -276,10 +276,11 @@
                     // Loop through children and set position based on original
                     // childs position and original containers scroll position
                     for(var i = 0; i < clone.children.length; i++) {
+                        var cloneChild = clone.children[i];
                         // Make sure this element is stylable
-                        if(typeof(clone.children[i]) === 'undefined' ||
-                            clone.children[i] === null ||
-                            typeof(clone.children[i].style) === 'undefined') {
+                        if(typeof(cloneChild) === 'undefined' ||
+                            cloneChild === null ||
+                            typeof(cloneChild.style) === 'undefined') {
 
                             continue;
                         }
@@ -287,7 +288,7 @@
                         computedStylesCache[i] = originalChildStyles;
 
                         // Set child to absolute positioning relative to parent (container)
-                        clone.children[i].style.position = 'absolute';
+                        cloneChild.style.position = 'absolute';
 
                         // Take into account the fact that there may be children which were already
                         // positioned absolute relative to its parent, thus we need to use the original position
@@ -298,8 +299,8 @@
                             var finalLeft = isNaN(left) ? 0 : left;
                             finalTop -= original.scrollTop;
                             finalLeft -= original.scrollLeft;
-                            clone.children[i].style.top = finalTop + 'px';
-                            clone.children[i].style.left = finalLeft + 'px';
+                            cloneChild.style.top = finalTop + 'px';
+                            cloneChild.style.left = finalLeft + 'px';
                             continue;
                         }
 
@@ -335,8 +336,8 @@
                         }
 
                         // Set the childs positon based on our current scroll position
-                        clone.children[i].style.top = -scrollTopRemaining + 'px';
-                        clone.children[i].style.left = -scrollLeftRemaining + 'px';
+                        cloneChild.style.top = -scrollTopRemaining + 'px';
+                        cloneChild.style.left = -scrollLeftRemaining + 'px';
                     }
                 }
             }
