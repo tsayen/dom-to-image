@@ -335,7 +335,7 @@
                             }
                         }
 
-                        // Set the childs positon based on our current scroll position
+                        // Set the childs position based on our current scroll position
                         cloneChild.style.top = -scrollTopRemaining + 'px';
                         cloneChild.style.left = -scrollLeftRemaining + 'px';
                     }
