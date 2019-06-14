@@ -42,6 +42,9 @@
      * @param {Object} options - Rendering options
      * @param {Function} options.filter - Should return true if passed node should be included in the output
      *          (excluding node means excluding it's children as well). Not called on the root node.
+     * @param {Function} options.onclone - Callback function which is called when the Document has been cloned for
+     *         rendering, can be used to modify the contents that will be rendered without affecting the original
+     *         source document.
      * @param {String} options.bgcolor - color for the background, any valid CSS color value.
      * @param {Number} options.width - width to be applied to node before rendering.
      * @param {Number} options.height - height to be applied to node before rendering.
@@ -74,6 +77,7 @@
             if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
             if (options.width) clone.style.width = options.width + 'px';
             if (options.height) clone.style.height = options.height + 'px';
+            if (options.onclone && typeof options.onclone === "function") options.onclone(clone);
 
             if (options.style)
                 Object.keys(options.style).forEach(function(property) {
@@ -777,7 +781,7 @@
                         return util.dataAsUrl(data, util.mimeType(element.src));
                     })
                     .then(function(dataUrl) {
-                        return new Promise(function(resolve, reject) {
+                        return new Promise(function(resolve) {
                             element.onload = resolve;
                             // for any image with invalid src(such as <img src />), just ignore it
                             element.onerror = resolve;

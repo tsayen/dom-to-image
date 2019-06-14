@@ -2,7 +2,7 @@
     "name": "dom-to-image-more",
     "version": "2.8.0",
     "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
-    "main": "src/dom-to-image-more.js",
+    "main": "dist/dom-to-image-more.min.js",
     "dependencies": {},
     "devDependencies": {
         "chai": "^4.2.0",
@@ -22,7 +22,8 @@
         "mocha": "^6.1.4"
     },
     "scripts": {
-        "test": "./node_modules/.bin/grunt test"
+        "test": "./node_modules/.bin/grunt test",
+        "build": "./node_modules/.bin/grunt"
     },
     "repository": {
         "type": "git",
