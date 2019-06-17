@@ -77,14 +77,21 @@
             if (options.bgcolor) clone.style.backgroundColor = options.bgcolor;
             if (options.width) clone.style.width = options.width + 'px';
             if (options.height) clone.style.height = options.height + 'px';
-            if (options.onclone && typeof options.onclone === "function") options.onclone(clone);
 
             if (options.style)
                 Object.keys(options.style).forEach(function(property) {
                     clone.style[property] = options.style[property];
                 });
 
-            return clone;
+            var onCloneResult = null;
+
+            if (typeof options.onclone === "function")
+                onCloneResult = options.onclone(clone);
+
+            return Promise.resolve(onCloneResult)
+                .then(function () {
+                    return clone;
+                });
         }
     }
 
