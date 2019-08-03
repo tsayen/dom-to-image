@@ -229,6 +229,11 @@
 
             function cloneStyle() {
                 copyStyle(window.getComputedStyle(original), clone.style);
+                
+                // Prevent cropping and gaps at edge of element
+                if (root) {
+                    clone.style.setProperty('margin', 0);
+                }
 
                 function copyStyle(source, target) {
                     if (source.cssText) target.cssText = source.cssText;
