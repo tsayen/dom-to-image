@@ -155,6 +155,10 @@ Set to true to append the current time as a query string to URL requests to enab
 
 A data URL for a placeholder image that will be used when fetching an image fails. Defaults to undefined and will throw an error on failed images
 
+#### scrollFix
+
+Set to true to have the resulting image take into account scroll positioning, this will be done by making the scroll container position relative, and then positioning the children absolutely based on the scroll position of the container and the height of the preceding children. Because this works with absolute and relative positioning there is a chance that it may not work as intended for you and is a experimental feature for now. Defaults to false
+
 ## Browsers
 
 It's tested on latest Chrome and Firefox (49 and 45 respectively at the time
