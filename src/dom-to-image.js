@@ -428,7 +428,6 @@
                 node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
                 return new XMLSerializer().serializeToString(node);
             })
-            .then(util.escapeXhtml)
             .then(function (xhtml) {
                 return '<foreignObject x="0" y="0" width="100%" height="100%">' + xhtml + '</foreignObject>';
             })
@@ -437,7 +436,7 @@
                     foreignObject + '</svg>';
             })
             .then(function (svg) {
-                return 'data:image/svg+xml;charset=utf-8,' + svg;
+                return encodeURI('data:image/svg+xml;charset=utf-8,') + encodeURIComponent(svg);
             });
     }
 
@@ -454,7 +453,6 @@
             uid: uid(),
             delay: delay,
             asArray: asArray,
-            escapeXhtml: escapeXhtml,
             makeImage: makeImage,
             width: width,
             height: height
@@ -641,10 +639,6 @@
             var length = arrayLike.length;
             for (var i = 0; i < length; i++) array.push(arrayLike[i]);
             return array;
-        }
-
-        function escapeXhtml(string) {
-            return string.replace(/#/g, '%23').replace(/\n/g, '%0A');
         }
 
         function width(node) {
