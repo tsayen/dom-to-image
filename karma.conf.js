@@ -9,6 +9,11 @@ module.exports = function (config) {
                 included: false,
                 served: true
             }, 
+            {
+                pattern: 'spec/font-awesome-4.7.0/**/*',
+                included: false,
+                served: true
+            }, 
             'node_modules/jquery/dist/jquery.js',
             'node_modules/imagediff/imagediff.js',
             'node_modules/tesseract.js/dist/tesseract.js',
