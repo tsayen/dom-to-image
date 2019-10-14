@@ -1,1 +1,1 @@
-module.exports = 'CY'
+module.exports = 'CY';

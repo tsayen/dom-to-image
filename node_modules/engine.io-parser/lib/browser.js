@@ -5,9 +5,13 @@
 var keys = require('./keys');
 var hasBinary = require('has-binary');
 var sliceBuffer = require('arraybuffer.slice');
-var base64encoder = require('base64-arraybuffer');
 var after = require('after');
-var utf8 = require('utf8');
+var utf8 = require('wtf-8');
+
+var base64encoder;
+if (global && global.ArrayBuffer) {
+  base64encoder = require('base64-arraybuffer');
+}
 
 /**
  * Check if we are running an android browser. That requires us to use
@@ -16,7 +20,7 @@ var utf8 = require('utf8');
  * http://ghinda.net/jpeg-blob-ajax-android/
  */
 
-var isAndroid = navigator.userAgent.match(/Android/i);
+var isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
 
 /**
  * Check if we are running in PhantomJS.
@@ -24,7 +28,7 @@ var isAndroid = navigator.userAgent.match(/Android/i);
  * https://github.com/ariya/phantomjs/issues/11395
  * @type boolean
  */
-var isPhantomJS = /PhantomJS/i.test(navigator.userAgent);
+var isPhantomJS = typeof navigator !== 'undefined' && /PhantomJS/i.test(navigator.userAgent);
 
 /**
  * When true, avoids using Blobs to encode payloads.
@@ -218,16 +222,18 @@ exports.encodeBase64Packet = function(packet, callback) {
  */
 
 exports.decodePacket = function (data, binaryType, utf8decode) {
+  if (data === undefined) {
+    return err;
+  }
   // String data
-  if (typeof data == 'string' || data === undefined) {
+  if (typeof data == 'string') {
     if (data.charAt(0) == 'b') {
       return exports.decodeBase64Packet(data.substr(1), binaryType);
     }
 
     if (utf8decode) {
-      try {
-        data = utf8.decode(data);
-      } catch (e) {
+      data = tryDecode(data);
+      if (data === false) {
         return err;
       }
     }
@@ -253,6 +259,15 @@ exports.decodePacket = function (data, binaryType, utf8decode) {
   return { type: packetslist[type], data: rest };
 };
 
+function tryDecode(data) {
+  try {
+    data = utf8.decode(data);
+  } catch (e) {
+    return false;
+  }
+  return data;
+}
+
 /**
  * Decodes a packet encoded in a base64 string
  *
@@ -262,7 +277,7 @@ exports.decodePacket = function (data, binaryType, utf8decode) {
 
 exports.decodeBase64Packet = function(msg, binaryType) {
   var type = packetslist[msg.charAt(0)];
-  if (!global.ArrayBuffer) {
+  if (!base64encoder) {
     return { type: type, data: { base64: true, data: msg.substr(1) } };
   }
 

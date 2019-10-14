@@ -11,8 +11,10 @@ module.exports = (grunt)->
     uglify: build:
       files: '<%=grunt.option("path")%>.min.js': '<%=grunt.option("path")%>.js'
       options:
-        mangle: {+sort, +keep_fnames}
-        compress: {+pure_getters, +keep_fargs, +keep_fnames}
+        mangle: {+keep_fnames}
+        compress: {+keep_fnames, +pure_getters}
+        output: {max_line_len: 32000}
+        ie8: on
         sourceMap: on
         banner: config.banner
     livescript: src: files:

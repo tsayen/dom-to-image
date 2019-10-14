@@ -21,7 +21,7 @@ function useNative () {
 module.exports = useNative() ? NativeCustomEvent :
 
 // IE >= 9
-'function' === typeof document.createEvent ? function CustomEvent (type, params) {
+'undefined' !== typeof document && 'function' === typeof document.createEvent ? function CustomEvent (type, params) {
   var e = document.createEvent('CustomEvent');
   if (params) {
     e.initCustomEvent(type, params.bubbles, params.cancelable, params.detail);

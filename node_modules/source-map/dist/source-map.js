@@ -52,7 +52,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/*
 	 * Copyright 2009-2011 Mozilla Foundation and contributors
@@ -64,9 +64,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.SourceNode = __webpack_require__(10).SourceNode;
 
 
-/***/ },
+/***/ }),
 /* 1 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
 	/*
@@ -329,6 +329,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	SourceMapGenerator.prototype._validateMapping =
 	  function SourceMapGenerator_validateMapping(aGenerated, aOriginal, aSource,
 	                                              aName) {
+	    // When aOriginal is truthy but has empty values for .line and .column,
+	    // it is most likely a programmer error. In this case we throw a very
+	    // specific error message to try to guide them the right way.
+	    // For example: https://github.com/Polymer/polymer-bundler/pull/519
+	    if (aOriginal && typeof aOriginal.line !== 'number' && typeof aOriginal.column !== 'number') {
+	        throw new Error(
+	            'original.line and original.column are not numbers -- you probably meant to omit ' +
+	            'the original mapping entirely and only map the generated position. If so, pass ' +
+	            'null for the original mapping instead of an object with empty or null values.'
+	        );
+	    }
+
 	    if (aGenerated && 'line' in aGenerated && 'column' in aGenerated
 	        && aGenerated.line > 0 && aGenerated.column >= 0
 	        && !aOriginal && !aSource && !aName) {
@@ -474,9 +486,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.SourceMapGenerator = SourceMapGenerator;
 
 
-/***/ },
+/***/ }),
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
 	/*
@@ -620,9 +632,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-/***/ },
+/***/ }),
 /* 3 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
 	/*
@@ -693,9 +705,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-/***/ },
+/***/ }),
 /* 4 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
 	/*
@@ -768,7 +780,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Normalizes a path, or the path portion of a URL:
 	 *
-	 * - Replaces consequtive slashes with one slash.
+	 * - Replaces consecutive slashes with one slash.
 	 * - Removes unnecessary '.' parts.
 	 * - Removes unnecessary '<dir>/..' parts.
 	 *
@@ -1116,9 +1128,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.compareByGeneratedPositionsInflated = compareByGeneratedPositionsInflated;
 
 
-/***/ },
+/***/ }),
 /* 5 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
 	/*
@@ -1129,6 +1141,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var util = __webpack_require__(4);
 	var has = Object.prototype.hasOwnProperty;
+	var hasNativeMap = typeof Map !== "undefined";
 
 	/**
 	 * A data structure which is a combination of an array and a set. Adding a new
@@ -1138,7 +1151,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function ArraySet() {
 	  this._array = [];
-	  this._set = Object.create(null);
+	  this._set = hasNativeMap ? new Map() : Object.create(null);
 	}
 
 	/**
@@ -1159,7 +1172,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns Number
 	 */
 	ArraySet.prototype.size = function ArraySet_size() {
-	  return Object.getOwnPropertyNames(this._set).length;
+	  return hasNativeMap ? this._set.size : Object.getOwnPropertyNames(this._set).length;
 	};
 
 	/**
@@ -1168,14 +1181,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param String aStr
 	 */
 	ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
-	  var sStr = util.toSetString(aStr);
-	  var isDuplicate = has.call(this._set, sStr);
+	  var sStr = hasNativeMap ? aStr : util.toSetString(aStr);
+	  var isDuplicate = hasNativeMap ? this.has(aStr) : has.call(this._set, sStr);
 	  var idx = this._array.length;
 	  if (!isDuplicate || aAllowDuplicates) {
 	    this._array.push(aStr);
 	  }
 	  if (!isDuplicate) {
-	    this._set[sStr] = idx;
+	    if (hasNativeMap) {
+	      this._set.set(aStr, idx);
+	    } else {
+	      this._set[sStr] = idx;
+	    }
 	  }
 	};
 
@@ -1185,8 +1202,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param String aStr
 	 */
 	ArraySet.prototype.has = function ArraySet_has(aStr) {
-	  var sStr = util.toSetString(aStr);
-	  return has.call(this._set, sStr);
+	  if (hasNativeMap) {
+	    return this._set.has(aStr);
+	  } else {
+	    var sStr = util.toSetString(aStr);
+	    return has.call(this._set, sStr);
+	  }
 	};
 
 	/**
@@ -1195,10 +1216,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param String aStr
 	 */
 	ArraySet.prototype.indexOf = function ArraySet_indexOf(aStr) {
-	  var sStr = util.toSetString(aStr);
-	  if (has.call(this._set, sStr)) {
-	    return this._set[sStr];
+	  if (hasNativeMap) {
+	    var idx = this._set.get(aStr);
+	    if (idx >= 0) {
+	        return idx;
+	    }
+	  } else {
+	    var sStr = util.toSetString(aStr);
+	    if (has.call(this._set, sStr)) {
+	      return this._set[sStr];
+	    }
 	  }
+
 	  throw new Error('"' + aStr + '" is not in the set.');
 	};
 
@@ -1226,9 +1255,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.ArraySet = ArraySet;
 
 
-/***/ },
+/***/ }),
 /* 6 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
 	/*
@@ -1311,9 +1340,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.MappingList = MappingList;
 
 
-/***/ },
+/***/ }),
 /* 7 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
 	/*
@@ -2399,9 +2428,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.IndexedSourceMapConsumer = IndexedSourceMapConsumer;
 
 
-/***/ },
+/***/ }),
 /* 8 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
 	/*
@@ -2516,9 +2545,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-/***/ },
+/***/ }),
 /* 9 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
 	/*
@@ -2636,9 +2665,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-/***/ },
+/***/ }),
 /* 10 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/* -*- Mode: js; js-indent-level: 2; -*- */
 	/*
@@ -2702,13 +2731,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // All even indices of this array are one line of the generated code,
 	    // while all odd indices are the newlines between two adjacent lines
 	    // (since `REGEX_NEWLINE` captures its match).
-	    // Processed fragments are removed from this array, by calling `shiftNextLine`.
+	    // Processed fragments are accessed by calling `shiftNextLine`.
 	    var remainingLines = aGeneratedCode.split(REGEX_NEWLINE);
+	    var remainingLinesIndex = 0;
 	    var shiftNextLine = function() {
-	      var lineContents = remainingLines.shift();
+	      var lineContents = getNextLine();
 	      // The last line of a file might not have a newline.
-	      var newLine = remainingLines.shift() || "";
+	      var newLine = getNextLine() || "";
 	      return lineContents + newLine;
+
+	      function getNextLine() {
+	        return remainingLinesIndex < remainingLines.length ?
+	            remainingLines[remainingLinesIndex++] : undefined;
+	      }
 	    };
 
 	    // We need to remember the position of "remainingLines"
@@ -2733,10 +2768,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	          // There is no new line in between.
 	          // Associate the code between "lastGeneratedColumn" and
 	          // "mapping.generatedColumn" with "lastMapping"
-	          var nextLine = remainingLines[0];
+	          var nextLine = remainingLines[remainingLinesIndex];
 	          var code = nextLine.substr(0, mapping.generatedColumn -
 	                                        lastGeneratedColumn);
-	          remainingLines[0] = nextLine.substr(mapping.generatedColumn -
+	          remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn -
 	                                              lastGeneratedColumn);
 	          lastGeneratedColumn = mapping.generatedColumn;
 	          addMappingWithCode(lastMapping, code);
@@ -2753,21 +2788,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	        lastGeneratedLine++;
 	      }
 	      if (lastGeneratedColumn < mapping.generatedColumn) {
-	        var nextLine = remainingLines[0];
+	        var nextLine = remainingLines[remainingLinesIndex];
 	        node.add(nextLine.substr(0, mapping.generatedColumn));
-	        remainingLines[0] = nextLine.substr(mapping.generatedColumn);
+	        remainingLines[remainingLinesIndex] = nextLine.substr(mapping.generatedColumn);
 	        lastGeneratedColumn = mapping.generatedColumn;
 	      }
 	      lastMapping = mapping;
 	    }, this);
 	    // We have processed all mappings.
-	    if (remainingLines.length > 0) {
+	    if (remainingLinesIndex < remainingLines.length) {
 	      if (lastMapping) {
 	        // Associate the remaining code in the current line with "lastMapping"
 	        addMappingWithCode(lastMapping, shiftNextLine());
 	      }
 	      // and add the remaining lines without any mapping
-	      node.add(remainingLines.join(""));
+	      node.add(remainingLines.splice(remainingLinesIndex).join(""));
 	    }
 
 	    // Copy sourcesContent into SourceNode
@@ -3049,7 +3084,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.SourceNode = SourceNode;
 
 
-/***/ }
+/***/ })
 /******/ ])
 });
 ;

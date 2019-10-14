@@ -4,8 +4,7 @@
  */
 
 var Polling = require('./polling');
-var Transport = require('../transport');
-var debug = require('debug')('engine:polling-xhr');
+var util = require('util');
 
 /**
  * Module exports.
@@ -19,7 +18,7 @@ module.exports = XHR;
  * @api public
  */
 
-function XHR(req){
+function XHR (req) {
   Polling.call(this, req);
 }
 
@@ -27,17 +26,17 @@ function XHR(req){
  * Inherits from Polling.
  */
 
-XHR.prototype.__proto__ = Polling.prototype;
+util.inherits(XHR, Polling);
 
 /**
  * Overrides `onRequest` to handle `OPTIONS`..
  *
- * @param {http.ServerRequest}
+ * @param {http.IncomingMessage}
  * @api private
  */
 
 XHR.prototype.onRequest = function (req) {
-  if ('OPTIONS' == req.method) {
+  if ('OPTIONS' === req.method) {
     var res = req.res;
     var headers = this.headers(req);
     headers['Access-Control-Allow-Headers'] = 'Content-Type';
@@ -51,12 +50,12 @@ XHR.prototype.onRequest = function (req) {
 /**
  * Returns headers for a response.
  *
- * @param {http.ServerRequest} request
+ * @param {http.IncomingMessage} request
  * @param {Object} extra headers
  * @api private
  */
 
-XHR.prototype.headers = function(req, headers){
+XHR.prototype.headers = function (req, headers) {
   headers = headers || {};
 
   if (req.headers.origin) {

@@ -1,7 +1,7 @@
 
 # Engine.IO client
 
-[![Build Status](https://secure.travis-ci.org/socketio/engine.io-client.svg)](http://travis-ci.org/socketio/engine.io-client)
+[![Build Status](https://travis-ci.org/socketio/engine.io-client.svg?branch=master)](http://travis-ci.org/socketio/engine.io-client)
 [![NPM version](https://badge.fury.io/js/engine.io-client.svg)](http://badge.fury.io/js/engine.io-client)
 
 This is the client for [Engine.IO](http://github.com/socketio/engine.io),
@@ -159,7 +159,7 @@ Exposed as `eio` in the browser standalone build.
     - `String` | `ArrayBuffer`: utf-8 encoded data or ArrayBuffer containing
       binary data
 - `close`
-  - Fired upon disconnection. In compliance with the WebSocket API spec, this event may be 
+  - Fired upon disconnection. In compliance with the WebSocket API spec, this event may be
     fired even if the `open` event does not occur (i.e. due to connection error or `close()`).
 - `error`
   - Fired when an error occurs.
@@ -223,6 +223,10 @@ Exposed as `eio` in the browser standalone build.
         (see [ws module](https://github.com/einaros/ws) api docs). Set to `false` to disable. (`true`)
         - `threshold` (`Number`): data is compressed only if the byte size is above this value. This option is ignored on the browser. (`1024`)
       - `extraHeaders` (`Object`): Headers that will be passed for each request to the server (via xhr-polling and via websockets). These values then can be used during handshake or for special proxies. Can only be used in Node.js client environment.
+      - `onlyBinaryUpgrades` (`Boolean`): whether transport upgrades should be restricted to transports supporting binary data (`false`)
+      - `requestTimeout` (`Number`): Timeout for xhr-polling requests in milliseconds (`0`)
+      - `forceNode` (`Boolean`): Uses NodeJS implementation for websockets - even if there is a native Browser-Websocket available, which is preferred by default over the NodeJS implementation. (This is useful when using hybrid platforms like nw.js or electron) (`false`, NodeJS only)
+      - `localAddress` (`String`): the local IP address to connect to
 - `send`
     - Sends a message to the server
     - **Parameters**
@@ -289,4 +293,3 @@ See the `Tests` section above for how to run tests before submitting any patches
 ## License
 
 MIT - Copyright (c) 2014 Automattic, Inc.
-

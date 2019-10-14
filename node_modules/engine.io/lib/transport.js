@@ -3,9 +3,10 @@
  * Module dependencies.
  */
 
-var EventEmitter = require('events').EventEmitter
-  , parser = require('engine.io-parser')
-  , debug = require('debug')('engine:transport');
+var EventEmitter = require('events').EventEmitter;
+var parser = require('engine.io-parser');
+var util = require('util');
+var debug = require('debug')('engine:transport');
 
 /**
  * Expose the constructor.
@@ -24,7 +25,7 @@ function noop () {}
 /**
  * Transport constructor.
  *
- * @param {http.ServerRequest} request
+ * @param {http.IncomingMessage} request
  * @api public
  */
 
@@ -37,7 +38,7 @@ function Transport (req) {
  * Inherits from EventEmitter.
  */
 
-Transport.prototype.__proto__ = EventEmitter.prototype;
+util.inherits(Transport, EventEmitter);
 
 /**
  * Flags the transport as discarded.
@@ -52,7 +53,7 @@ Transport.prototype.discard = function () {
 /**
  * Called with an incoming HTTP request.
  *
- * @param {http.ServerRequest} request
+ * @param {http.IncomingMessage} request
  * @api private
  */
 
@@ -68,7 +69,7 @@ Transport.prototype.onRequest = function (req) {
  */
 
 Transport.prototype.close = function (fn) {
-  if ('closed' == this.readyState || 'closing' == this.readyState) return;
+  if ('closed' === this.readyState || 'closing' === this.readyState) return;
 
   this.readyState = 'closing';
   this.doClose(fn || noop);

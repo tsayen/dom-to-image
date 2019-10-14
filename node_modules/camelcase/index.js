@@ -1,23 +1,4 @@
 'use strict';
-
-function preserveCamelCase(str) {
-	var isLastCharLower = false;
-
-	for (var i = 0; i < str.length; i++) {
-		var c = str.charAt(i);
-
-		if (isLastCharLower && (/[a-zA-Z]/).test(c) && c.toUpperCase() === c) {
-			str = str.substr(0, i) + '-' + str.substr(i);
-			isLastCharLower = false;
-			i++;
-		} else {
-			isLastCharLower = (c.toLowerCase() === c);
-		}
-	}
-
-	return str;
-}
-
 module.exports = function () {
 	var str = [].map.call(arguments, function (str) {
 		return str.trim();
@@ -29,23 +10,13 @@ module.exports = function () {
 		return '';
 	}
 
-	if (str.length === 1) {
-		return str;
-	}
-
-	if (!(/[_.\- ]+/).test(str)) {
-		if (str === str.toUpperCase()) {
-			return str.toLowerCase();
+	if (str.length === 1 || !(/[_.\- ]+/).test(str) ) {
+		if (str[0] === str[0].toLowerCase() && str.slice(1) !== str.slice(1).toLowerCase()) {
+			return str;
 		}
 
-		if (str[0] !== str[0].toLowerCase()) {
-			return str[0].toLowerCase() + str.slice(1);
-		}
-
-		return str;
+		return str.toLowerCase();
 	}
-
-	str = preserveCamelCase(str);
 
 	return str
 	.replace(/^[_.\- ]+/, '')

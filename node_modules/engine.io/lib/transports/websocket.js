@@ -3,9 +3,10 @@
  * Module dependencies.
  */
 
-var Transport = require('../transport')
-  , parser = require('engine.io-parser')
-  , debug = require('debug')('engine:ws')
+var Transport = require('../transport');
+var parser = require('engine.io-parser');
+var util = require('util');
+var debug = require('debug')('engine:ws');
 
 /**
  * Export the constructor.
@@ -14,9 +15,9 @@ var Transport = require('../transport')
 module.exports = WebSocket;
 
 /**
- * WebSocket transport 
+ * WebSocket transport
  *
- * @param {http.ServerRequest}
+ * @param {http.IncomingMessage}
  * @api public
  */
 
@@ -27,18 +28,20 @@ function WebSocket (req) {
   this.socket.on('message', this.onData.bind(this));
   this.socket.once('close', this.onClose.bind(this));
   this.socket.on('error', this.onError.bind(this));
-  this.socket.on('headers', function (headers) {
-    self.emit('headers', headers);
-  });
+  this.socket.on('headers', onHeaders);
   this.writable = true;
   this.perMessageDeflate = null;
-};
+
+  function onHeaders (headers) {
+    self.emit('headers', headers);
+  }
+}
 
 /**
  * Inherits from Transport.
  */
 
-WebSocket.prototype.__proto__ = Transport.prototype;
+util.inherits(WebSocket, Transport);
 
 /**
  * Transport name
@@ -85,31 +88,37 @@ WebSocket.prototype.onData = function (data) {
 
 WebSocket.prototype.send = function (packets) {
   var self = this;
-  packets.forEach(function(packet) {
-    parser.encodePacket(packet, self.supportsBinary, function(data) {
-      debug('writing "%s"', data);
 
-      // always creates a new object since ws modifies it
-      var opts = {};
-      if (packet.options) {
-        opts.compress = packet.options.compress;
+  for (var i = 0; i < packets.length; i++) {
+    var packet = packets[i];
+    parser.encodePacket(packet, self.supportsBinary, send);
+  }
+
+  function send (data) {
+    debug('writing "%s"', data);
+
+    // always creates a new object since ws modifies it
+    var opts = {};
+    if (packet.options) {
+      opts.compress = packet.options.compress;
+    }
+
+    if (self.perMessageDeflate) {
+      var len = 'string' === typeof data ? Buffer.byteLength(data) : data.length;
+      if (len < self.perMessageDeflate.threshold) {
+        opts.compress = false;
       }
+    }
 
-      if (self.perMessageDeflate) {
-        var len = 'string' == typeof data ? Buffer.byteLength(data) : data.length;
-        if (len < self.perMessageDeflate.threshold) {
-          opts.compress = false;
-        }
-      }
+    self.writable = false;
+    self.socket.send(data, opts, onEnd);
+  }
 
-      self.writable = false;
-      self.socket.send(data, opts, function (err){
-        if (err) return self.onError('write error', err.stack);
-        self.writable = true;
-        self.emit('drain');
-      });
-    });
-  });
+  function onEnd (err) {
+    if (err) return self.onError('write error', err.stack);
+    self.writable = true;
+    self.emit('drain');
+  }
 };
 
 /**

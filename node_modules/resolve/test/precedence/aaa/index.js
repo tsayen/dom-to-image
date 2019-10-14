@@ -1,1 +1,1 @@
-module.exports = 'okok'
+module.exports = 'okok';

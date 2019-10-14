@@ -1,1 +1,1 @@
-module.exports = function (x) { return x + 100 }
+module.exports = function (x) { return x + 100; };

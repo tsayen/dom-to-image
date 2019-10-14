@@ -1,9 +1,11 @@
 /*!
  * normalize-path <https://github.com/jonschlinkert/normalize-path>
  *
- * Copyright (c) 2014-2015, Jon Schlinkert.
- * Licensed under the MIT License
+ * Copyright (c) 2014-2017, Jon Schlinkert.
+ * Released under the MIT License.
  */
+
+var removeTrailingSeparator = require('remove-trailing-separator');
 
 module.exports = function normalizePath(str, stripTrailing) {
   if (typeof str !== 'string') {
@@ -11,7 +13,7 @@ module.exports = function normalizePath(str, stripTrailing) {
   }
   str = str.replace(/[\\\/]+/g, '/');
   if (stripTrailing !== false) {
-    str = str.replace(/\/$/, '');
+    str = removeTrailingSeparator(str);
   }
   return str;
 };

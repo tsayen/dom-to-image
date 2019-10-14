@@ -44,20 +44,29 @@ You can check a working example at `examples/accept.js`.
 
 #### Methods
 
-##### mediaTypes(availableMediaTypes):
+##### mediaType()
 
-Returns an array of preferred media types ordered by priority from a list of available media types.
+Returns the most preferred media type from the client.
 
-##### mediaType(availableMediaType):
+##### mediaType(availableMediaType)
 
-Returns the top preferred media type from a list of available media types.
+Returns the most preferred media type from a list of available media types.
+
+##### mediaTypes()
+
+Returns an array of preferred media types ordered by the client preference.
+
+##### mediaTypes(availableMediaTypes)
+
+Returns an array of preferred media types ordered by priority from a list of
+available media types.
 
 ### Accept-Language Negotiation
 
 ```js
 negotiator = new Negotiator(request)
 
-availableLanguages = 'en', 'es', 'fr'
+availableLanguages = ['en', 'es', 'fr']
 
 // Let's say Accept-Language header is 'en;q=0.8, es, pt'
 
@@ -75,13 +84,22 @@ You can check a working example at `examples/language.js`.
 
 #### Methods
 
-##### languages(availableLanguages):
+##### language()
 
-Returns an array of preferred languages ordered by priority from a list of available languages.
+Returns the most preferred language from the client.
 
-##### language(availableLanguages):
+##### language(availableLanguages)
 
-Returns the top preferred language from a list of available languages.
+Returns the most preferred language from a list of available languages.
+
+##### languages()
+
+Returns an array of preferred languages ordered by the client preference.
+
+##### languages(availableLanguages)
+
+Returns an array of preferred languages ordered by priority from a list of
+available languages.
 
 ### Accept-Charset Negotiation
 
@@ -106,13 +124,22 @@ You can check a working example at `examples/charset.js`.
 
 #### Methods
 
-##### charsets(availableCharsets):
+##### charset()
 
-Returns an array of preferred charsets ordered by priority from a list of available charsets.
+Returns the most preferred charset from the client.
 
-##### charset(availableCharsets):
+##### charset(availableCharsets)
 
-Returns the top preferred charset from a list of available charsets.
+Returns the most preferred charset from a list of available charsets.
+
+##### charsets()
+
+Returns an array of preferred charsets ordered by the client preference.
+
+##### charsets(availableCharsets)
+
+Returns an array of preferred charsets ordered by priority from a list of
+available charsets.
 
 ### Accept-Encoding Negotiation
 
@@ -137,25 +164,40 @@ You can check a working example at `examples/encoding.js`.
 
 #### Methods
 
-##### encodings(availableEncodings):
+##### encoding()
 
-Returns an array of preferred encodings ordered by priority from a list of available encodings.
+Returns the most preferred encoding from the client.
 
-##### encoding(availableEncodings):
+##### encoding(availableEncodings)
 
-Returns the top preferred encoding from a list of available encodings.
+Returns the most preferred encoding from a list of available encodings.
+
+##### encodings()
+
+Returns an array of preferred encodings ordered by the client preference.
+
+##### encodings(availableEncodings)
+
+Returns an array of preferred encodings ordered by priority from a list of
+available encodings.
+
+## See Also
+
+The [accepts](https://npmjs.org/package/accepts#readme) module builds on
+this module and provides an alternative interface, mime type validation,
+and more.
 
 ## License
 
 [MIT](LICENSE)
 
-[npm-image]: https://img.shields.io/npm/v/negotiator.svg?style=flat
+[npm-image]: https://img.shields.io/npm/v/negotiator.svg
 [npm-url]: https://npmjs.org/package/negotiator
-[node-version-image]: https://img.shields.io/node/v/negotiator.svg?style=flat
-[node-version-url]: http://nodejs.org/download/
-[travis-image]: https://img.shields.io/travis/jshttp/negotiator.svg?style=flat
+[node-version-image]: https://img.shields.io/node/v/negotiator.svg
+[node-version-url]: https://nodejs.org/en/download/
+[travis-image]: https://img.shields.io/travis/jshttp/negotiator/master.svg
 [travis-url]: https://travis-ci.org/jshttp/negotiator
-[coveralls-image]: https://img.shields.io/coveralls/jshttp/negotiator.svg?style=flat
+[coveralls-image]: https://img.shields.io/coveralls/jshttp/negotiator/master.svg
 [coveralls-url]: https://coveralls.io/r/jshttp/negotiator?branch=master
-[downloads-image]: https://img.shields.io/npm/dm/negotiator.svg?style=flat
+[downloads-image]: https://img.shields.io/npm/dm/negotiator.svg
 [downloads-url]: https://npmjs.org/package/negotiator

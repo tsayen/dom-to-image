@@ -33,8 +33,8 @@ var cache = exports.managers = {};
  * @api public
  */
 
-function lookup(uri, opts) {
-  if (typeof uri == 'object') {
+function lookup (uri, opts) {
+  if (typeof uri === 'object') {
     opts = uri;
     uri = undefined;
   }
@@ -61,8 +61,10 @@ function lookup(uri, opts) {
     }
     io = cache[id];
   }
-
-  return io.socket(parsed.path);
+  if (parsed.query && !opts.query) {
+    opts.query = parsed.query;
+  }
+  return io.socket(parsed.path, opts);
 }
 
 /**

@@ -1,4 +1,8 @@
 ## Version 2.0
+
+* __v2.3__
+  - Updated dependencies
+
 * __v2.1__
   - Default all values to minor,patch and major fields to 0 by default.
 

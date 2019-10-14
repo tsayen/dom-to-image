@@ -39,7 +39,7 @@ common.setupOutgoing = function(outgoing, options, req, forward) {
     function(e) { outgoing[e] = options[forward || 'target'][e]; }
   );
 
-  outgoing.method = req.method;
+  outgoing.method = options.method || req.method;
   outgoing.headers = extend({}, req.headers);
 
   if (options.headers){
@@ -48,6 +48,10 @@ common.setupOutgoing = function(outgoing, options, req, forward) {
 
   if (options.auth) {
     outgoing.auth = options.auth;
+  }
+  
+  if (options.ca) {
+      outgoing.ca = options.ca;
   }
 
   if (isSSL.test(options[forward || 'target'].protocol)) {
@@ -195,6 +199,41 @@ common.urlJoin = function() {
   retSegs.push.apply(retSegs, lastSegs);
 
   return retSegs.join('?')
+};
+
+/**
+ * Rewrites or removes the domain of a cookie header
+ *
+ * @param {String|Array} Header
+ * @param {Object} Config, mapping of domain to rewritten domain.
+ *                 '*' key to match any domain, null value to remove the domain.
+ *
+ * @api private
+ */
+common.rewriteCookieProperty = function rewriteCookieProperty(header, config, property) {
+  if (Array.isArray(header)) {
+    return header.map(function (headerElement) {
+      return rewriteCookieProperty(headerElement, config, property);
+    });
+  }
+  return header.replace(new RegExp("(;\\s*" + property + "=)([^;]+)", 'i'), function(match, prefix, previousValue) {
+    var newValue;
+    if (previousValue in config) {
+      newValue = config[previousValue];
+    } else if ('*' in config) {
+      newValue = config['*'];
+    } else {
+      //no match, return previous value
+      return match;
+    }
+    if (newValue) {
+      //replace value
+      return prefix + newValue;
+    } else {
+      //remove value
+      return '';
+    }
+  });
 };
 
 /**

@@ -4,41 +4,66 @@
 
 process.title = 'grunt';
 
-// Especially badass external libs.
-var findup = require('findup-sync');
-var resolve = require('resolve').sync;
+var Liftoff = require('liftoff');
+var v8flags = require('v8flags');
+var extensions = require('interpret').jsVariants;
+var nopt = require('nopt');
+var gruntOptions = require('grunt-known-options');
+var completion = require('../lib/completion.js');
+var info = require('../lib/info.js');
+var pkg = require('../package.json');
 
-// Internal libs.
-var options = require('../lib/cli').options;
-var completion = require('../lib/completion');
-var info = require('../lib/info');
-var path = require('path');
+// Parse `gruntOptions` into a form that nopt can handle.
+var aliases = {};
+var known = {};
 
-var basedir = process.cwd();
-var gruntpath;
+Object.keys(gruntOptions).forEach(function(key) {
+  var short = gruntOptions[key].short;
+  if (short) {
+    aliases[short] = '--' + key;
+  }
+  known[key] = gruntOptions[key].type;
+});
 
-// Do stuff based on CLI options.
+// Parse them and return an options object.
+var options = nopt(known, aliases, process.argv, 2);
+
 if ('completion' in options) {
   completion.print(options.completion);
 } else if (options.version) {
-  info.version();
-} else if (options.gruntfile) { //Note: if both `gruntfile` and `base` are set, use `gruntfile`
-  basedir = path.resolve(path.dirname(options.gruntfile));
-} else if (options.base) {
-  basedir = path.resolve(options.base);
+  console.log('grunt-cli v' + pkg.version);
 }
 
-try {
-  gruntpath = resolve('grunt', {basedir: basedir});
-} catch (ex) {
-  gruntpath = findup('lib/grunt.js');
-  // No grunt install found!
-  if (!gruntpath) {
-    if (options.version) { process.exit(); }
-    if (options.help) { info.help(); }
-    info.fatal('Unable to find local grunt.', 99);
-  }
-}
-
-// Everything looks good. Require local grunt and run it.
-require(gruntpath).cli();
+v8flags(function (err, v8flags) {
+  var Grunt = new Liftoff({
+    name: 'grunt',
+    configName: 'Gruntfile',
+    // Support a number of languages based on file extension
+    extensions: extensions,
+    // Flags that are v8 flags will be loaded into node instead of Gruntfile
+    v8flags: v8flags
+  });
+  Grunt.launch({
+    cwd: options.base,
+    configPath: options.gruntfile,
+    require: options.require,
+    verbose: options.verbose
+  }, function (env) {
+    var tasks = options.argv.remain;
+    delete options.argv;
+    // No grunt install found!
+    if (!env.modulePath) {
+      if (options.version) {
+        process.exit();
+      }
+      if (options.help) {
+        info.help();
+      }
+      info.fatal('Unable to find local grunt.', 99);
+    } else {
+      options.gruntfile = env.configPath;
+      var grunt = require(env.modulePath);
+      grunt.tasks(tasks, options);
+    }
+  });
+});

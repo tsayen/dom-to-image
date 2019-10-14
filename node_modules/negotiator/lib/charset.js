@@ -1,16 +1,57 @@
+/**
+ * negotiator
+ * Copyright(c) 2012 Isaac Z. Schlueter
+ * Copyright(c) 2014 Federico Romero
+ * Copyright(c) 2014-2015 Douglas Christopher Wilson
+ * MIT Licensed
+ */
+
+'use strict';
+
+/**
+ * Module exports.
+ * @public
+ */
+
 module.exports = preferredCharsets;
-preferredCharsets.preferredCharsets = preferredCharsets;
+module.exports.preferredCharsets = preferredCharsets;
+
+/**
+ * Module variables.
+ * @private
+ */
+
+var simpleCharsetRegExp = /^\s*([^\s;]+)\s*(?:;(.*))?$/;
+
+/**
+ * Parse the Accept-Charset header.
+ * @private
+ */
 
 function parseAcceptCharset(accept) {
-  return accept.split(',').map(function(e, i) {
-    return parseCharset(e.trim(), i);
-  }).filter(function(e) {
-    return e;
-  });
+  var accepts = accept.split(',');
+
+  for (var i = 0, j = 0; i < accepts.length; i++) {
+    var charset = parseCharset(accepts[i].trim(), i);
+
+    if (charset) {
+      accepts[j++] = charset;
+    }
+  }
+
+  // trim accepts
+  accepts.length = j;
+
+  return accepts;
 }
 
-function parseCharset(s, i) {
-  var match = s.match(/^\s*(\S+?)\s*(?:;(.*))?$/);
+/**
+ * Parse a charset from the Accept-Charset header.
+ * @private
+ */
+
+function parseCharset(str, i) {
+  var match = simpleCharsetRegExp.exec(str);
   if (!match) return null;
 
   var charset = match[1];
@@ -33,19 +74,31 @@ function parseCharset(s, i) {
   };
 }
 
-function getCharsetPriority(charset, accepted) {
-  return (accepted.map(function(a) {
-    return specify(charset, a);
-  }).filter(Boolean).sort(function (a, b) {
-    if(a.s == b.s) {
-      return a.q > b.q ? -1 : 1;
-    } else {
-      return a.s > b.s ? -1 : 1;
+/**
+ * Get the priority of a charset.
+ * @private
+ */
+
+function getCharsetPriority(charset, accepted, index) {
+  var priority = {o: -1, q: 0, s: 0};
+
+  for (var i = 0; i < accepted.length; i++) {
+    var spec = specify(charset, accepted[i], index);
+
+    if (spec && (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) < 0) {
+      priority = spec;
     }
-  })[0] || {s: 0, q:0});
+  }
+
+  return priority;
 }
 
-function specify(charset, spec) {
+/**
+ * Get the specificity of the charset.
+ * @private
+ */
+
+function specify(charset, spec, index) {
   var s = 0;
   if(spec.charset.toLowerCase() === charset.toLowerCase()){
     s |= 1;
@@ -54,34 +107,63 @@ function specify(charset, spec) {
   }
 
   return {
-    s: s,
+    i: index,
+    o: spec.i,
     q: spec.q,
+    s: s
   }
 }
 
+/**
+ * Get the preferred charsets from an Accept-Charset header.
+ * @public
+ */
+
 function preferredCharsets(accept, provided) {
   // RFC 2616 sec 14.2: no header = *
-  accept = parseAcceptCharset(accept === undefined ? '*' : accept || '');
-  if (provided) {
-    return provided.map(function(type) {
-      return [type, getCharsetPriority(type, accept)];
-    }).filter(function(pair) {
-      return pair[1].q > 0;
-    }).sort(function(a, b) {
-      var pa = a[1];
-      var pb = b[1];
-      return (pb.q - pa.q) || (pb.s - pa.s) || (pa.i - pb.i);
-    }).map(function(pair) {
-      return pair[0];
-    });
-  } else {
-    return accept.sort(function (a, b) {
-      // revsort
-      return (b.q - a.q) || (a.i - b.i);
-    }).filter(function(type) {
-      return type.q > 0;
-    }).map(function(type) {
-      return type.charset;
-    });
+  var accepts = parseAcceptCharset(accept === undefined ? '*' : accept || '');
+
+  if (!provided) {
+    // sorted list of all charsets
+    return accepts
+      .filter(isQuality)
+      .sort(compareSpecs)
+      .map(getFullCharset);
   }
+
+  var priorities = provided.map(function getPriority(type, index) {
+    return getCharsetPriority(type, accepts, index);
+  });
+
+  // sorted list of accepted charsets
+  return priorities.filter(isQuality).sort(compareSpecs).map(function getCharset(priority) {
+    return provided[priorities.indexOf(priority)];
+  });
+}
+
+/**
+ * Compare two specs.
+ * @private
+ */
+
+function compareSpecs(a, b) {
+  return (b.q - a.q) || (b.s - a.s) || (a.o - b.o) || (a.i - b.i) || 0;
+}
+
+/**
+ * Get full charset string.
+ * @private
+ */
+
+function getFullCharset(spec) {
+  return spec.charset;
+}
+
+/**
+ * Check if a spec has any quality.
+ * @private
+ */
+
+function isQuality(spec) {
+  return spec.q > 0;
 }

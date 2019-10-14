@@ -5,7 +5,8 @@
  */
 var path = require('path')
   , fs = require('fs')
-  , vm = require('vm');
+  , vm = require('vm')
+  , tmp = require('tmp');
 
 /**
  * Third party modules.
@@ -37,13 +38,22 @@ exports.update = function update(callback) {
         exports.parse([ before, remote, after ], function parsing(err, results, source) {
           callback(err, results);
 
-          if (source && !err) {
-            fs.writeFile(exports.output, source, function idk(err) {
-              if (err) {
-                console.error('Failed to save the generated file due to reasons', err);
-              }
+          if (!source || err) return;
+
+          //
+          // Save to a tmp file to avoid potential concurrency issues.
+          //
+          tmp.file(function (err, tempFilePath) {
+            if (err) return;
+
+            fs.writeFile(tempFilePath, source, function idk(err) {
+              if (err) return
+
+              fs.rename(tempFilePath, exports.output, function(err) {
+
+              });
             });
-          }
+          });
         });
       });
     });

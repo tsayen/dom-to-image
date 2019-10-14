@@ -1,24 +1,15 @@
-var dP         = require('./_object-dp').f
-  , createDesc = require('./_property-desc')
-  , has        = require('./_has')
-  , FProto     = Function.prototype
-  , nameRE     = /^\s*function ([^ (]*)/
-  , NAME       = 'name';
-
-var isExtensible = Object.isExtensible || function(){
-  return true;
-};
+var dP = require('./_object-dp').f;
+var FProto = Function.prototype;
+var nameRE = /^\s*function ([^ (]*)/;
+var NAME = 'name';
 
 // 19.2.4.2 name
 NAME in FProto || require('./_descriptors') && dP(FProto, NAME, {
   configurable: true,
-  get: function(){
+  get: function () {
     try {
-      var that = this
-        , name = ('' + that).match(nameRE)[1];
-      has(that, NAME) || !isExtensible(that) || dP(that, NAME, createDesc(5, name));
-      return name;
-    } catch(e){
+      return ('' + this).match(nameRE)[1];
+    } catch (e) {
       return '';
     }
   }

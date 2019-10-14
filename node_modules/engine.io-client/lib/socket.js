@@ -2,7 +2,7 @@
  * Module dependencies.
  */
 
-var transports = require('./transports');
+var transports = require('./transports/index');
 var Emitter = require('component-emitter');
 var debug = require('debug')('engine.io-client:socket');
 var index = require('indexof');
@@ -18,14 +18,6 @@ var parseqs = require('parseqs');
 module.exports = Socket;
 
 /**
- * Noop function.
- *
- * @api private
- */
-
-function noop(){}
-
-/**
  * Socket constructor.
  *
  * @param {String|Object} uri or options
@@ -33,12 +25,12 @@ function noop(){}
  * @api public
  */
 
-function Socket(uri, opts){
+function Socket (uri, opts) {
   if (!(this instanceof Socket)) return new Socket(uri, opts);
 
   opts = opts || {};
 
-  if (uri && 'object' == typeof uri) {
+  if (uri && 'object' === typeof uri) {
     opts = uri;
     uri = null;
   }
@@ -46,15 +38,15 @@ function Socket(uri, opts){
   if (uri) {
     uri = parseuri(uri);
     opts.hostname = uri.host;
-    opts.secure = uri.protocol == 'https' || uri.protocol == 'wss';
+    opts.secure = uri.protocol === 'https' || uri.protocol === 'wss';
     opts.port = uri.port;
     if (uri.query) opts.query = uri.query;
   } else if (opts.host) {
     opts.hostname = parseuri(opts.host).host;
   }
 
-  this.secure = null != opts.secure ? opts.secure :
-    (global.location && 'https:' == location.protocol);
+  this.secure = null != opts.secure ? opts.secure
+    : (global.location && 'https:' === location.protocol);
 
   if (opts.hostname && !opts.port) {
     // if no port is specified manually, use the protocol default
@@ -64,11 +56,11 @@ function Socket(uri, opts){
   this.agent = opts.agent || false;
   this.hostname = opts.hostname ||
     (global.location ? location.hostname : 'localhost');
-  this.port = opts.port || (global.location && location.port ?
-       location.port :
-       (this.secure ? 443 : 80));
+  this.port = opts.port || (global.location && location.port
+      ? location.port
+      : (this.secure ? 443 : 80));
   this.query = opts.query || {};
-  if ('string' == typeof this.query) this.query = parseqs.decode(this.query);
+  if ('string' === typeof this.query) this.query = parseqs.decode(this.query);
   this.upgrade = false !== opts.upgrade;
   this.path = (opts.path || '/engine.io').replace(/\/$/, '') + '/';
   this.forceJSONP = !!opts.forceJSONP;
@@ -80,6 +72,7 @@ function Socket(uri, opts){
   this.transports = opts.transports || ['polling', 'websocket'];
   this.readyState = '';
   this.writeBuffer = [];
+  this.prevBufferLen = 0;
   this.policyPort = opts.policyPort || 843;
   this.rememberUpgrade = opts.rememberUpgrade || false;
   this.binaryType = null;
@@ -98,15 +91,30 @@ function Socket(uri, opts){
   this.cert = opts.cert || null;
   this.ca = opts.ca || null;
   this.ciphers = opts.ciphers || null;
-  this.rejectUnauthorized = opts.rejectUnauthorized === undefined ? true : opts.rejectUnauthorized;
+  this.rejectUnauthorized = opts.rejectUnauthorized === undefined ? null : opts.rejectUnauthorized;
+  this.forceNode = !!opts.forceNode;
 
   // other options for Node.js client
-  var freeGlobal = typeof global == 'object' && global;
+  var freeGlobal = typeof global === 'object' && global;
   if (freeGlobal.global === freeGlobal) {
     if (opts.extraHeaders && Object.keys(opts.extraHeaders).length > 0) {
       this.extraHeaders = opts.extraHeaders;
     }
+
+    if (opts.localAddress) {
+      this.localAddress = opts.localAddress;
+    }
   }
+
+  // set on handshake
+  this.id = null;
+  this.upgrades = null;
+  this.pingInterval = null;
+  this.pingTimeout = null;
+
+  // set on heartbeat
+  this.pingIntervalTimer = null;
+  this.pingTimeoutTimer = null;
 
   this.open();
 }
@@ -134,7 +142,7 @@ Socket.protocol = parser.protocol; // this is an int
 
 Socket.Socket = Socket;
 Socket.Transport = require('./transport');
-Socket.transports = require('./transports');
+Socket.transports = require('./transports/index');
 Socket.parser = require('engine.io-parser');
 
 /**
@@ -181,7 +189,9 @@ Socket.prototype.createTransport = function (name) {
     ciphers: this.ciphers,
     rejectUnauthorized: this.rejectUnauthorized,
     perMessageDeflate: this.perMessageDeflate,
-    extraHeaders: this.extraHeaders
+    extraHeaders: this.extraHeaders,
+    forceNode: this.forceNode,
+    localAddress: this.localAddress
   });
 
   return transport;
@@ -204,12 +214,12 @@ function clone (obj) {
  */
 Socket.prototype.open = function () {
   var transport;
-  if (this.rememberUpgrade && Socket.priorWebsocketSuccess && this.transports.indexOf('websocket') != -1) {
+  if (this.rememberUpgrade && Socket.priorWebsocketSuccess && this.transports.indexOf('websocket') !== -1) {
     transport = 'websocket';
   } else if (0 === this.transports.length) {
     // Emit error on next tick so it can be listened to
     var self = this;
-    setTimeout(function() {
+    setTimeout(function () {
       self.emit('error', 'No transports available');
     }, 0);
     return;
@@ -237,7 +247,7 @@ Socket.prototype.open = function () {
  * @api private
  */
 
-Socket.prototype.setTransport = function(transport){
+Socket.prototype.setTransport = function (transport) {
   debug('setting transport %s', transport.name);
   var self = this;
 
@@ -251,16 +261,16 @@ Socket.prototype.setTransport = function(transport){
 
   // set up transport listeners
   transport
-  .on('drain', function(){
+  .on('drain', function () {
     self.onDrain();
   })
-  .on('packet', function(packet){
+  .on('packet', function (packet) {
     self.onPacket(packet);
   })
-  .on('error', function(e){
+  .on('error', function (e) {
     self.onError(e);
   })
-  .on('close', function(){
+  .on('close', function () {
     self.onClose('transport close');
   });
 };
@@ -274,13 +284,13 @@ Socket.prototype.setTransport = function(transport){
 
 Socket.prototype.probe = function (name) {
   debug('probing transport "%s"', name);
-  var transport = this.createTransport(name, { probe: 1 })
-    , failed = false
-    , self = this;
+  var transport = this.createTransport(name, { probe: 1 });
+  var failed = false;
+  var self = this;
 
   Socket.priorWebsocketSuccess = false;
 
-  function onTransportOpen(){
+  function onTransportOpen () {
     if (self.onlyBinaryUpgrades) {
       var upgradeLosesBinary = !this.supportsBinary && self.transport.supportsBinary;
       failed = failed || upgradeLosesBinary;
@@ -291,17 +301,17 @@ Socket.prototype.probe = function (name) {
     transport.send([{ type: 'ping', data: 'probe' }]);
     transport.once('packet', function (msg) {
       if (failed) return;
-      if ('pong' == msg.type && 'probe' == msg.data) {
+      if ('pong' === msg.type && 'probe' === msg.data) {
         debug('probe transport "%s" pong', name);
         self.upgrading = true;
         self.emit('upgrading', transport);
         if (!transport) return;
-        Socket.priorWebsocketSuccess = 'websocket' == transport.name;
+        Socket.priorWebsocketSuccess = 'websocket' === transport.name;
 
         debug('pausing current transport "%s"', self.transport.name);
         self.transport.pause(function () {
           if (failed) return;
-          if ('closed' == self.readyState) return;
+          if ('closed' === self.readyState) return;
           debug('changing transport and sending upgrade packet');
 
           cleanup();
@@ -322,7 +332,7 @@ Socket.prototype.probe = function (name) {
     });
   }
 
-  function freezeTransport() {
+  function freezeTransport () {
     if (failed) return;
 
     // Any callback called by transport should be ignored since now
@@ -334,8 +344,8 @@ Socket.prototype.probe = function (name) {
     transport = null;
   }
 
-  //Handle any error that happens while probing
-  function onerror(err) {
+  // Handle any error that happens while probing
+  function onerror (err) {
     var error = new Error('probe error: ' + err);
     error.transport = transport.name;
 
@@ -346,25 +356,25 @@ Socket.prototype.probe = function (name) {
     self.emit('upgradeError', error);
   }
 
-  function onTransportClose(){
-    onerror("transport closed");
+  function onTransportClose () {
+    onerror('transport closed');
   }
 
-  //When the socket is closed while we're probing
-  function onclose(){
-    onerror("socket closed");
+  // When the socket is closed while we're probing
+  function onclose () {
+    onerror('socket closed');
   }
 
-  //When the socket is upgraded while we're probing
-  function onupgrade(to){
-    if (transport && to.name != transport.name) {
+  // When the socket is upgraded while we're probing
+  function onupgrade (to) {
+    if (transport && to.name !== transport.name) {
       debug('"%s" works - aborting "%s"', to.name, transport.name);
       freezeTransport();
     }
   }
 
-  //Remove all listeners on the transport and on self
-  function cleanup(){
+  // Remove all listeners on the transport and on self
+  function cleanup () {
     transport.removeListener('open', onTransportOpen);
     transport.removeListener('error', onerror);
     transport.removeListener('close', onTransportClose);
@@ -380,7 +390,6 @@ Socket.prototype.probe = function (name) {
   this.once('upgrading', onupgrade);
 
   transport.open();
-
 };
 
 /**
@@ -392,13 +401,13 @@ Socket.prototype.probe = function (name) {
 Socket.prototype.onOpen = function () {
   debug('socket open');
   this.readyState = 'open';
-  Socket.priorWebsocketSuccess = 'websocket' == this.transport.name;
+  Socket.priorWebsocketSuccess = 'websocket' === this.transport.name;
   this.emit('open');
   this.flush();
 
   // we check for `readyState` in case an `open`
   // listener already closed the socket
-  if ('open' == this.readyState && this.upgrade && this.transport.pause) {
+  if ('open' === this.readyState && this.upgrade && this.transport.pause) {
     debug('starting upgrade probes');
     for (var i = 0, l = this.upgrades.length; i < l; i++) {
       this.probe(this.upgrades[i]);
@@ -413,7 +422,8 @@ Socket.prototype.onOpen = function () {
  */
 
 Socket.prototype.onPacket = function (packet) {
-  if ('opening' == this.readyState || 'open' == this.readyState) {
+  if ('opening' === this.readyState || 'open' === this.readyState ||
+      'closing' === this.readyState) {
     debug('socket receive: type "%s", data "%s"', packet.type, packet.data);
 
     this.emit('packet', packet);
@@ -463,7 +473,7 @@ Socket.prototype.onHandshake = function (data) {
   this.pingTimeout = data.pingTimeout;
   this.onOpen();
   // In case open handler closes socket
-  if  ('closed' == this.readyState) return;
+  if ('closed' === this.readyState) return;
   this.setPing();
 
   // Prolong liveness of socket on heartbeat
@@ -481,7 +491,7 @@ Socket.prototype.onHeartbeat = function (timeout) {
   clearTimeout(this.pingTimeoutTimer);
   var self = this;
   self.pingTimeoutTimer = setTimeout(function () {
-    if ('closed' == self.readyState) return;
+    if ('closed' === self.readyState) return;
     self.onClose('ping timeout');
   }, timeout || (self.pingInterval + self.pingTimeout));
 };
@@ -511,7 +521,7 @@ Socket.prototype.setPing = function () {
 
 Socket.prototype.ping = function () {
   var self = this;
-  this.sendPacket('ping', function(){
+  this.sendPacket('ping', function () {
     self.emit('ping');
   });
 };
@@ -522,7 +532,7 @@ Socket.prototype.ping = function () {
  * @api private
  */
 
-Socket.prototype.onDrain = function() {
+Socket.prototype.onDrain = function () {
   this.writeBuffer.splice(0, this.prevBufferLen);
 
   // setting prevBufferLen = 0 is very important
@@ -544,7 +554,7 @@ Socket.prototype.onDrain = function() {
  */
 
 Socket.prototype.flush = function () {
-  if ('closed' != this.readyState && this.transport.writable &&
+  if ('closed' !== this.readyState && this.transport.writable &&
     !this.upgrading && this.writeBuffer.length) {
     debug('flushing %d packets in socket', this.writeBuffer.length);
     this.transport.send(this.writeBuffer);
@@ -582,17 +592,17 @@ Socket.prototype.send = function (msg, options, fn) {
  */
 
 Socket.prototype.sendPacket = function (type, data, options, fn) {
-  if('function' == typeof data) {
+  if ('function' === typeof data) {
     fn = data;
     data = undefined;
   }
 
-  if ('function' == typeof options) {
+  if ('function' === typeof options) {
     fn = options;
     options = null;
   }
 
-  if ('closing' == this.readyState || 'closed' == this.readyState) {
+  if ('closing' === this.readyState || 'closed' === this.readyState) {
     return;
   }
 
@@ -617,13 +627,13 @@ Socket.prototype.sendPacket = function (type, data, options, fn) {
  */
 
 Socket.prototype.close = function () {
-  if ('opening' == this.readyState || 'open' == this.readyState) {
+  if ('opening' === this.readyState || 'open' === this.readyState) {
     this.readyState = 'closing';
 
     var self = this;
 
     if (this.writeBuffer.length) {
-      this.once('drain', function() {
+      this.once('drain', function () {
         if (this.upgrading) {
           waitForUpgrade();
         } else {
@@ -637,19 +647,19 @@ Socket.prototype.close = function () {
     }
   }
 
-  function close() {
+  function close () {
     self.onClose('forced close');
     debug('socket closing - telling transport to close');
     self.transport.close();
   }
 
-  function cleanupAndClose() {
+  function cleanupAndClose () {
     self.removeListener('upgrade', cleanupAndClose);
     self.removeListener('upgradeError', cleanupAndClose);
     close();
   }
 
-  function waitForUpgrade() {
+  function waitForUpgrade () {
     // wait for upgrade to finish since we can't send packets while pausing a transport
     self.once('upgrade', cleanupAndClose);
     self.once('upgradeError', cleanupAndClose);
@@ -678,7 +688,7 @@ Socket.prototype.onError = function (err) {
  */
 
 Socket.prototype.onClose = function (reason, desc) {
-  if ('opening' == this.readyState || 'open' == this.readyState || 'closing' == this.readyState) {
+  if ('opening' === this.readyState || 'open' === this.readyState || 'closing' === this.readyState) {
     debug('socket close with reason: "%s"', reason);
     var self = this;
 
@@ -721,7 +731,7 @@ Socket.prototype.onClose = function (reason, desc) {
 
 Socket.prototype.filterUpgrades = function (upgrades) {
   var filteredUpgrades = [];
-  for (var i = 0, j = upgrades.length; i<j; i++) {
+  for (var i = 0, j = upgrades.length; i < j; i++) {
     if (~index(this.transports, upgrades[i])) filteredUpgrades.push(upgrades[i]);
   }
   return filteredUpgrades;

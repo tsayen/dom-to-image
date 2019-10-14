@@ -1,27 +1,22 @@
 /*!
  * arr-flatten <https://github.com/jonschlinkert/arr-flatten>
  *
- * Copyright (c) 2014-2015, Jon Schlinkert.
- * Licensed under the MIT License.
+ * Copyright (c) 2014-2017, Jon Schlinkert.
+ * Released under the MIT License.
  */
 
 'use strict';
 
-module.exports = function flatten(arr) {
+module.exports = function (arr) {
   return flat(arr, []);
 };
 
 function flat(arr, res) {
+  var i = 0, cur;
   var len = arr.length;
-  var i = -1;
-
-  while (len--) {
-    var cur = arr[++i];
-    if (Array.isArray(cur)) {
-      flat(cur, res);
-    } else {
-      res.push(cur);
-    }
+  for (; i < len; i++) {
+    cur = arr[i];
+    Array.isArray(cur) ? flat(cur, res) : res.push(cur);
   }
   return res;
 }

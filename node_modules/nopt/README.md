@@ -5,9 +5,10 @@ The Wrong Way is to sit down and write an option parser.  We've all done
 that.
 
 The Right Way is to write some complex configurable program with so many
-options that you go half-insane just trying to manage them all, and put
-it off with duct-tape solutions until you see exactly to the core of the
-problem, and finally snap and write an awesome option parser.
+options that you hit the limit of your frustration just trying to
+manage them all, and defer it with duct-tape solutions until you see
+exactly to the core of the problem, and finally snap and write an
+awesome option parser.
 
 If you want to write an option parser, don't write an option parser.
 Write a package manager, or a source control system, or a service
@@ -18,34 +19,37 @@ nice option parser.
 
 ## USAGE
 
-    // my-program.js
-    var nopt = require("nopt")
-      , Stream = require("stream").Stream
-      , path = require("path")
-      , knownOpts = { "foo" : [String, null]
-                    , "bar" : [Stream, Number]
-                    , "baz" : path
-                    , "bloo" : [ "big", "medium", "small" ]
-                    , "flag" : Boolean
-                    , "pick" : Boolean
-                    , "many" : [String, Array]
-                    }
-      , shortHands = { "foofoo" : ["--foo", "Mr. Foo"]
-                     , "b7" : ["--bar", "7"]
-                     , "m" : ["--bloo", "medium"]
-                     , "p" : ["--pick"]
-                     , "f" : ["--flag"]
-                     }
-                 // everything is optional.
-                 // knownOpts and shorthands default to {}
-                 // arg list defaults to process.argv
-                 // slice defaults to 2
-      , parsed = nopt(knownOpts, shortHands, process.argv, 2)
-    console.log(parsed)
+```javascript
+// my-program.js
+var nopt = require("nopt")
+  , Stream = require("stream").Stream
+  , path = require("path")
+  , knownOpts = { "foo" : [String, null]
+                , "bar" : [Stream, Number]
+                , "baz" : path
+                , "bloo" : [ "big", "medium", "small" ]
+                , "flag" : Boolean
+                , "pick" : Boolean
+                , "many1" : [String, Array]
+                , "many2" : [path, Array]
+                }
+  , shortHands = { "foofoo" : ["--foo", "Mr. Foo"]
+                 , "b7" : ["--bar", "7"]
+                 , "m" : ["--bloo", "medium"]
+                 , "p" : ["--pick"]
+                 , "f" : ["--flag"]
+                 }
+             // everything is optional.
+             // knownOpts and shorthands default to {}
+             // arg list defaults to process.argv
+             // slice defaults to 2
+  , parsed = nopt(knownOpts, shortHands, process.argv, 2)
+console.log(parsed)
+```
 
 This would give you support for any of the following:
 
-```bash
+```console
 $ node my-program.js --foo "blerp" --no-flag
 { "foo" : "blerp", "flag" : false }
 
@@ -61,11 +65,11 @@ $ node my-program.js -fp --foofoo
 $ node my-program.js --foofoo -- -fp  # -- stops the flag parsing.
 { foo: "Mr. Foo", argv: { remain: ["-fp"] } }
 
-$ node my-program.js --blatzk 1000 -fp # unknown opts are ok.
-{ blatzk: 1000, flag: true, pick: true }
-
-$ node my-program.js --blatzk true -fp # but they need a value
+$ node my-program.js --blatzk -fp # unknown opts are ok.
 { blatzk: true, flag: true, pick: true }
+
+$ node my-program.js --blatzk=1000 -fp # but you need to use = if they have a value
+{ blatzk: 1000, flag: true, pick: true }
 
 $ node my-program.js --no-blatzk -fp # unless they start with "no-"
 { blatzk: false, flag: true, pick: true }
@@ -77,11 +81,11 @@ $ node my-program.js --baz b/a/z # known paths are resolved.
 # values, and will always be an array.  The other types provided
 # specify what types are allowed in the list.
 
-$ node my-program.js --many 1 --many null --many foo
-{ many: ["1", "null", "foo"] }
+$ node my-program.js --many1 5 --many1 null --many1 foo
+{ many1: ["5", "null", "foo"] }
 
-$ node my-program.js --many foo
-{ many: ["foo"] }
+$ node my-program.js --many2 foo --many2 bar
+{ many2: ["/path/to/foo", "path/to/bar"] }
 ```
 
 Read the tests at the bottom of `lib/nopt.js` for more examples of
@@ -116,12 +120,13 @@ considered valid values.  For instance, in the example above, the
 and any other value will be rejected.
 
 When parsing unknown fields, `"true"`, `"false"`, and `"null"` will be
-interpreted as their JavaScript equivalents, and numeric values will be
-interpreted as a number.
+interpreted as their JavaScript equivalents.
 
 You can also mix types and values, or multiple types, in a list.  For
 instance `{ blah: [Number, null] }` would allow a value to be set to
-either a Number or null.
+either a Number or null.  When types are ordered, this implies a
+preference, and the first type that can be used to properly interpret
+the value will be used.
 
 To define a new type, add it to `nopt.typeDefs`.  Each item in that
 hash is an object with a `type` member and a `validate` method.  The
@@ -136,8 +141,8 @@ config object and remove its invalid properties.
 
 ## Error Handling
 
-By default, nopt outputs a warning to standard error when invalid
-options are found.  You can change this behavior by assigning a method
+By default, nopt outputs a warning to standard error when invalid values for
+known options are found.  You can change this behavior by assigning a method
 to `nopt.invalidHandler`.  This method will be called with
 the offending `nopt.invalidHandler(key, val, types)`.
 

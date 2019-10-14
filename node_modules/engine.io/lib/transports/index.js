@@ -22,13 +22,13 @@ module.exports = exports = {
 exports.polling.upgradesTo = ['websocket'];
 
 /**
- * Polling polimorphic constructor.
+ * Polling polymorphic constructor.
  *
  * @api private
  */
 
 function polling (req) {
-  if ('string' == typeof req._query.j) {
+  if ('string' === typeof req._query.j) {
     return new JSONP(req);
   } else {
     return new XHR(req);

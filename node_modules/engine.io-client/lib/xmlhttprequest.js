@@ -1,7 +1,8 @@
 // browser shim for xmlhttprequest module
+
 var hasCORS = require('has-cors');
 
-module.exports = function(opts) {
+module.exports = function (opts) {
   var xdomain = opts.xdomain;
 
   // scheme must be same when usign XDomainRequest
@@ -14,7 +15,7 @@ module.exports = function(opts) {
 
   // XMLHttpRequest can be disabled on IE
   try {
-    if ('undefined' != typeof XMLHttpRequest && (!xdomain || hasCORS)) {
+    if ('undefined' !== typeof XMLHttpRequest && (!xdomain || hasCORS)) {
       return new XMLHttpRequest();
     }
   } catch (e) { }
@@ -23,14 +24,14 @@ module.exports = function(opts) {
   // because loading bar keeps flashing when using jsonp-polling
   // https://github.com/yujiosaka/socke.io-ie8-loading-example
   try {
-    if ('undefined' != typeof XDomainRequest && !xscheme && enablesXDR) {
+    if ('undefined' !== typeof XDomainRequest && !xscheme && enablesXDR) {
       return new XDomainRequest();
     }
   } catch (e) { }
 
   if (!xdomain) {
     try {
-      return new ActiveXObject('Microsoft.XMLHTTP');
-    } catch(e) { }
+      return new global[['Active'].concat('Object').join('X')]('Microsoft.XMLHTTP');
+    } catch (e) { }
   }
-}
+};

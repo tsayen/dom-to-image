@@ -51,7 +51,6 @@ describe('CustomEvent', function () {
 
       function onclaw (ev) {
         if (!ev) ev = window.event;
-        assert.equal(e.type, 'claw');
         assert.equal(e.bubbles, true);
         assert.equal(e.cancelable, true);
         assert.equal(e.detail.canhaz, 'cheeseburger');

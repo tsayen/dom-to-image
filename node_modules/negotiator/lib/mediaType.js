@@ -1,35 +1,84 @@
+/**
+ * negotiator
+ * Copyright(c) 2012 Isaac Z. Schlueter
+ * Copyright(c) 2014 Federico Romero
+ * Copyright(c) 2014-2015 Douglas Christopher Wilson
+ * MIT Licensed
+ */
+
+'use strict';
+
+/**
+ * Module exports.
+ * @public
+ */
+
 module.exports = preferredMediaTypes;
-preferredMediaTypes.preferredMediaTypes = preferredMediaTypes;
+module.exports.preferredMediaTypes = preferredMediaTypes;
+
+/**
+ * Module variables.
+ * @private
+ */
+
+var simpleMediaTypeRegExp = /^\s*([^\s\/;]+)\/([^;\s]+)\s*(?:;(.*))?$/;
+
+/**
+ * Parse the Accept header.
+ * @private
+ */
 
 function parseAccept(accept) {
-  return accept.split(',').map(function(e, i) {
-    return parseMediaType(e.trim(), i);
-  }).filter(function(e) {
-    return e;
-  });
-};
+  var accepts = splitMediaTypes(accept);
 
-function parseMediaType(s, i) {
-  var match = s.match(/\s*(\S+?)\/([^;\s]+)\s*(?:;(.*))?/);
+  for (var i = 0, j = 0; i < accepts.length; i++) {
+    var mediaType = parseMediaType(accepts[i].trim(), i);
+
+    if (mediaType) {
+      accepts[j++] = mediaType;
+    }
+  }
+
+  // trim accepts
+  accepts.length = j;
+
+  return accepts;
+}
+
+/**
+ * Parse a media type from the Accept header.
+ * @private
+ */
+
+function parseMediaType(str, i) {
+  var match = simpleMediaTypeRegExp.exec(str);
   if (!match) return null;
 
-  var type = match[1],
-      subtype = match[2],
-      full = "" + type + "/" + subtype,
-      params = {},
-      q = 1;
+  var params = Object.create(null);
+  var q = 1;
+  var subtype = match[2];
+  var type = match[1];
 
   if (match[3]) {
-    params = match[3].split(';').map(function(s) {
-      return s.trim().split('=');
-    }).reduce(function (set, p) {
-      set[p[0]] = p[1];
-      return set
-    }, params);
+    var kvps = splitParameters(match[3]).map(splitKeyValuePair);
 
-    if (params.q != null) {
-      q = parseFloat(params.q);
-      delete params.q;
+    for (var j = 0; j < kvps.length; j++) {
+      var pair = kvps[j];
+      var key = pair[0].toLowerCase();
+      var val = pair[1];
+
+      // get the value, unwrapping quotes
+      var value = val && val[0] === '"' && val[val.length - 1] === '"'
+        ? val.substr(1, val.length - 2)
+        : val;
+
+      if (key === 'q') {
+        q = parseFloat(value);
+        break;
+      }
+
+      // store parameter
+      params[key] = value;
     }
   }
 
@@ -38,24 +87,35 @@ function parseMediaType(s, i) {
     subtype: subtype,
     params: params,
     q: q,
-    i: i,
-    full: full
+    i: i
   };
 }
 
-function getMediaTypePriority(type, accepted) {
-  return (accepted.map(function(a) {
-    return specify(type, a);
-  }).filter(Boolean).sort(function (a, b) {
-    if(a.s == b.s) {
-      return a.q > b.q ? -1 : 1;
-    } else {
-      return a.s > b.s ? -1 : 1;
+/**
+ * Get the priority of a media type.
+ * @private
+ */
+
+function getMediaTypePriority(type, accepted, index) {
+  var priority = {o: -1, q: 0, s: 0};
+
+  for (var i = 0; i < accepted.length; i++) {
+    var spec = specify(type, accepted[i], index);
+
+    if (spec && (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) < 0) {
+      priority = spec;
     }
-  })[0] || {s: 0, q: 0});
+  }
+
+  return priority;
 }
 
-function specify(type, spec) {
+/**
+ * Get the specificity of the media type.
+ * @private
+ */
+
+function specify(type, spec, index) {
   var p = parseMediaType(type);
   var s = 0;
 
@@ -87,36 +147,148 @@ function specify(type, spec) {
   }
 
   return {
+    i: index,
+    o: spec.i,
     q: spec.q,
     s: s,
   }
-
 }
+
+/**
+ * Get the preferred media types from an Accept header.
+ * @public
+ */
 
 function preferredMediaTypes(accept, provided) {
   // RFC 2616 sec 14.2: no header = */*
-  accept = parseAccept(accept === undefined ? '*/*' : accept || '');
-  if (provided) {
-    return provided.map(function(type) {
-      return [type, getMediaTypePriority(type, accept)];
-    }).filter(function(pair) {
-      return pair[1].q > 0;
-    }).sort(function(a, b) {
-      var pa = a[1];
-      var pb = b[1];
-      return (pb.q - pa.q) || (pb.s - pa.s) || (pa.i - pb.i);
-    }).map(function(pair) {
-      return pair[0];
-    });
+  var accepts = parseAccept(accept === undefined ? '*/*' : accept || '');
 
-  } else {
-    return accept.sort(function (a, b) {
-      // revsort
-      return (b.q - a.q) || (a.i - b.i);
-    }).filter(function(type) {
-      return type.q > 0;
-    }).map(function(type) {
-      return type.full;
-    });
+  if (!provided) {
+    // sorted list of all types
+    return accepts
+      .filter(isQuality)
+      .sort(compareSpecs)
+      .map(getFullType);
   }
+
+  var priorities = provided.map(function getPriority(type, index) {
+    return getMediaTypePriority(type, accepts, index);
+  });
+
+  // sorted list of accepted types
+  return priorities.filter(isQuality).sort(compareSpecs).map(function getType(priority) {
+    return provided[priorities.indexOf(priority)];
+  });
+}
+
+/**
+ * Compare two specs.
+ * @private
+ */
+
+function compareSpecs(a, b) {
+  return (b.q - a.q) || (b.s - a.s) || (a.o - b.o) || (a.i - b.i) || 0;
+}
+
+/**
+ * Get full type string.
+ * @private
+ */
+
+function getFullType(spec) {
+  return spec.type + '/' + spec.subtype;
+}
+
+/**
+ * Check if a spec has any quality.
+ * @private
+ */
+
+function isQuality(spec) {
+  return spec.q > 0;
+}
+
+/**
+ * Count the number of quotes in a string.
+ * @private
+ */
+
+function quoteCount(string) {
+  var count = 0;
+  var index = 0;
+
+  while ((index = string.indexOf('"', index)) !== -1) {
+    count++;
+    index++;
+  }
+
+  return count;
+}
+
+/**
+ * Split a key value pair.
+ * @private
+ */
+
+function splitKeyValuePair(str) {
+  var index = str.indexOf('=');
+  var key;
+  var val;
+
+  if (index === -1) {
+    key = str;
+  } else {
+    key = str.substr(0, index);
+    val = str.substr(index + 1);
+  }
+
+  return [key, val];
+}
+
+/**
+ * Split an Accept header into media types.
+ * @private
+ */
+
+function splitMediaTypes(accept) {
+  var accepts = accept.split(',');
+
+  for (var i = 1, j = 0; i < accepts.length; i++) {
+    if (quoteCount(accepts[j]) % 2 == 0) {
+      accepts[++j] = accepts[i];
+    } else {
+      accepts[j] += ',' + accepts[i];
+    }
+  }
+
+  // trim accepts
+  accepts.length = j + 1;
+
+  return accepts;
+}
+
+/**
+ * Split a string of parameters.
+ * @private
+ */
+
+function splitParameters(str) {
+  var parameters = str.split(';');
+
+  for (var i = 1, j = 0; i < parameters.length; i++) {
+    if (quoteCount(parameters[j]) % 2 == 0) {
+      parameters[++j] = parameters[i];
+    } else {
+      parameters[j] += ';' + parameters[i];
+    }
+  }
+
+  // trim parameters
+  parameters.length = j + 1;
+
+  for (var i = 0; i < parameters.length; i++) {
+    parameters[i] = parameters[i].trim();
+  }
+
+  return parameters;
 }

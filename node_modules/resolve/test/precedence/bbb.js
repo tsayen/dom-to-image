@@ -1,1 +1,1 @@
-module.exports '>_<'
+module.exports = '>_<';

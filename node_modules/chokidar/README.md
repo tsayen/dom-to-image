@@ -61,7 +61,7 @@ Then `require` and use it in your code:
 var chokidar = require('chokidar');
 
 // One-liner for current directory, ignores .dotfiles
-chokidar.watch('.', {ignored: /[\/\\]\./}).on('all', (event, path) => {
+chokidar.watch('.', {ignored: /(^|[\/\\])\../}).on('all', (event, path) => {
   console.log(event, path);
 });
 ```
@@ -71,7 +71,7 @@ chokidar.watch('.', {ignored: /[\/\\]\./}).on('all', (event, path) => {
 
 // Initialize watcher.
 var watcher = chokidar.watch('file, dir, glob, or array', {
-  ignored: /[\/\\]\./,
+  ignored: /(^|[\/\\])\../,
   persistent: true
 });
 
@@ -120,6 +120,7 @@ chokidar.watch('file', {
   ignoreInitial: false,
   followSymlinks: true,
   cwd: '.',
+  disableGlobbing: false,
 
   usePolling: true,
   interval: 100,
@@ -168,6 +169,8 @@ symlinks themselves will be watched for changes instead of following
 the link references and bubbling events through the link's path.
 * `cwd` (no default). The base directory from which watch `paths` are to be
 derived. Paths emitted with events will be relative to this.
+* `disableGlobbing` (default: `false`). If set to `true` then the strings passed to `.watch()` and `.add()` are treated as
+literal path names, even if they look like globs.
 
 #### Performance
 
@@ -177,9 +180,11 @@ leads to high CPU utilization, consider setting this to `false`. It is
 typically necessary to **set this to `true` to successfully watch files over
 a network**, and it may be necessary to successfully watch files in other
 non-standard situations. Setting to `true` explicitly on OS X overrides the
-`useFsEvents` default.
+`useFsEvents` default. You may also set the CHOKIDAR_USEPOLLING env variable
+to true (1) or false (0) in order to override this option.
 * _Polling-specific settings_ (effective when `usePolling: true`)
-  * `interval` (default: `100`). Interval of file system polling.
+  * `interval` (default: `100`). Interval of file system polling. You may also 
+    set the CHOKIDAR_INTERVAL env variable to override this option.
   * `binaryInterval` (default: `300`). Interval of file system
   polling for binary files.
   ([see list of binary extensions](https://github.com/sindresorhus/binary-extensions/blob/master/binary-extensions.json))
@@ -195,7 +200,7 @@ already available from the underlying watch events.
 * `depth` (default: `undefined`). If set, limits how many levels of
 subdirectories will be traversed.
 * `awaitWriteFinish` (default: `false`).
-By default, the `add` event will fire when a file first appear on disk, before
+By default, the `add` event will fire when a file first appears on disk, before
 the entire file has been written. Furthermore, in some cases some `change`
 events will be emitted while the file is being written. In some cases,
 especially when watching for large files there will be a need to wait for the
@@ -264,24 +269,25 @@ execute a command on each change, or get a stdio stream of change events.
   * On Mac, install the XCode command-line tools
 
 ## License
-The MIT license.
 
-Copyright (c) 2012 - 2016 Paul Miller [paulmillr.com](http://paulmillr.com) & Elan Shanker
+The MIT License (MIT)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
+Copyright (c) 2016 Paul Miller (http://paulmillr.com) & Elan Shanker
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

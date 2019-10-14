@@ -1,20 +1,20 @@
 // ie9- setTimeout & setInterval additional parameters fix
-var global     = require('./_global')
-  , $export    = require('./_export')
-  , invoke     = require('./_invoke')
-  , partial    = require('./_partial')
-  , navigator  = global.navigator
-  , MSIE       = !!navigator && /MSIE .\./.test(navigator.userAgent); // <- dirty ie9- check
-var wrap = function(set){
-  return MSIE ? function(fn, time /*, ...args */){
-    return set(invoke(
-      partial,
-      [].slice.call(arguments, 2),
-      typeof fn == 'function' ? fn : Function(fn)
-    ), time);
-  } : set;
+var global = require('./_global');
+var $export = require('./_export');
+var userAgent = require('./_user-agent');
+var slice = [].slice;
+var MSIE = /MSIE .\./.test(userAgent); // <- dirty ie9- check
+var wrap = function (set) {
+  return function (fn, time /* , ...args */) {
+    var boundArgs = arguments.length > 2;
+    var args = boundArgs ? slice.call(arguments, 2) : false;
+    return set(boundArgs ? function () {
+      // eslint-disable-next-line no-new-func
+      (typeof fn == 'function' ? fn : Function(fn)).apply(this, args);
+    } : fn, time);
+  };
 };
 $export($export.G + $export.B + $export.F * MSIE, {
-  setTimeout:  wrap(global.setTimeout),
+  setTimeout: wrap(global.setTimeout),
   setInterval: wrap(global.setInterval)
 });

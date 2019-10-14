@@ -81,7 +81,9 @@ function DEFNODE(type, props, methods, base) {
     ctor.DEFMETHOD = function(name, method) {
         this.prototype[name] = method;
     };
-    exports["AST_" + type] = ctor;
+    if (typeof exports !== "undefined") {
+        exports["AST_" + type] = ctor;
+    }
     return ctor;
 };
 
@@ -89,8 +91,19 @@ var AST_Token = DEFNODE("Token", "type value line col pos endline endcol endpos 
 }, null);
 
 var AST_Node = DEFNODE("Node", "start end", {
-    clone: function() {
+    _clone: function(deep) {
+        if (deep) {
+            var self = this.clone();
+            return self.transform(new TreeTransformer(function(node) {
+                if (node !== self) {
+                    return node.clone(true);
+                }
+            }));
+        }
         return new this.CTOR(this);
+    },
+    clone: function(deep) {
+        return this._clone(deep);
     },
     $documentation: "Base class of all AST nodes",
     $propdoc: {
@@ -143,12 +156,13 @@ var AST_SimpleStatement = DEFNODE("SimpleStatement", "body", {
 }, AST_Statement);
 
 function walk_body(node, visitor) {
-    if (node.body instanceof AST_Statement) {
-        node.body._walk(visitor);
+    var body = node.body;
+    if (body instanceof AST_Statement) {
+        body._walk(visitor);
     }
-    else node.body.forEach(function(stat){
-        stat._walk(visitor);
-    });
+    else for (var i = 0, len = body.length; i < len; i++) {
+        body[i]._walk(visitor);
+    }
 };
 
 var AST_Block = DEFNODE("Block", "body", {
@@ -196,6 +210,21 @@ var AST_LabeledStatement = DEFNODE("LabeledStatement", "label", {
             this.label._walk(visitor);
             this.body._walk(visitor);
         });
+    },
+    clone: function(deep) {
+        var node = this._clone(deep);
+        if (deep) {
+            var label = node.label;
+            var def = this.label;
+            node.walk(new TreeWalker(function(node) {
+                if (node instanceof AST_LoopControl
+                    && node.label && node.label.thedef === def) {
+                    node.label.thedef = label;
+                    label.references.push(node);
+                }
+            }));
+        }
+        return node;
     }
 }, AST_StatementWithBody);
 
@@ -369,9 +398,10 @@ var AST_Lambda = DEFNODE("Lambda", "name argnames uses_arguments", {
     _walk: function(visitor) {
         return visitor._visit(this, function(){
             if (this.name) this.name._walk(visitor);
-            this.argnames.forEach(function(arg){
-                arg._walk(visitor);
-            });
+            var argnames = this.argnames;
+            for (var i = 0, len = argnames.length; i < len; i++) {
+                argnames[i]._walk(visitor);
+            }
             walk_body(this, visitor);
         });
     }
@@ -531,9 +561,10 @@ var AST_Definitions = DEFNODE("Definitions", "definitions", {
     },
     _walk: function(visitor) {
         return visitor._visit(this, function(){
-            this.definitions.forEach(function(def){
-                def._walk(visitor);
-            });
+            var definitions = this.definitions;
+            for (var i = 0, len = definitions.length; i < len; i++) {
+                definitions[i]._walk(visitor);
+            }
         });
     }
 }, AST_Statement);
@@ -571,9 +602,10 @@ var AST_Call = DEFNODE("Call", "expression args", {
     _walk: function(visitor) {
         return visitor._visit(this, function(){
             this.expression._walk(visitor);
-            this.args.forEach(function(arg){
-                arg._walk(visitor);
-            });
+            var args = this.args;
+            for (var i = 0, len = args.length; i < len; i++) {
+                args[i]._walk(visitor);
+            }
         });
     }
 });
@@ -740,9 +772,10 @@ var AST_Array = DEFNODE("Array", "elements", {
     },
     _walk: function(visitor) {
         return visitor._visit(this, function(){
-            this.elements.forEach(function(el){
-                el._walk(visitor);
-            });
+            var elements = this.elements;
+            for (var i = 0, len = elements.length; i < len; i++) {
+                elements[i]._walk(visitor);
+            }
         });
     }
 });
@@ -754,9 +787,10 @@ var AST_Object = DEFNODE("Object", "properties", {
     },
     _walk: function(visitor) {
         return visitor._visit(this, function(){
-            this.properties.forEach(function(prop){
-                prop._walk(visitor);
-            });
+            var properties = this.properties;
+            for (var i = 0, len = properties.length; i < len; i++) {
+                properties[i]._walk(visitor);
+            }
         });
     }
 });
@@ -764,8 +798,8 @@ var AST_Object = DEFNODE("Object", "properties", {
 var AST_ObjectProperty = DEFNODE("ObjectProperty", "key value", {
     $documentation: "Base class for literal object properties",
     $propdoc: {
-        key: "[string] the property name converted to a string for ObjectKeyVal.  For setters and getters this is an arbitrary AST_Node.",
-        value: "[AST_Node] property value.  For setters and getters this is an AST_Function."
+        key: "[string] the property name converted to a string for ObjectKeyVal.  For setters and getters this is an AST_SymbolAccessor.",
+        value: "[AST_Node] property value.  For setters and getters this is an AST_Accessor."
     },
     _walk: function(visitor) {
         return visitor._visit(this, function(){
@@ -804,9 +838,6 @@ var AST_SymbolAccessor = DEFNODE("SymbolAccessor", null, {
 
 var AST_SymbolDeclaration = DEFNODE("SymbolDeclaration", "init", {
     $documentation: "A declaration symbol (symbol in var/const, function name or argument, symbol in catch)",
-    $propdoc: {
-        init: "[AST_Node*/S] array of initializers for this declaration."
-    }
 }, AST_Symbol);
 
 var AST_SymbolVar = DEFNODE("SymbolVar", null, {
@@ -954,8 +985,8 @@ TreeWalker.prototype = {
     push: function (node) {
         if (node instanceof AST_Lambda) {
             this.directives = Object.create(this.directives);
-        } else if (node instanceof AST_Directive) {
-            this.directives[node.value] = this.directives[node.value] ? "up" : true;
+        } else if (node instanceof AST_Directive && !this.directives[node.value]) {
+            this.directives[node.value] = node;
         }
         this.stack.push(node);
     },
@@ -983,7 +1014,7 @@ TreeWalker.prototype = {
             for (var i = 0; i < node.body.length; ++i) {
                 var st = node.body[i];
                 if (!(st instanceof AST_Directive)) break;
-                if (st.value == type) return true;
+                if (st.value == type) return st;
             }
         }
     },
@@ -1005,16 +1036,16 @@ TreeWalker.prototype = {
             self = p;
         }
     },
-    loopcontrol_target: function(label) {
+    loopcontrol_target: function(node) {
         var stack = this.stack;
-        if (label) for (var i = stack.length; --i >= 0;) {
+        if (node.label) for (var i = stack.length; --i >= 0;) {
             var x = stack[i];
-            if (x instanceof AST_LabeledStatement && x.label.name == label.name) {
+            if (x instanceof AST_LabeledStatement && x.label.name == node.label.name)
                 return x.body;
-            }
         } else for (var i = stack.length; --i >= 0;) {
             var x = stack[i];
-            if (x instanceof AST_Switch || x instanceof AST_IterationStatement)
+            if (x instanceof AST_IterationStatement
+                || node instanceof AST_Break && x instanceof AST_Switch)
                 return x;
         }
     }

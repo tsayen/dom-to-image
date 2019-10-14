@@ -19,7 +19,7 @@ module.exports.Request = Request;
  * Empty function
  */
 
-function empty(){}
+function empty () {}
 
 /**
  * XHR Polling constructor.
@@ -28,11 +28,12 @@ function empty(){}
  * @api public
  */
 
-function XHR(opts){
+function XHR (opts) {
   Polling.call(this, opts);
+  this.requestTimeout = opts.requestTimeout;
 
   if (global.location) {
-    var isSSL = 'https:' == location.protocol;
+    var isSSL = 'https:' === location.protocol;
     var port = location.port;
 
     // some user agents have empty `location.port`
@@ -40,9 +41,9 @@ function XHR(opts){
       port = isSSL ? 443 : 80;
     }
 
-    this.xd = opts.hostname != global.location.hostname ||
-      port != opts.port;
-    this.xs = opts.secure != isSSL;
+    this.xd = opts.hostname !== global.location.hostname ||
+      port !== opts.port;
+    this.xs = opts.secure !== isSSL;
   } else {
     this.extraHeaders = opts.extraHeaders;
   }
@@ -67,7 +68,7 @@ XHR.prototype.supportsBinary = true;
  * @api private
  */
 
-XHR.prototype.request = function(opts){
+XHR.prototype.request = function (opts) {
   opts = opts || {};
   opts.uri = this.uri();
   opts.xd = this.xd;
@@ -84,6 +85,7 @@ XHR.prototype.request = function(opts){
   opts.ca = this.ca;
   opts.ciphers = this.ciphers;
   opts.rejectUnauthorized = this.rejectUnauthorized;
+  opts.requestTimeout = this.requestTimeout;
 
   // other options for Node.js client
   opts.extraHeaders = this.extraHeaders;
@@ -99,12 +101,12 @@ XHR.prototype.request = function(opts){
  * @api private
  */
 
-XHR.prototype.doWrite = function(data, fn){
+XHR.prototype.doWrite = function (data, fn) {
   var isBinary = typeof data !== 'string' && data !== undefined;
   var req = this.request({ method: 'POST', data: data, isBinary: isBinary });
   var self = this;
   req.on('success', fn);
-  req.on('error', function(err){
+  req.on('error', function (err) {
     self.onError('xhr post error', err);
   });
   this.sendXhr = req;
@@ -116,14 +118,14 @@ XHR.prototype.doWrite = function(data, fn){
  * @api private
  */
 
-XHR.prototype.doPoll = function(){
+XHR.prototype.doPoll = function () {
   debug('xhr poll');
   var req = this.request();
   var self = this;
-  req.on('data', function(data){
+  req.on('data', function (data) {
     self.onData(data);
   });
-  req.on('error', function(err){
+  req.on('error', function (err) {
     self.onError('xhr poll error', err);
   });
   this.pollXhr = req;
@@ -136,17 +138,18 @@ XHR.prototype.doPoll = function(){
  * @api public
  */
 
-function Request(opts){
+function Request (opts) {
   this.method = opts.method || 'GET';
   this.uri = opts.uri;
   this.xd = !!opts.xd;
   this.xs = !!opts.xs;
   this.async = false !== opts.async;
-  this.data = undefined != opts.data ? opts.data : null;
+  this.data = undefined !== opts.data ? opts.data : null;
   this.agent = opts.agent;
   this.isBinary = opts.isBinary;
   this.supportsBinary = opts.supportsBinary;
   this.enablesXDR = opts.enablesXDR;
+  this.requestTimeout = opts.requestTimeout;
 
   // SSL options for Node.js client
   this.pfx = opts.pfx;
@@ -175,7 +178,7 @@ Emitter(Request.prototype);
  * @api private
  */
 
-Request.prototype.create = function(){
+Request.prototype.create = function () {
   var opts = { agent: this.agent, xdomain: this.xd, xscheme: this.xs, enablesXDR: this.enablesXDR };
 
   // SSL options for Node.js client
@@ -209,7 +212,7 @@ Request.prototype.create = function(){
       xhr.responseType = 'arraybuffer';
     }
 
-    if ('POST' == this.method) {
+    if ('POST' === this.method) {
       try {
         if (this.isBinary) {
           xhr.setRequestHeader('Content-type', 'application/octet-stream');
@@ -219,27 +222,35 @@ Request.prototype.create = function(){
       } catch (e) {}
     }
 
+    try {
+      xhr.setRequestHeader('Accept', '*/*');
+    } catch (e) {}
+
     // ie6 check
     if ('withCredentials' in xhr) {
       xhr.withCredentials = true;
     }
 
+    if (this.requestTimeout) {
+      xhr.timeout = this.requestTimeout;
+    }
+
     if (this.hasXDR()) {
-      xhr.onload = function(){
+      xhr.onload = function () {
         self.onLoad();
       };
-      xhr.onerror = function(){
+      xhr.onerror = function () {
         self.onError(xhr.responseText);
       };
     } else {
-      xhr.onreadystatechange = function(){
-        if (4 != xhr.readyState) return;
-        if (200 == xhr.status || 1223 == xhr.status) {
+      xhr.onreadystatechange = function () {
+        if (4 !== xhr.readyState) return;
+        if (200 === xhr.status || 1223 === xhr.status) {
           self.onLoad();
         } else {
           // make sure the `error` event handler that's user-set
           // does not throw in the same tick and gets caught here
-          setTimeout(function(){
+          setTimeout(function () {
             self.onError(xhr.status);
           }, 0);
         }
@@ -252,7 +263,7 @@ Request.prototype.create = function(){
     // Need to defer since .create() is called directly fhrom the constructor
     // and thus the 'error' event can only be only bound *after* this exception
     // occurs.  Therefore, also, we cannot throw here at all.
-    setTimeout(function() {
+    setTimeout(function () {
       self.onError(e);
     }, 0);
     return;
@@ -270,7 +281,7 @@ Request.prototype.create = function(){
  * @api private
  */
 
-Request.prototype.onSuccess = function(){
+Request.prototype.onSuccess = function () {
   this.emit('success');
   this.cleanup();
 };
@@ -281,7 +292,7 @@ Request.prototype.onSuccess = function(){
  * @api private
  */
 
-Request.prototype.onData = function(data){
+Request.prototype.onData = function (data) {
   this.emit('data', data);
   this.onSuccess();
 };
@@ -292,7 +303,7 @@ Request.prototype.onData = function(data){
  * @api private
  */
 
-Request.prototype.onError = function(err){
+Request.prototype.onError = function (err) {
   this.emit('error', err);
   this.cleanup(true);
 };
@@ -303,8 +314,8 @@ Request.prototype.onError = function(err){
  * @api private
  */
 
-Request.prototype.cleanup = function(fromError){
-  if ('undefined' == typeof this.xhr || null === this.xhr) {
+Request.prototype.cleanup = function (fromError) {
+  if ('undefined' === typeof this.xhr || null === this.xhr) {
     return;
   }
   // xmlhttprequest
@@ -317,7 +328,7 @@ Request.prototype.cleanup = function(fromError){
   if (fromError) {
     try {
       this.xhr.abort();
-    } catch(e) {}
+    } catch (e) {}
   }
 
   if (global.document) {
@@ -333,7 +344,7 @@ Request.prototype.cleanup = function(fromError){
  * @api private
  */
 
-Request.prototype.onLoad = function(){
+Request.prototype.onLoad = function () {
   var data;
   try {
     var contentType;
@@ -341,7 +352,7 @@ Request.prototype.onLoad = function(){
       contentType = this.xhr.getResponseHeader('Content-Type').split(';')[0];
     } catch (e) {}
     if (contentType === 'application/octet-stream') {
-      data = this.xhr.response;
+      data = this.xhr.response || this.xhr.responseText;
     } else {
       if (!this.supportsBinary) {
         data = this.xhr.responseText;
@@ -373,7 +384,7 @@ Request.prototype.onLoad = function(){
  * @api private
  */
 
-Request.prototype.hasXDR = function(){
+Request.prototype.hasXDR = function () {
   return 'undefined' !== typeof global.XDomainRequest && !this.xs && this.enablesXDR;
 };
 
@@ -383,7 +394,7 @@ Request.prototype.hasXDR = function(){
  * @api public
  */
 
-Request.prototype.abort = function(){
+Request.prototype.abort = function () {
   this.cleanup();
 };
 
@@ -393,9 +404,10 @@ Request.prototype.abort = function(){
  * emitted.
  */
 
+Request.requestsCount = 0;
+Request.requests = {};
+
 if (global.document) {
-  Request.requestsCount = 0;
-  Request.requests = {};
   if (global.attachEvent) {
     global.attachEvent('onunload', unloadHandler);
   } else if (global.addEventListener) {
@@ -403,7 +415,7 @@ if (global.document) {
   }
 }
 
-function unloadHandler() {
+function unloadHandler () {
   for (var i in Request.requests) {
     if (Request.requests.hasOwnProperty(i)) {
       Request.requests[i].abort();

@@ -13,6 +13,7 @@
  */
 
 var bytes = require('bytes')
+var createError = require('http-errors')
 var iconv = require('iconv-lite')
 var unpipe = require('unpipe')
 
@@ -28,7 +29,7 @@ module.exports = getRawBody
  * @private
  */
 
-var iconvEncodingMessageRegExp = /^Encoding not recognized: /
+var ICONV_ENCODING_MESSAGE_REGEXP = /^Encoding not recognized: /
 
 /**
  * Get the decoder for a given encoding.
@@ -44,11 +45,12 @@ function getDecoder (encoding) {
     return iconv.getDecoder(encoding)
   } catch (e) {
     // error getting decoder
-    if (!iconvEncodingMessageRegExp.test(e.message)) throw e
+    if (!ICONV_ENCODING_MESSAGE_REGEXP.test(e.message)) throw e
 
     // the encoding was not found
-    throw createError(415, 'specified encoding unsupported', 'encoding.unsupported', {
-      encoding: encoding
+    throw createError(415, 'specified encoding unsupported', {
+      encoding: encoding,
+      type: 'encoding.unsupported'
     })
   }
 }
@@ -132,49 +134,6 @@ function halt (stream) {
 }
 
 /**
- * Make a serializable error object.
- *
- * To create serializable errors you must re-set message so
- * that it is enumerable and you must re configure the type
- * property so that is writable and enumerable.
- *
- * @param {number} status
- * @param {string} message
- * @param {string} type
- * @param {object} props
- * @private
- */
-
-function createError (status, message, type, props) {
-  var error = new Error()
-
-  // capture stack trace
-  Error.captureStackTrace(error, createError)
-
-  // set free-form properties
-  for (var prop in props) {
-    error[prop] = props[prop]
-  }
-
-  // set message
-  error.message = message
-
-  // set status
-  error.status = status
-  error.statusCode = status
-
-  // set type
-  Object.defineProperty(error, 'type', {
-    value: type,
-    enumerable: true,
-    writable: true,
-    configurable: true
-  })
-
-  return error
-}
-
-/**
  * Read the data from the stream.
  *
  * @param {object} stream
@@ -193,10 +152,11 @@ function readStream (stream, encoding, length, limit, callback) {
   // note: we intentionally leave the stream paused,
   // so users should handle the stream themselves.
   if (limit !== null && length !== null && length > limit) {
-    return done(createError(413, 'request entity too large', 'entity.too.large', {
+    return done(createError(413, 'request entity too large', {
       expected: length,
       length: length,
-      limit: limit
+      limit: limit,
+      type: 'entity.too.large'
     }))
   }
 
@@ -208,7 +168,9 @@ function readStream (stream, encoding, length, limit, callback) {
   var state = stream._readableState
   if (stream._decoder || (state && (state.encoding || state.decoder))) {
     // developer error
-    return done(createError(500, 'stream encoding should not be set', 'stream.encoding.set'))
+    return done(createError(500, 'stream encoding should not be set', {
+      type: 'stream.encoding.set'
+    }))
   }
 
   var received = 0
@@ -266,11 +228,12 @@ function readStream (stream, encoding, length, limit, callback) {
   function onAborted () {
     if (complete) return
 
-    done(createError(400, 'request aborted', 'request.aborted', {
+    done(createError(400, 'request aborted', {
       code: 'ECONNABORTED',
       expected: length,
       length: length,
-      received: received
+      received: received,
+      type: 'request.aborted'
     }))
   }
 
@@ -278,15 +241,17 @@ function readStream (stream, encoding, length, limit, callback) {
     if (complete) return
 
     received += chunk.length
-    decoder
-      ? buffer += decoder.write(chunk)
-      : buffer.push(chunk)
 
     if (limit !== null && received > limit) {
-      done(createError(413, 'request entity too large', 'entity.too.large', {
+      done(createError(413, 'request entity too large', {
         limit: limit,
-        received: received
+        received: received,
+        type: 'entity.too.large'
       }))
+    } else if (decoder) {
+      buffer += decoder.write(chunk)
+    } else {
+      buffer.push(chunk)
     }
   }
 
@@ -295,10 +260,11 @@ function readStream (stream, encoding, length, limit, callback) {
     if (err) return done(err)
 
     if (length !== null && received !== length) {
-      done(createError(400, 'request size did not match content length', 'request.size.invalid', {
+      done(createError(400, 'request size did not match content length', {
         expected: length,
         length: length,
-        received: received
+        received: received,
+        type: 'request.size.invalid'
       }))
     } else {
       var string = decoder

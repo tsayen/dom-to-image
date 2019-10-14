@@ -78,13 +78,28 @@ function repeat_string(str, i) {
     return d;
 };
 
+function configure_error_stack(fn) {
+    Object.defineProperty(fn.prototype, "stack", {
+        get: function() {
+            var err = new Error(this.message);
+            err.name = this.name;
+            try {
+                throw err;
+            } catch(e) {
+                return e.stack;
+            }
+        }
+    });
+}
+
 function DefaultsError(msg, defs) {
-    Error.call(this, msg);
-    this.msg = msg;
+    this.message = msg;
     this.defs = defs;
 };
 DefaultsError.prototype = Object.create(Error.prototype);
 DefaultsError.prototype.constructor = DefaultsError;
+DefaultsError.prototype.name = "DefaultsError";
+configure_error_stack(DefaultsError);
 
 DefaultsError.croak = function(msg, defs) {
     throw new DefaultsError(msg, defs);
@@ -111,7 +126,11 @@ function merge(obj, ext) {
     return count;
 };
 
-function noop() {};
+function noop() {}
+function return_false() { return false; }
+function return_true() { return true; }
+function return_this() { return this; }
+function return_null() { return null; }
 
 var MAP = (function(){
     function MAP(a, f, backwards) {
@@ -168,7 +187,7 @@ function push_uniq(array, el) {
 
 function string_template(text, props) {
     return text.replace(/\{(.+?)\}/g, function(str, p){
-        return props[p];
+        return props && props[p];
     });
 };
 
@@ -317,4 +336,27 @@ Dictionary.fromObject = function(obj) {
 
 function HOP(obj, prop) {
     return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+// return true if the node at the top of the stack (that means the
+// innermost node in the current output) is lexically the first in
+// a statement.
+function first_in_statement(stack) {
+    var node = stack.parent(-1);
+    for (var i = 0, p; p = stack.parent(i); i++) {
+        if (p instanceof AST_Statement && p.body === node)
+            return true;
+        if ((p instanceof AST_Seq           && p.car === node        ) ||
+            (p instanceof AST_Call          && p.expression === node && !(p instanceof AST_New) ) ||
+            (p instanceof AST_Dot           && p.expression === node ) ||
+            (p instanceof AST_Sub           && p.expression === node ) ||
+            (p instanceof AST_Conditional   && p.condition === node  ) ||
+            (p instanceof AST_Binary        && p.left === node       ) ||
+            (p instanceof AST_UnaryPostfix  && p.expression === node ))
+        {
+            node = p;
+        } else {
+            return false;
+        }
+    }
 }

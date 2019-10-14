@@ -1,4 +1,4 @@
-# repeat-string [![NPM version](https://img.shields.io/npm/v/repeat-string.svg)](https://www.npmjs.com/package/repeat-string) [![Build Status](https://img.shields.io/travis/jonschlinkert/repeat-string.svg)](https://travis-ci.org/jonschlinkert/repeat-string)
+# repeat-string [![NPM version](https://img.shields.io/npm/v/repeat-string.svg?style=flat)](https://www.npmjs.com/package/repeat-string) [![NPM monthly downloads](https://img.shields.io/npm/dm/repeat-string.svg?style=flat)](https://npmjs.org/package/repeat-string)  [![NPM total downloads](https://img.shields.io/npm/dt/repeat-string.svg?style=flat)](https://npmjs.org/package/repeat-string) [![Linux Build Status](https://img.shields.io/travis/jonschlinkert/repeat-string.svg?style=flat&label=Travis)](https://travis-ci.org/jonschlinkert/repeat-string)
 
 > Repeat the given string n times. Fastest implementation for repeating a string.
 
@@ -7,7 +7,7 @@
 Install with [npm](https://www.npmjs.com/):
 
 ```sh
-$ npm install repeat-string --save
+$ npm install --save repeat-string
 ```
 
 ## Usage
@@ -18,12 +18,6 @@ Repeat the given `string` the specified `number` of times.
 
 **Example:**
 
-**Params**
-
-* `string` **{String}**: The string to repeat
-* `number` **{Number}**: The number of times to repeat the string
-* `returns` **{String}**: Repeated string
-
 **Example**
 
 ```js
@@ -32,35 +26,51 @@ repeat('A', 5);
 //=> AAAAA
 ```
 
+**Params**
+
+* `string` **{String}**: The string to repeat
+* `number` **{Number}**: The number of times to repeat the string
+* `returns` **{String}**: Repeated string
+
 ## Benchmarks
 
 Repeat string is significantly faster than the native method (which is itself faster than [repeating](https://github.com/sindresorhus/repeating)):
 
 ```sh
-#1: 5
-  native x 10,484,023 ops/sec ±1.24% (89 runs sampled)
-  repeat-string x 16,189,255 ops/sec ±1.05% (91 runs sampled)
-  repeating x 9,051,715 ops/sec ±1.18% (90 runs sampled)
+# 2x
+repeat-string  █████████████████████████  (26,953,977 ops/sec)
+repeating      █████████                  (9,855,695 ops/sec)
+native         ██████████████████         (19,453,895 ops/sec)
 
-#2: 50
-  native x 7,975,566 ops/sec ±1.29% (91 runs sampled)
-  repeat-string x 15,317,972 ops/sec ±1.16% (87 runs sampled)
-  repeating x 6,279,112 ops/sec ±1.29% (89 runs sampled)
+# 3x
+repeat-string  █████████████████████████  (19,445,252 ops/sec)
+repeating      ███████████                (8,661,565 ops/sec)
+native         ████████████████████       (16,020,598 ops/sec)
 
-#3: 250
-  native x 6,212,752 ops/sec ±1.33% (91 runs sampled)
-  repeat-string x 14,565,168 ops/sec ±0.83% (93 runs sampled)
-  repeating x 5,787,124 ops/sec ±1.25% (92 runs sampled)
+# 10x
+repeat-string  █████████████████████████  (23,792,521 ops/sec)
+repeating      █████████                  (8,571,332 ops/sec)
+native         ███████████████            (14,582,955 ops/sec)
 
-#4: 2000
-  native x 4,912,163 ops/sec ±1.27% (91 runs sampled)
-  repeat-string x 17,129,748 ops/sec ±1.01% (91 runs sampled)
-  repeating x 4,613,043 ops/sec ±1.37% (91 runs sampled)
+# 50x
+repeat-string  █████████████████████████  (23,640,179 ops/sec)
+repeating      █████                      (5,505,509 ops/sec)
+native         ██████████                 (10,085,557 ops/sec)
 
-#5: 20000
-  native x 4,506,624 ops/sec ±1.33% (90 runs sampled)
-  repeat-string x 14,877,672 ops/sec ±1.00% (93 runs sampled)
-  repeating x 4,305,756 ops/sec ±1.36% (89 runs sampled)
+# 250x
+repeat-string  █████████████████████████  (23,489,618 ops/sec)
+repeating      ████                       (3,962,937 ops/sec)
+native         ████████                   (7,724,892 ops/sec)
+
+# 2000x
+repeat-string  █████████████████████████  (20,315,172 ops/sec)
+repeating      ████                       (3,297,079 ops/sec)
+native         ███████                    (6,203,331 ops/sec)
+
+# 20000x
+repeat-string  █████████████████████████  (23,382,915 ops/sec)
+repeating      ███                        (2,980,058 ops/sec)
+native         █████                      (5,578,808 ops/sec)
 ```
 
 **Run the benchmarks**
@@ -71,29 +81,37 @@ Install dev dependencies:
 npm i -d && node benchmark
 ```
 
-## Related projects
+## About
 
-[repeat-element](https://www.npmjs.com/package/repeat-element): Create an array by repeating the given value n times. | [homepage](https://github.com/jonschlinkert/repeat-element)
+### Related projects
 
-## Contributing
+[repeat-element](https://www.npmjs.com/package/repeat-element): Create an array by repeating the given value n times. | [homepage](https://github.com/jonschlinkert/repeat-element "Create an array by repeating the given value n times.")
 
-Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/jonschlinkert/repeat-string/issues/new).
+### Contributing
 
-## Building docs
+Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](../../issues/new).
 
-Generate readme and API documentation with [verb](https://github.com/verbose/verb):
+### Contributors
+
+| **Commits** | **Contributor**<br/> | 
+| --- | --- |
+| 51 | [jonschlinkert](https://github.com/jonschlinkert) |
+| 2 | [LinusU](https://github.com/LinusU) |
+| 2 | [tbusser](https://github.com/tbusser) |
+| 1 | [doowb](https://github.com/doowb) |
+| 1 | [wooorm](https://github.com/wooorm) |
+
+### Building docs
+
+_(This document was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme) (a [verb](https://github.com/verbose/verb) generator), please don't edit the readme directly. Any changes to the readme must be made in [.verb.md](.verb.md).)_
+
+To generate the readme and API documentation with [verb](https://github.com/verbose/verb):
 
 ```sh
-$ npm install verb && npm run docs
+$ npm install -g verb verb-generate-readme && verb
 ```
 
-Or, if [verb](https://github.com/verbose/verb) is installed globally:
-
-```sh
-$ verb
-```
-
-## Running tests
+### Running tests
 
 Install dev dependencies:
 
@@ -101,18 +119,18 @@ Install dev dependencies:
 $ npm install -d && npm test
 ```
 
-## Author
+### Author
 
 **Jon Schlinkert**
 
 * [github/jonschlinkert](https://github.com/jonschlinkert)
 * [twitter/jonschlinkert](http://twitter.com/jonschlinkert)
 
-## License
+### License
 
-Copyright © 2016 [Jon Schlinkert](http://github.com/jonschlinkert)
+Copyright © 2016, [Jon Schlinkert](http://github.com/jonschlinkert).
 Released under the [MIT license](https://github.com/jonschlinkert/repeat-string/blob/master/LICENSE).
 
 ***
 
-_This file was generated by [verb](https://github.com/verbose/verb), v0.9.0, on February 29, 2016._
+_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.2.0, on October 23, 2016._

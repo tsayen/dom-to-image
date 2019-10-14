@@ -2,7 +2,7 @@ require! {
   '../library/fn/promise': Promise
   './config': {list, experimental, libraryBlacklist, es5SpecialCase, banner}
   fs: {readFile, writeFile, unlink}
-  path: {join}
+  path: {basename, dirname, join}
   webpack, temp
 }
 
@@ -30,8 +30,8 @@ module.exports = ({modules = [], blacklist = [], library = no, umd = on})->
         if library => join __dirname, '..', 'library', 'modules', it
         else join __dirname, '..', 'modules', it
       output:
-        path: ''
-        filename: TARGET
+        path: dirname TARGET
+        filename: basename "./#TARGET"
     if err => return reject err
 
     err, script <~! readFile TARGET
@@ -43,9 +43,9 @@ module.exports = ({modules = [], blacklist = [], library = no, umd = on})->
     if umd
       exportScript = """
         // CommonJS export
-        if(typeof module != 'undefined' && module.exports)module.exports = __e;
+        if (typeof module != 'undefined' && module.exports) module.exports = __e;
         // RequireJS export
-        else if(typeof define == 'function' && define.amd)define(function(){return __e});
+        else if (typeof define == 'function' && define.amd) define(function () { return __e; });
         // Export to global object
         else __g.core = __e;
         """

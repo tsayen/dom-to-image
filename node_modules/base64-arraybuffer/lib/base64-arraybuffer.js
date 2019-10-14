@@ -5,8 +5,16 @@
  * Copyright (c) 2012 Niklas von Hertzen
  * Licensed under the MIT license.
  */
-(function(chars){
+(function(){
   "use strict";
+
+  var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+  // Use a lookup table to find the index.
+  var lookup = new Uint8Array(256);
+  for (var i = 0; i < chars.length; i++) {
+    lookup[chars.charCodeAt(i)] = i;
+  }
 
   exports.encode = function(arraybuffer) {
     var bytes = new Uint8Array(arraybuffer),
@@ -44,10 +52,10 @@
     bytes = new Uint8Array(arraybuffer);
 
     for (i = 0; i < len; i+=4) {
-      encoded1 = chars.indexOf(base64[i]);
-      encoded2 = chars.indexOf(base64[i+1]);
-      encoded3 = chars.indexOf(base64[i+2]);
-      encoded4 = chars.indexOf(base64[i+3]);
+      encoded1 = lookup[base64.charCodeAt(i)];
+      encoded2 = lookup[base64.charCodeAt(i+1)];
+      encoded3 = lookup[base64.charCodeAt(i+2)];
+      encoded4 = lookup[base64.charCodeAt(i+3)];
 
       bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
       bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
@@ -56,4 +64,4 @@
 
     return arraybuffer;
   };
-})("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+})();

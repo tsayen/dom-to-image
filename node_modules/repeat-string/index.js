@@ -40,7 +40,7 @@ module.exports = repeat;
 
 function repeat(str, num) {
   if (typeof str !== 'string') {
-    throw new TypeError('repeat-string expects a string.');
+    throw new TypeError('expected a string');
   }
 
   // cover common, quick use cases
@@ -51,18 +51,20 @@ function repeat(str, num) {
   if (cache !== str || typeof cache === 'undefined') {
     cache = str;
     res = '';
+  } else if (res.length >= max) {
+    return res.substr(0, max);
   }
 
-  while (max > res.length && num > 0) {
+  while (max > res.length && num > 1) {
     if (num & 1) {
       res += str;
     }
 
     num >>= 1;
-    if (!num) break;
     str += str;
   }
 
-  return res.substr(0, max);
+  res += str;
+  res = res.substr(0, max);
+  return res;
 }
-

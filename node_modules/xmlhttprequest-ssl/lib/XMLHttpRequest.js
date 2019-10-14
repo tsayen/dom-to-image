@@ -35,6 +35,8 @@ XMLHttpRequest.XMLHttpRequest = XMLHttpRequest;
  */
 
 function XMLHttpRequest(opts) {
+  "use strict";
+
   /**
    * Private variables
    */
@@ -414,7 +416,7 @@ function XMLHttpRequest(opts) {
       self.dispatchEvent("readystatechange");
 
       // Handler for the response
-      function responseHandler(resp) {
+      var responseHandler = function(resp) {
         // Set response var to the response we got back
         // This is so it remains accessable outside this scope
         response = resp;
@@ -436,13 +438,13 @@ function XMLHttpRequest(opts) {
           };
 
           if (ssl) {
-            options.pfx = opts.pfx;
-            options.key = opts.key;
-            options.passphrase = opts.passphrase;
-            options.cert = opts.cert;
-            options.ca = opts.ca;
-            options.ciphers = opts.ciphers;
-            options.rejectUnauthorized = opts.rejectUnauthorized;
+            newOptions.pfx = opts.pfx;
+            newOptions.key = opts.key;
+            newOptions.passphrase = opts.passphrase;
+            newOptions.cert = opts.cert;
+            newOptions.ca = opts.ca;
+            newOptions.ciphers = opts.ciphers;
+            newOptions.rejectUnauthorized = opts.rejectUnauthorized;
           }
 
           // Issue the new request
@@ -452,7 +454,9 @@ function XMLHttpRequest(opts) {
           return;
         }
 
-        response.setEncoding("utf8");
+        if (response && response.setEncoding) {
+          response.setEncoding("utf8");
+        }
 
         setState(self.HEADERS_RECEIVED);
         self.status = response.statusCode;
@@ -482,7 +486,7 @@ function XMLHttpRequest(opts) {
       }
 
       // Error handler for the request
-      function errorHandler(error) {
+      var errorHandler = function(error) {
         self.handleError(error);
       }
 

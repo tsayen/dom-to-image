@@ -5,9 +5,9 @@
 
 var Emitter = require('events').EventEmitter;
 var parser = require('socket.io-parser');
+var hasBin = require('has-binary2');
 var url = require('url');
 var debug = require('debug')('socket.io:socket');
-var hasBin = require('has-binary');
 
 /**
  * Module exports.
@@ -25,6 +25,7 @@ exports.events = [
   'error',
   'connect',
   'disconnect',
+  'disconnecting',
   'newListener',
   'removeListener'
 ];
@@ -38,7 +39,8 @@ exports.events = [
 var flags = [
   'json',
   'volatile',
-  'broadcast'
+  'broadcast',
+  'local'
 ];
 
 /**
@@ -55,18 +57,21 @@ var emit = Emitter.prototype.emit;
  * @api public
  */
 
-function Socket(nsp, client){
+function Socket(nsp, client, query){
   this.nsp = nsp;
   this.server = nsp.server;
   this.adapter = this.nsp.adapter;
-  this.id = nsp.name + '#' + client.id;
+  this.id = nsp.name !== '/' ? nsp.name + '#' + client.id : client.id;
   this.client = client;
   this.conn = client.conn;
   this.rooms = {};
   this.acks = {};
   this.connected = true;
   this.disconnected = false;
-  this.handshake = this.buildHandshake();
+  this.handshake = this.buildHandshake(query);
+  this.fns = [];
+  this.flags = {};
+  this._rooms = [];
 }
 
 /**
@@ -80,10 +85,11 @@ Socket.prototype.__proto__ = Emitter.prototype;
  */
 
 flags.forEach(function(flag){
-  Socket.prototype.__defineGetter__(flag, function(){
-    this.flags = this.flags || {};
-    this.flags[flag] = true;
-    return this;
+  Object.defineProperty(Socket.prototype, flag, {
+    get: function() {
+      this.flags[flag] = true;
+      return this;
+    }
   });
 });
 
@@ -93,8 +99,10 @@ flags.forEach(function(flag){
  * @api public
  */
 
-Socket.prototype.__defineGetter__('request', function(){
-  return this.conn.request;
+Object.defineProperty(Socket.prototype, 'request', {
+  get: function() {
+    return this.conn.request;
+  }
 });
 
 /**
@@ -103,7 +111,13 @@ Socket.prototype.__defineGetter__('request', function(){
  * @api private
  */
 
-Socket.prototype.buildHandshake = function(){
+Socket.prototype.buildHandshake = function(query){
+  var self = this;
+  function buildQuery(){
+    var requestQuery = url.parse(self.request.url, true).query;
+    //if socket-specific query exist, replace query strings in requestQuery
+    return Object.assign({}, query, requestQuery);
+  }
   return {
     headers: this.request.headers,
     time: (new Date) + '',
@@ -112,7 +126,7 @@ Socket.prototype.buildHandshake = function(){
     secure: !!this.request.connection.encrypted,
     issued: +(new Date),
     url: this.request.url,
-    query: url.parse(this.request.url, true).query || {}
+    query: buildQuery()
   };
 };
 
@@ -126,41 +140,42 @@ Socket.prototype.buildHandshake = function(){
 Socket.prototype.emit = function(ev){
   if (~exports.events.indexOf(ev)) {
     emit.apply(this, arguments);
+    return this;
+  }
+
+  var args = Array.prototype.slice.call(arguments);
+  var packet = {
+    type: (this.flags.binary !== undefined ? this.flags.binary : hasBin(args)) ? parser.BINARY_EVENT : parser.EVENT,
+    data: args
+  };
+
+  // access last argument to see if it's an ACK callback
+  if (typeof args[args.length - 1] === 'function') {
+    if (this._rooms.length || this.flags.broadcast) {
+      throw new Error('Callbacks are not supported when broadcasting');
+    }
+
+    debug('emitting packet with ack id %d', this.nsp.ids);
+    this.acks[this.nsp.ids] = args.pop();
+    packet.id = this.nsp.ids++;
+  }
+
+  var rooms = this._rooms.slice(0);
+  var flags = Object.assign({}, this.flags);
+
+  // reset flags
+  this._rooms = [];
+  this.flags = {};
+
+  if (rooms.length || flags.broadcast) {
+    this.adapter.broadcast(packet, {
+      except: [this.id],
+      rooms: rooms,
+      flags: flags
+    });
   } else {
-    var args = Array.prototype.slice.call(arguments);
-    var packet = {};
-    packet.type = hasBin(args) ? parser.BINARY_EVENT : parser.EVENT;
-    packet.data = args;
-    var flags = this.flags || {};
-
-    // access last argument to see if it's an ACK callback
-    if ('function' == typeof args[args.length - 1]) {
-      if (this._rooms || flags.broadcast) {
-        throw new Error('Callbacks are not supported when broadcasting');
-      }
-
-      debug('emitting packet with ack id %d', this.nsp.ids);
-      this.acks[this.nsp.ids] = args.pop();
-      packet.id = this.nsp.ids++;
-    }
-
-    if (this._rooms || flags.broadcast) {
-      this.adapter.broadcast(packet, {
-        except: [this.id],
-        rooms: this._rooms,
-        flags: flags
-      });
-    } else {
-      // dispatch packet
-      this.packet(packet, {
-        volatile: flags.volatile,
-        compress: flags.compress
-      });
-    }
-
-    // reset flags
-    delete this._rooms;
-    delete this.flags;
+    // dispatch packet
+    this.packet(packet, flags);
   }
   return this;
 };
@@ -175,7 +190,6 @@ Socket.prototype.emit = function(ev){
 
 Socket.prototype.to =
 Socket.prototype.in = function(name){
-  this._rooms = this._rooms || [];
   if (!~this._rooms.indexOf(name)) this._rooms.push(name);
   return this;
 };
@@ -213,23 +227,31 @@ Socket.prototype.packet = function(packet, opts){
 /**
  * Joins a room.
  *
- * @param {String} room
+ * @param {String|Array} room or array of rooms
  * @param {Function} fn optional, callback
  * @return {Socket} self
  * @api private
  */
 
-Socket.prototype.join = function(room, fn){
-  debug('joining room %s', room);
+Socket.prototype.join = function(rooms, fn){
+  debug('joining room %s', rooms);
   var self = this;
-  if (this.rooms.hasOwnProperty(room)) {
+  if (!Array.isArray(rooms)) {
+    rooms = [rooms];
+  }
+  rooms = rooms.filter(function (room) {
+    return !self.rooms.hasOwnProperty(room);
+  });
+  if (!rooms.length) {
     fn && fn(null);
     return this;
   }
-  this.adapter.add(this.id, room, function(err){
+  this.adapter.addAll(this.id, rooms, function(err){
     if (err) return fn && fn(err);
-    debug('joined room %s', room);
-    self.rooms[room] = room;
+    debug('joined room %s', rooms);
+    rooms.forEach(function (room) {
+      self.rooms[room] = room;
+    });
     fn && fn(null);
   });
   return this;
@@ -268,8 +290,10 @@ Socket.prototype.leaveAll = function(){
 };
 
 /**
- * Called by `Namespace` upon succesful
+ * Called by `Namespace` upon successful
  * middleware execution (ie: authorization).
+ * Socket is added to namespace array before
+ * call to join, so adapters can access it.
  *
  * @api private
  */
@@ -278,7 +302,12 @@ Socket.prototype.onconnect = function(){
   debug('socket connected - writing packet');
   this.nsp.connected[this.id] = this;
   this.join(this.id);
-  this.packet({ type: parser.CONNECT });
+  var skip = this.nsp.name === '/' && this.nsp.fns.length === 0;
+  if (skip) {
+    debug('packet already sent in initial handshake');
+  } else {
+    this.packet({ type: parser.CONNECT });
+  }
 };
 
 /**
@@ -312,7 +341,7 @@ Socket.prototype.onpacket = function(packet){
       break;
 
     case parser.ERROR:
-      this.emit('error', packet.data);
+      this.onerror(new Error(packet.data));
   }
 };
 
@@ -332,7 +361,7 @@ Socket.prototype.onevent = function(packet){
     args.push(this.ack(packet.id));
   }
 
-  emit.apply(this, args);
+  this.dispatch(args);
 };
 
 /**
@@ -351,10 +380,9 @@ Socket.prototype.ack = function(id){
     var args = Array.prototype.slice.call(arguments);
     debug('sending ack %j', args);
 
-    var type = hasBin(args) ? parser.BINARY_ACK : parser.ACK;
     self.packet({
       id: id,
-      type: type,
+      type: hasBin(args) ? parser.BINARY_ACK : parser.ACK,
       data: args
     });
 
@@ -416,6 +444,7 @@ Socket.prototype.onerror = function(err){
 Socket.prototype.onclose = function(reason){
   if (!this.connected) return this;
   debug('closing socket - reason %s', reason);
+  this.emit('disconnecting', reason);
   this.leaveAll();
   this.nsp.remove(this);
   this.client.remove(this);
@@ -464,7 +493,80 @@ Socket.prototype.disconnect = function(close){
  */
 
 Socket.prototype.compress = function(compress){
-  this.flags = this.flags || {};
   this.flags.compress = compress;
   return this;
+};
+
+/**
+ * Sets the binary flag
+ *
+ * @param {Boolean} Encode as if it has binary data if `true`, Encode as if it doesnt have binary data if `false`
+ * @return {Socket} self
+ * @api public
+ */
+
+ Socket.prototype.binary = function (binary) {
+   this.flags.binary = binary;
+   return this;
+ };
+
+/**
+ * Dispatch incoming event to socket listeners.
+ *
+ * @param {Array} event that will get emitted
+ * @api private
+ */
+
+Socket.prototype.dispatch = function(event){
+  debug('dispatching an event %j', event);
+  var self = this;
+  function dispatchSocket(err) {
+    process.nextTick(function(){
+      if (err) {
+        return self.error(err.data || err.message);
+      }
+      emit.apply(self, event);
+    });
+  }
+  this.run(event, dispatchSocket);
+};
+
+/**
+ * Sets up socket middleware.
+ *
+ * @param {Function} middleware function (event, next)
+ * @return {Socket} self
+ * @api public
+ */
+
+Socket.prototype.use = function(fn){
+  this.fns.push(fn);
+  return this;
+};
+
+/**
+ * Executes the middleware for an incoming event.
+ *
+ * @param {Array} event that will get emitted
+ * @param {Function} last fn call in the middleware
+ * @api private
+ */
+Socket.prototype.run = function(event, fn){
+  var fns = this.fns.slice(0);
+  if (!fns.length) return fn(null);
+
+  function run(i){
+    fns[i](event, function(err){
+      // upon error, short-circuit
+      if (err) return fn(err);
+
+      // if no middleware left, summon callback
+      if (!fns[i + 1]) return fn(null);
+
+      // go on to next
+      run(i + 1);
+    });
+  }
+
+  run(0);
 };

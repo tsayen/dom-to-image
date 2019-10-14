@@ -1,3 +1,14 @@
+1.3.3 / 2019-04-15
+==================
+
+  * Fix Node.js 0.8 return value inconsistencies
+
+1.3.2 / 2017-09-09
+==================
+
+  * perf: reduce overhead for full URLs
+  * perf: unroll the "fast-path" `RegExp`
+
 1.3.1 / 2016-01-17
 ==================
 

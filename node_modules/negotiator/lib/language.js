@@ -1,16 +1,57 @@
+/**
+ * negotiator
+ * Copyright(c) 2012 Isaac Z. Schlueter
+ * Copyright(c) 2014 Federico Romero
+ * Copyright(c) 2014-2015 Douglas Christopher Wilson
+ * MIT Licensed
+ */
+
+'use strict';
+
+/**
+ * Module exports.
+ * @public
+ */
+
 module.exports = preferredLanguages;
-preferredLanguages.preferredLanguages = preferredLanguages;
+module.exports.preferredLanguages = preferredLanguages;
+
+/**
+ * Module variables.
+ * @private
+ */
+
+var simpleLanguageRegExp = /^\s*([^\s\-;]+)(?:-([^\s;]+))?\s*(?:;(.*))?$/;
+
+/**
+ * Parse the Accept-Language header.
+ * @private
+ */
 
 function parseAcceptLanguage(accept) {
-  return accept.split(',').map(function(e, i) {
-    return parseLanguage(e.trim(), i);
-  }).filter(function(e) {
-    return e;
-  });
+  var accepts = accept.split(',');
+
+  for (var i = 0, j = 0; i < accepts.length; i++) {
+    var langauge = parseLanguage(accepts[i].trim(), i);
+
+    if (langauge) {
+      accepts[j++] = langauge;
+    }
+  }
+
+  // trim accepts
+  accepts.length = j;
+
+  return accepts;
 }
 
-function parseLanguage(s, i) {
-  var match = s.match(/^\s*(\S+?)(?:-(\S+?))?\s*(?:;(.*))?$/);
+/**
+ * Parse a language from the Accept-Language header.
+ * @private
+ */
+
+function parseLanguage(str, i) {
+  var match = simpleLanguageRegExp.exec(str);
   if (!match) return null;
 
   var prefix = match[1],
@@ -37,19 +78,31 @@ function parseLanguage(s, i) {
   };
 }
 
-function getLanguagePriority(language, accepted) {
-  return (accepted.map(function(a){
-    return specify(language, a);
-  }).filter(Boolean).sort(function (a, b) {
-    if(a.s == b.s) {
-      return a.q > b.q ? -1 : 1;
-    } else {
-      return a.s > b.s ? -1 : 1;
+/**
+ * Get the priority of a language.
+ * @private
+ */
+
+function getLanguagePriority(language, accepted, index) {
+  var priority = {o: -1, q: 0, s: 0};
+
+  for (var i = 0; i < accepted.length; i++) {
+    var spec = specify(language, accepted[i], index);
+
+    if (spec && (priority.s - spec.s || priority.q - spec.q || priority.o - spec.o) < 0) {
+      priority = spec;
     }
-  })[0] || {s: 0, q: 0});
+  }
+
+  return priority;
 }
 
-function specify(language, spec) {
+/**
+ * Get the specificity of the language.
+ * @private
+ */
+
+function specify(language, spec, index) {
   var p = parseLanguage(language)
   if (!p) return null;
   var s = 0;
@@ -64,37 +117,63 @@ function specify(language, spec) {
   }
 
   return {
-    s: s,
+    i: index,
+    o: spec.i,
     q: spec.q,
+    s: s
   }
 };
 
+/**
+ * Get the preferred languages from an Accept-Language header.
+ * @public
+ */
+
 function preferredLanguages(accept, provided) {
   // RFC 2616 sec 14.4: no header = *
-  accept = parseAcceptLanguage(accept === undefined ? '*' : accept || '');
-  if (provided) {
+  var accepts = parseAcceptLanguage(accept === undefined ? '*' : accept || '');
 
-    var ret = provided.map(function(type) {
-      return [type, getLanguagePriority(type, accept)];
-    }).filter(function(pair) {
-      return pair[1].q > 0;
-    }).sort(function(a, b) {
-      var pa = a[1];
-      var pb = b[1];
-      return (pb.q - pa.q) || (pb.s - pa.s) || (pa.i - pb.i);
-    }).map(function(pair) {
-      return pair[0];
-    });
-    return ret;
-
-  } else {
-    return accept.sort(function (a, b) {
-      // revsort
-      return (b.q - a.q) || (a.i - b.i);
-    }).filter(function(type) {
-      return type.q > 0;
-    }).map(function(type) {
-      return type.full;
-    });
+  if (!provided) {
+    // sorted list of all languages
+    return accepts
+      .filter(isQuality)
+      .sort(compareSpecs)
+      .map(getFullLanguage);
   }
+
+  var priorities = provided.map(function getPriority(type, index) {
+    return getLanguagePriority(type, accepts, index);
+  });
+
+  // sorted list of accepted languages
+  return priorities.filter(isQuality).sort(compareSpecs).map(function getLanguage(priority) {
+    return provided[priorities.indexOf(priority)];
+  });
+}
+
+/**
+ * Compare two specs.
+ * @private
+ */
+
+function compareSpecs(a, b) {
+  return (b.q - a.q) || (b.s - a.s) || (a.o - b.o) || (a.i - b.i) || 0;
+}
+
+/**
+ * Get full language string.
+ * @private
+ */
+
+function getFullLanguage(spec) {
+  return spec.full;
+}
+
+/**
+ * Check if a spec has any quality.
+ * @private
+ */
+
+function isQuality(spec) {
+  return spec.q > 0;
 }

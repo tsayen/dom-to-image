@@ -1,4 +1,4 @@
-require('../modules/es7.object.get-own-property-descriptors');
-require('../modules/es7.string.pad-start');
-require('../modules/es7.string.pad-end');
+require('../modules/es7.global');
+require('../modules/es7.system.global');
+require('../modules/es7.promise.finally');
 module.exports = require('./4');

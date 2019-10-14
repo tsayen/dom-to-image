@@ -46,6 +46,6 @@ exports.helpFooter = function() {
     'your project. For more information about installing and configuring grunt,',
     'please see the Getting Started guide:',
     '',
-    'http://gruntjs.com/getting-started',
+    'https://gruntjs.com/getting-started',
   ].forEach(function(str) { console.log(str); });
 };

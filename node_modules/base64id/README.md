@@ -9,7 +9,7 @@ To increase performance, random bytes are buffered to minimize the number of syn
 
 ## Installation
 
-   $ npm install mongoose
+   $ npm install base64id
 
 ## Usage
 

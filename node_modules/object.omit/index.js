@@ -13,7 +13,7 @@ var forOwn = require('for-own');
 module.exports = function omit(obj, keys) {
   if (!isObject(obj)) return {};
 
-  var keys = [].concat.apply([], [].slice.call(arguments, 1));
+  keys = [].concat.apply([], [].slice.call(arguments, 1));
   var last = keys[keys.length - 1];
   var res = {}, fn;
 
@@ -26,7 +26,7 @@ module.exports = function omit(obj, keys) {
     return obj;
   }
 
-  forOwn(obj, function (value, key) {
+  forOwn(obj, function(value, key) {
     if (keys.indexOf(key) === -1) {
 
       if (!isFunction) {

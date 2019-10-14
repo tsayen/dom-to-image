@@ -1,13 +1,12 @@
 /*!
  * regex-cache <https://github.com/jonschlinkert/regex-cache>
  *
- * Copyright (c) 2015 Jon Schlinkert.
- * Licensed under the MIT license.
+ * Copyright (c) 2015-2017, Jon Schlinkert.
+ * Released under the MIT License.
  */
 
 'use strict';
 
-var isPrimitive = require('is-primitive');
 var equal = require('is-equal-shallow');
 var basic = {};
 var cache = {};

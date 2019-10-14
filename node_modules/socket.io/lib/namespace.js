@@ -31,7 +31,8 @@ exports.events = [
 
 exports.flags = [
   'json',
-  'volatile'
+  'volatile',
+  'local'
 ];
 
 /**
@@ -69,10 +70,12 @@ Namespace.prototype.__proto__ = Emitter.prototype;
  */
 
 exports.flags.forEach(function(flag){
-  Namespace.prototype.__defineGetter__(flag, function(){
-    this.flags = this.flags || {};
-    this.flags[flag] = true;
-    return this;
+  Object.defineProperty(Namespace.prototype, flag, {
+    get: function() {
+      this.flags = this.flags || {};
+      this.flags[flag] = true;
+      return this;
+    }
   });
 });
 
@@ -137,7 +140,7 @@ Namespace.prototype.run = function(socket, fn){
  */
 
 Namespace.prototype.to =
-Namespace.prototype['in'] = function(name){
+Namespace.prototype.in = function(name){
   this.rooms = this.rooms || [];
   if (!~this.rooms.indexOf(name)) this.rooms.push(name);
   return this;
@@ -150,9 +153,9 @@ Namespace.prototype['in'] = function(name){
  * @api private
  */
 
-Namespace.prototype.add = function(client, fn){
+Namespace.prototype.add = function(client, query, fn){
   debug('adding socket to nsp %s', this.name);
-  var socket = new Socket(this, client);
+  var socket = new Socket(this, client, query);
   var self = this;
   this.run(socket, function(err){
     process.nextTick(function(){

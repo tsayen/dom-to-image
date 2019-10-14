@@ -76,6 +76,7 @@ function FSWatcher(_opts) {
   if (undef('ignorePermissionErrors')) opts.ignorePermissionErrors = false;
   if (undef('interval')) opts.interval = 100;
   if (undef('binaryInterval')) opts.binaryInterval = 300;
+  if (undef('disableGlobbing')) opts.disableGlobbing = false;
   this.enableBinaryInterval = opts.binaryInterval !== opts.interval;
 
   // Enable fsevents on OS X when polling isn't explicitly enabled.
@@ -103,6 +104,10 @@ function FSWatcher(_opts) {
     } else {
       opts.usePolling = !!envLower
     }
+  }
+  var envInterval = process.env.CHOKIDAR_INTERVAL;
+  if (envInterval) {
+    opts.interval = parseInt(envInterval);
   }
 
   // Editor atomic write normalization enabled by default with fs.watch
@@ -377,7 +382,7 @@ FSWatcher.prototype._isIgnored = function(path, stats) {
 var replacerRe = /^\.[\/\\]/;
 FSWatcher.prototype._getWatchHelpers = function(path, depth) {
   path = path.replace(replacerRe, '');
-  var watchPath = depth || !isGlob(path) ? path : globParent(path);
+  var watchPath = depth || this.options.disableGlobbing || !isGlob(path) ? path : globParent(path);
   var fullWatchPath = sysPath.resolve(watchPath);
   var hasGlob = watchPath !== path;
   var globFilter = hasGlob ? anymatch(path) : false;
@@ -408,6 +413,7 @@ FSWatcher.prototype._getWatchHelpers = function(path, depth) {
   };
 
   var filterPath = function(entry) {
+    if (entry.stat && entry.stat.isSymbolicLink()) return filterDir(entry);
     var resolvedPath = entryPath(entry);
     return (!hasGlob || globFilter(resolvedPath)) &&
       this._isntIgnored(resolvedPath, entry.stat) &&
@@ -464,7 +470,7 @@ FSWatcher.prototype._getWatchedDir = function(directory) {
   if (!(dir in this._watched)) this._watched[dir] = {
     _items: Object.create(null),
     add: function(item) {
-      if (item !== '.') this._items[item] = true;
+      if (item !== '.' && item !== '..') this._items[item] = true;
     },
     remove: function(item) {
       delete this._items[item];
@@ -618,7 +624,7 @@ FSWatcher.prototype.add = function(paths, _origAdd, _internal) {
       }.bind(this));
     }.bind(this), function(error, results) {
       results.forEach(function(item) {
-        if (!item) return;
+        if (!item || this.closed) return;
         this.add(sysPath.dirname(item), sysPath.basename(_origAdd || item));
       }, this);
     }.bind(this));

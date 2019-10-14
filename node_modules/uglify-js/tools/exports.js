@@ -17,7 +17,3 @@ exports["string_template"] = string_template;
 exports["tokenizer"] = tokenizer;
 exports["is_identifier"] = is_identifier;
 exports["SymbolDef"] = SymbolDef;
-
-if (typeof DEBUG !== "undefined" && DEBUG) {
-    exports["EXPECT_DIRECTIVE"] = EXPECT_DIRECTIVE;
-}

@@ -5,7 +5,6 @@
 
 var debug = require('debug')('socket.io-parser');
 var json = require('json3');
-var isArray = require('isarray');
 var Emitter = require('component-emitter');
 var binary = require('./binary');
 var isBuf = require('./is-buffer');
@@ -323,16 +322,21 @@ function decodeString(str) {
 
   // look up json data
   if (str.charAt(++i)) {
-    try {
-      p.data = json.parse(str.substr(i));
-    } catch(e){
-      return error();
-    }
+    p = tryParse(p, str.substr(i));
   }
 
   debug('decoded %s as %j', str, p);
   return p;
 }
+
+function tryParse(p, str) {
+  try {
+    p.data = json.parse(str);
+  } catch(e){
+    return error();
+  }
+  return p; 
+};
 
 /**
  * Deallocates a parser's resources

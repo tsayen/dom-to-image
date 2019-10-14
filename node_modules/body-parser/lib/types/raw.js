@@ -29,8 +29,8 @@ module.exports = raw
  * @api public
  */
 
-function raw(options) {
-  var opts = options || {};
+function raw (options) {
+  var opts = options || {}
 
   var inflate = opts.inflate !== false
   var limit = typeof opts.limit !== 'number'
@@ -48,27 +48,33 @@ function raw(options) {
     ? typeChecker(type)
     : type
 
-  function parse(buf) {
+  function parse (buf) {
     return buf
   }
 
-  return function rawParser(req, res, next) {
+  return function rawParser (req, res, next) {
     if (req._body) {
-      return debug('body already parsed'), next()
+      debug('body already parsed')
+      next()
+      return
     }
 
     req.body = req.body || {}
 
     // skip requests without bodies
     if (!typeis.hasBody(req)) {
-      return debug('skip empty body'), next()
+      debug('skip empty body')
+      next()
+      return
     }
 
     debug('content-type %j', req.headers['content-type'])
 
     // determine if request should be parsed
     if (!shouldParse(req)) {
-      return debug('skip parsing'), next()
+      debug('skip parsing')
+      next()
+      return
     }
 
     // read
@@ -88,8 +94,8 @@ function raw(options) {
  * @return {function}
  */
 
-function typeChecker(type) {
-  return function checkType(req) {
+function typeChecker (type) {
+  return function checkType (req) {
     return Boolean(typeis(req, type))
   }
 }

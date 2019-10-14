@@ -90,13 +90,13 @@ Object.defineProperty(exports, 'urlencoded', {
  * @public
  */
 
-function bodyParser(options){
+function bodyParser (options) {
   var opts = {}
 
   // exclude type option
   if (options) {
     for (var prop in options) {
-      if ('type' !== prop) {
+      if (prop !== 'type') {
         opts[prop] = options[prop]
       }
     }
@@ -105,11 +105,11 @@ function bodyParser(options){
   var _urlencoded = exports.urlencoded(opts)
   var _json = exports.json(opts)
 
-  return function bodyParser(req, res, next) {
-    _json(req, res, function(err){
-      if (err) return next(err);
-      _urlencoded(req, res, next);
-    });
+  return function bodyParser (req, res, next) {
+    _json(req, res, function (err) {
+      if (err) return next(err)
+      _urlencoded(req, res, next)
+    })
   }
 }
 
@@ -118,8 +118,8 @@ function bodyParser(options){
  * @private
  */
 
-function createParserGetter(name) {
-  return function get() {
+function createParserGetter (name) {
+  return function get () {
     return loadParser(name)
   }
 }
@@ -129,7 +129,7 @@ function createParserGetter(name) {
  * @private
  */
 
-function loadParser(parserName) {
+function loadParser (parserName) {
   var parser = parsers[parserName]
 
   if (parser !== undefined) {
@@ -153,5 +153,5 @@ function loadParser(parserName) {
   }
 
   // store to prevent invoking require()
-  return parsers[parserName] = parser
+  return (parsers[parserName] = parser)
 }

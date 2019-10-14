@@ -1,1 +1,1 @@
-module.exports = 'wtf'
+module.exports = 'wtf';

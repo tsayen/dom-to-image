@@ -23,9 +23,9 @@ their work and their rights. You should, too.
 
 ### This Package
 
-I created this package by copying exception identifiers out of the
-SPDX specification. That work was mechanical, routine, and required no
-creativity whatsoever. - Kyle Mitchell, package author
+> I created this package by copying exception identifiers out of the
+> SPDX specification. That work was mechanical, routine, and required no
+> creativity whatsoever. - Kyle Mitchell, package author
 
 United States users concerned about intellectual property may wish to
 discuss the following Supreme Court decisions with their attorneys:

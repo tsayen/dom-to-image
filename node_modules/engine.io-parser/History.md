@@ -1,4 +1,30 @@
 
+1.3.2 / 2016-12-07
+==================
+
+  * [chore] Bump dependencies (#78)
+
+1.3.1 / 2016-10-20
+==================
+
+  * [fix] Add safety check for global object (#71)
+  * [fix] decodePacket now accepts both Buffer and ArrayBuffer as data (#64)
+  * [fix] Handle undefined case properly when decoding packet (#74)
+  * [chore] Bump zuul to 3.11.0 & zuul-ngrok to 4.0.0 (#70)
+  * [chore] Update zuul browser settings (#73)
+
+1.3.0 / 2016-09-26
+==================
+
+  * [fix] Fix crashes in React Native "navigator is not defined" (#55)
+  * [refactor] Require base64-arraybuffer module conditionally. (#58)
+  * [perf] Split try catch into separate function (#65)
+  * [chore] Use wtf-8 instead of utf8 to prevent lone surrogates from generating parsing error (#68)
+  * [chore] Restrict files included in npm package (#67)
+  * [chore] Update license and repository url (#66)
+  * [chore] Update zuul browser settings following EOL notices (#62)
+  * [chore] bump zuul (#56)
+
 1.2.4 / 2015-12-04
 ==================
 
