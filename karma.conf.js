@@ -8,18 +8,10 @@ module.exports = function (config) {
                 pattern: 'spec/resources/**/*',
                 included: false,
                 served: true
-            }, {
-                pattern: 'node_modules/fontawesome/fonts/*.*',
-                included: false,
-                served: true
-            }, {
-                pattern: 'node_modules/fontawesome/css/*.*',
-                included: false,
-                served: true
-            },
+            }, 
             'node_modules/jquery/dist/jquery.js',
             'node_modules/imagediff/imagediff.js',
-            'test-lib/tesseract-1.0.10.js',
+            'node_modules/tesseract.js/dist/tesseract.js',
             'src/dom-to-image.js',
             'spec/dom-to-image.spec.js'
         ],
