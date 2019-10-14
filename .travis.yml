@@ -5,6 +5,8 @@ language: node_js
 node_js: lts/*
 before_install:
     - sudo apt-get update -q
+    # needed for node canvas build
+    - sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
     - sudo apt-get install chromium-browser -y
 before_script:
     - export CHROME_BIN=chromium-browser
