@@ -252,10 +252,27 @@
             function cloneStyle() {
                 copyStyle(window.getComputedStyle(original), clone.style);
 
+                function copyFont(source, target) {
+                    target.font = source.font;
+                    target.fontFamily = source.fontFamily;
+                    target.fontFeatureSettings = source.fontFeatureSettings;
+                    target.fontKerning = source.fontKerning;
+                    target.fontSize = source.fontSize;
+                    target.fontStretch = source.fontStretch;
+                    target.fontStyle = source.fontStyle;
+                    target.fontVariant = source.fontVariant;
+                    target.fontVariantCaps = source.fontVariantCaps;
+                    target.fontVariantEastAsian = source.fontVariantEastAsian;
+                    target.fontVariantLigatures = source.fontVariantLigatures;
+                    target.fontVariantNumeric = source.fontVariantNumeric;
+                    target.fontVariationSettings = source.fontVariationSettings;
+                    target.fontWeight = source.fontWeight;
+                }
+
                 function copyStyle(source, target) {
                     if (source.cssText) {
                         target.cssText = source.cssText;
-                        target.font = source.font; // here, we re-assign the font prop.
+                        copyFont(source, target); // here we re-assign the font props.
                     } else copyProperties(source, target);
 
                     function copyProperties(source, target) {
