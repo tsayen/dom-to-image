@@ -130,7 +130,7 @@
     function draw(domNode, options) {
         return toSvg(domNode, options)
             .then(util.makeImage)
-            .then(util.delay(100))
+            .then(util.delay(0))
             .then(function (image) {
                 var scale = getScale();
                 var canvas = newCanvas(domNode);
