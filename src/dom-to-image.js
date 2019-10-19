@@ -312,6 +312,19 @@
     }
 
     function makeSvgDataUri(node, width, height) {
+        var glNodes = node.querySelectorAll('[renderer=gl]');
+        node.style.opacity = 1;
+        node.style.visibility = 'visible';
+        node.oldOpacity = node.style.opacity;
+        node.oldVisibility = node.style.visibility;
+        var nodesArray = Array.prototype.slice.call(glNodes);
+        nodesArray.forEach((node) => {
+            node.oldOpacity = node.style.opacity;
+            node.oldVisibility = node.style.visibility;
+            node.style.opacity = 0;
+            node.style.visibility = 'hidden';
+        });
+
         return Promise.resolve(node)
             .then(function (node) {
                 node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
@@ -326,6 +339,13 @@
                     foreignObject + '</svg>';
             })
             .then(function (svg) {
+                node.style.opacity = node.style.oldOpacity;
+                node.style.visibility = node.style.oldVisibility;
+                var nodesArray = Array.prototype.slice.call(glNodes);
+                nodesArray.forEach((node) => {
+                    node.style.opacity = node.oldOpacity;
+                    node.style.visibility = node.oldVisibility;
+            });
                 return 'data:image/svg+xml;charset=utf-8,' + svg;
             });
     }
