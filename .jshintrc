@@ -1,7 +1,0 @@
-{
-    "eqeqeq": true,
-    "immed": true,
-    "newcap": true,
-    "unused": "strict",
-    "esnext": true
-}

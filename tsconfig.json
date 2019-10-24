@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "lib": [
+            "es2020",
+            "dom"
+        ],
+        "target": "esnext",
+        "moduleResolution": "node",
+        "outDir": "dist",
+        "declaration": true,
+        "noImplicitAny": true,
+        "allowJs": false,
+        "removeComments": true
+    },
+    "include": [
+        "src"
+    ]
+}

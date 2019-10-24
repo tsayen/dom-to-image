@@ -1,3 +1,5 @@
 *.iml
 .tags
 .tags*
+node_modules
+.vscode
