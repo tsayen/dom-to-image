@@ -1,19 +1,23 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "es6",
         "lib": [
             "es2020",
             "dom"
         ],
-        "target": "esnext",
+        "target": "es6",
         "moduleResolution": "node",
-        "outDir": "dist",
+        "outDir": "./dist",
         "declaration": true,
+        "declarationDir": "./dist",
         "noImplicitAny": true,
         "allowJs": false,
         "removeComments": true
     },
     "include": [
         "src"
+    ],
+    "exclude": [
+        "node_modules"
     ]
 }

@@ -1,4 +1,4 @@
-import * as util from "./util";
+import util from "./util";
 import inliner from "./inliner";
 
 const inline = async (element: HTMLImageElement): Promise<Event> => {

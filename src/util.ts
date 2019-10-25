@@ -1,4 +1,4 @@
-import { Options } from './dom-to-image'
+import { Options } from "."
 /**
  * Only WOFF and EOT mime types for fonts are 'real'
  * @see http://www.iana.org/assignments/media-types/media-types.xhtml
@@ -147,3 +147,21 @@ export const px = (node: Element, styleProperty: string) => {
   const value = window.getComputedStyle(node).getPropertyValue(styleProperty);
   return parseFloat(value.replace("px", ""));
 };
+
+export default {
+  width,
+  height,
+  px,
+  escapeXhtml,
+  sleep,
+  escape,
+  dataAsUrl,
+  getAndEncode,
+  makeImage,
+  uid,
+  resolveUrl,
+  canvasToBlob,
+  isDataUrl,
+  mimeType,
+  parseExtension
+}

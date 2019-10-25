@@ -1,5 +1,4 @@
-import * as util from "./util";
-import inliner from "./inliner";
+import util from "./util";
 import fontFaces from "./fontFaces";
 import images from "./images";
 

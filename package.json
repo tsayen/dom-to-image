@@ -2,7 +2,12 @@
     "name": "dom-to-image",
     "version": "2.6.0",
     "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
-    "main": "src/dom-to-image.js",
+    "main": "dist/dom-to-image.js",
+    "module": "dist/index.es.js",
+    "files": [
+        "dist"
+    ],
+    "types": "dist/index.d.ts",
     "dependencies": {},
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^2.5.0",
@@ -22,9 +27,13 @@
         "karma-mocha": "^0.1.10",
         "karma-mocha-reporter": "^1.3.0",
         "mocha": "^2.2.4",
+        "rollup": "^1.25.2",
+        "rollup-plugin-terser": "^5.1.2",
+        "rollup-plugin-typescript2": "^0.24.3",
         "typescript": "^3.8.0-dev.20191024"
     },
     "scripts": {
+        "build": "rollup -c",
         "lint": "eslint src/*.ts",
         "test": "./node_modules/.bin/grunt test"
     },

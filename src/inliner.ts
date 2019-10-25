@@ -1,5 +1,5 @@
-import * as util from "./util";
-import { Options } from "./dom-to-image";
+import util from "./util";
+import { Options } from ".";
 
 const URL_REGEX = /url\(['"]?([^'"]+?)['"]?\)/g;
 
