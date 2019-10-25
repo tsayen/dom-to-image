@@ -1,6 +1,6 @@
 import inliner from "./inliner";
 
-export const resolveAll = async () => {
+export const inlineAll = async (node: HTMLElement) => {
   const fonts = (Array.from(document.styleSheets) as CSSStyleSheet[])
     .flatMap(sheet => Array.from(sheet.cssRules))
     .filter(
@@ -15,9 +15,14 @@ export const resolveAll = async () => {
       return inliner.inlineAll(font.cssText, baseUrl);
     })
   );
-  return cssStrings.join("\n");
+
+  const cssText = cssStrings.join("\n");
+  const styleNode = document.createElement("style");
+  node.appendChild(styleNode);
+  styleNode.appendChild(document.createTextNode(cssText));
+  return node;
 };
 
 export default {
-  resolveAll
+  inlineAll
 };

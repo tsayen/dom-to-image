@@ -1,4 +1,5 @@
 import * as util from "./util";
+import { Options } from "./dom-to-image";
 
 const URL_REGEX = /url\(['"]?([^'"]+?)['"]?\)/g;
 
@@ -17,8 +18,8 @@ export const readUrls = (str: string) => {
 export const inline = async (
   str: string,
   url: string,
-  baseUrl?: string
-  //  get: Get
+  baseUrl?: string,
+  options?: Options
 ) => {
   const urlAsRegex = (url: string) => {
     return new RegExp(
@@ -27,27 +28,26 @@ export const inline = async (
     );
   };
 
-  return Promise.resolve(url)
-    .then(url => {
-      return baseUrl ? util.resolveUrl(url, baseUrl) : url;
-    })
-    .then(util.getAndEncode)
-    .then(data => {
-      return util.dataAsUrl(data, util.mimeType(url));
-    })
-    .then(dataUrl => {
-      return str.replace(urlAsRegex(url), "$1" + dataUrl + "$3");
-    });
+  const originUrl = baseUrl ? util.resolveUrl(url, baseUrl) : url;
+  const data = await util.getAndEncode(originUrl, options);
+  const dataUrl = util.dataAsUrl(data, util.mimeType(url));
+  return str.replace(urlAsRegex(url), "$1" + dataUrl + "$3");
 };
 
-async function inlineAll(str: string, baseUrl?: string /*get: Get */) {
+async function inlineAll(
+  str: string,
+  baseUrl?: string,
+  options?: Options /*get: Get */
+) {
   const nothingToInline = !shouldProcess(str);
 
   if (nothingToInline) return str;
 
   const urls = readUrls(str);
 
-  await Promise.all(urls.map(url => inline(str, url, baseUrl /**get */)));
+  await Promise.all(
+    urls.map(url => inline(str, url, baseUrl, options /**get */))
+  );
 
   return str;
 }

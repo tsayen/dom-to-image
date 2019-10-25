@@ -17,7 +17,7 @@ const inline = async (element: HTMLImageElement): Promise<Event> => {
 export const inlineAll = async (node: Node): Promise<any> => {
   if (!(node instanceof HTMLElement)) return node;
 
-  let background = node.style.getPropertyValue("background");
+  const background = node.style.getPropertyValue("background");
 
   if (!background) return node;
 
@@ -29,11 +29,13 @@ export const inlineAll = async (node: Node): Promise<any> => {
   );
 
   if (node instanceof HTMLImageElement) {
-    return inline(node);
+    await inline(node);
+    return node;
   } else {
-    return Promise.all(
+    const nodes = await Promise.all(
       Array.from(node.childNodes).map(child => inlineAll(child))
     );
+    return nodes;
   }
 };
 

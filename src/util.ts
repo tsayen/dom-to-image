@@ -1,3 +1,4 @@
+import { Options } from './dom-to-image'
 /**
  * Only WOFF and EOT mime types for fonts are 'real'
  * @see http://www.iana.org/assignments/media-types/media-types.xhtml
@@ -33,7 +34,7 @@ export const isDataUrl = (url:string) => {
   return url.search(/^(data:)/) !== -1;
 }
 
-export const canvasToBlob = (canvas: HTMLCanvasElement) => {
+export const canvasToBlob = (canvas: HTMLCanvasElement) :Promise<Blob> => {
   if (canvas.toBlob)
 {    return new Promise(resolve => {
       canvas.toBlob(resolve);
@@ -71,7 +72,7 @@ export const resolveUrl = (url: string, baseUrl: string) => {
 export const uid = () => {
   let index = 0;
 
-  return () => {
+  const gen =  () => {
     const fourRandomChars = () => {
       /** @see http://stackoverflow.com/a/6248722/2519373 */
       return (
@@ -80,6 +81,7 @@ export const uid = () => {
     };
     return "u" + fourRandomChars() + index++;
   };
+  return gen();
 };
 
 export const makeImage = (uri: string): Promise<HTMLImageElement> => {
@@ -93,68 +95,20 @@ export const makeImage = (uri: string): Promise<HTMLImageElement> => {
   });
 }
 
-export const getAndEncode = (url: string):Promise<string> => {
-  const TIMEOUT = 30000;
-  if (domtoimage.impl.options.cacheBust) {
+export const getAndEncode = async (url: string, options?:Options)  => {
+  // TODO: implement timeout
+  //const TIMEOUT = 30000;
+  
+  if (options?.cacheBust) {
     // Cache bypass so we dont have CORS issues with cached images
     // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
     url += (/\?/.test(url) ? "&" : "?") + new Date().getTime();
   }
 
-  return new Promise((resolve) => {
-    let request = new XMLHttpRequest();
-
-    request.onreadystatechange = done;
-    request.ontimeout = timeout;
-    request.responseType = "blob";
-    request.timeout = TIMEOUT;
-    request.open("GET", url, true);
-    request.send();
-
-    let placeholder;
-    if (domtoimage.impl.options.imagePlaceholder) {
-      let split = domtoimage.impl.options.imagePlaceholder.split(/,/);
-      if (split && split[1]) {
-        placeholder = split[1];
-      }
-    }
-
-    function done() {
-      if (request.readyState !== 4) return;
-
-      if (request.status !== 200) {
-        if (placeholder) {
-          resolve(placeholder);
-        } else {
-          fail("cannot fetch resource: " + url + ", status: " + request.status);
-        }
-
-        return;
-      }
-
-      let encoder = new FileReader();
-      encoder.onloadend = function() {
-        let content = encoder.result.split(/,/)[1];
-        resolve(content);
-      };
-      encoder.readAsDataURL(request.response);
-    }
-
-    function timeout() {
-      if (placeholder) {
-        resolve(placeholder);
-      } else {
-        fail(
-          "timeout of " + TIMEOUT + "ms occured while fetching resource: " + url
-        );
-      }
-    }
-
-    function fail(message) {
-      console.error(message);
-      resolve("");
-    }
-  });
+  const res = await fetch(url);
+  const data  = await res.blob();
+  const dataUrl = URL.createObjectURL(data);
+  return dataUrl;
 }
 
 export const dataAsUrl = (content: string, type: string) => {
@@ -165,14 +119,12 @@ export const escape = (str: string) => {
   return str.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1");
 };
 
-export const delay = (ms: number): (<T>(arg: T) => Promise<T>) => {
-  return arg => {
+export const sleep = (ms: number) => {
     return new Promise(resolve => {
       setTimeout(() => {
-        resolve(arg);
+        resolve();
       }, ms);
     });
-  };
 };
 
 export const escapeXhtml = (str: string) => {
