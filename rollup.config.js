@@ -13,9 +13,14 @@ export default {
             file: pkg.module,
             format: "es",
         },
+        {
+            file: "dist/dom-to-image.iife.js",
+            format: "iife",
+            name: "domToImage",
+        },
     ],
     external: [
-        "tslib",
+        //"tslib",
         ...Object.keys(pkg.dependencies || {}),
         ...Object.keys(pkg.peerDependencies || {}),
     ], plugins: [

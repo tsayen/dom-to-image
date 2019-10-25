@@ -136,7 +136,9 @@ async function cloneNode(
   };
 
   const clone = await makeNodeCopy(node);
+  console.log(console);
   const childrenClone = await cloneChildren(node, clone, filter);
+  console.log(childrenClone);
   return processClone(node, childrenClone);
 }
 
@@ -162,9 +164,6 @@ const processClone = async (original: HTMLElement, clone: HTMLElement) => {
 
   const clonePseudoElements = () => {
     const names: PseudoElementName[] = [":before", ":after"];
-    names.forEach(name => {
-      clonePseudoElement(name);
-    });
 
     const clonePseudoElement = (name: PseudoElementName) => {
       const style = window.getComputedStyle(original, name);
@@ -215,6 +214,10 @@ const processClone = async (original: HTMLElement, clone: HTMLElement) => {
 
       clone.appendChild(styleElement);
     };
+
+    names.forEach(name => {
+      clonePseudoElement(name);
+    });
   };
 
   const copyUserInput = () => {

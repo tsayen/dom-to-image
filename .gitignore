@@ -3,3 +3,6 @@
 .tags*
 node_modules
 .vscode
+tmp
+dist
+.cache

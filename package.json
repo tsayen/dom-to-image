@@ -3,13 +3,14 @@
     "version": "2.6.0",
     "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
     "main": "dist/dom-to-image.js",
-    "module": "dist/index.es.js",
+    "module": "dist/dom-to-image.es.js",
     "files": [
         "dist"
     ],
     "types": "dist/index.d.ts",
     "dependencies": {},
     "devDependencies": {
+        "tslib": "^1.10.0",
         "@typescript-eslint/eslint-plugin": "^2.5.0",
         "@typescript-eslint/parser": "^2.5.0",
         "chai": "^2.2.0",
@@ -34,6 +35,7 @@
     },
     "scripts": {
         "build": "rollup -c",
+        "dev": "rollup -cw",
         "lint": "eslint ./*.js src/*.ts",
         "test": "./node_modules/.bin/grunt test"
     },
