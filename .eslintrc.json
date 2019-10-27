@@ -6,7 +6,23 @@
     "plugins": [
         "@typescript-eslint"
     ],
+    "extends": [
+        "google"
+    ],
     "rules": {
+        "require-jsdoc": 0,
+        "indent": [
+            2,
+            2
+        ],
+        "object-curly-spacing": [
+            "error",
+            "always"
+        ],
+        "arrow-parens": [
+            "error",
+            "as-needed"
+        ],
         "quotes": [
             "error",
             "double"

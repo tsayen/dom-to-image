@@ -7,14 +7,14 @@ export const shouldProcess = (str: string) => {
   return str.search(URL_REGEX) !== -1;
 };
 
-export const readUrls = (str: string) => {
+const readUrls = (str: string) => {
   const result = [...str.matchAll(URL_REGEX)]
     .map(m => m[0])
     .filter(url => !util.isDataUrl(url));
   return result;
 };
 
-//type Get = (str: string) => Promise<string>;
+// type Get = (str: string) => Promise<string>;
 export const inline = async (
   str: string,
   url: string,
@@ -37,7 +37,7 @@ export const inline = async (
 async function inlineAll(
   str: string,
   baseUrl?: string,
-  options?: Options /*get: Get */
+  options?: Options /* get: Get */
 ) {
   const nothingToInline = !shouldProcess(str);
 
@@ -46,7 +46,7 @@ async function inlineAll(
   const urls = readUrls(str);
 
   await Promise.all(
-    urls.map(url => inline(str, url, baseUrl, options /**get */))
+    urls.map(url => inline(str, url, baseUrl, options /** get */))
   );
 
   return str;
@@ -56,5 +56,5 @@ export default {
   inlineAll,
   shouldProcess,
   readUrls,
-  inline
+  inline,
 };

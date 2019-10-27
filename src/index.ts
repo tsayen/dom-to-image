@@ -16,7 +16,7 @@ export type Options = {
 
 const defaultOptions: Options = {
   imagePlaceholder: undefined,
-  cacheBust: false
+  cacheBust: false,
 };
 
 async function toSvg(
@@ -40,8 +40,8 @@ async function toSvg(
     );
     return clone;
   };
-  const option = { ...defaultOptions, ...options };
-  let clone = await cloneNode(node, options.filter);
+  const mergedOptions = { ...defaultOptions, ...options };
+  let clone = await cloneNode(node, mergedOptions.filter);
   console.log({ clone });
   clone = await fontFaces.inlineAll(clone);
   clone = await images.inlineAll(node);
@@ -49,8 +49,8 @@ async function toSvg(
 
   return makeSvgDataUri(
     clone,
-    options.width || util.width(node),
-    options.height || util.height(node)
+    mergedOptions.width || util.width(node),
+    mergedOptions.height || util.height(node)
   );
 }
 
@@ -91,12 +91,12 @@ async function draw(domNode: HTMLElement, options: Options) {
 
   await util.sleep(100);
 
-  let canvas = document.createElement("canvas");
+  const canvas = document.createElement("canvas");
   canvas.width = options.width || util.width(domNode);
   canvas.height = options.height || util.height(domNode);
 
   if (options.bgcolor) {
-    let ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d");
     ctx.fillStyle = options.bgcolor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
@@ -112,8 +112,9 @@ async function cloneNode(
   if (filter && !filter(node)) return;
 
   const makeNodeCopy = (node: HTMLElement): Promise<HTMLElement> => {
-    if (node instanceof HTMLCanvasElement)
+    if (node instanceof HTMLCanvasElement) {
       return util.makeImage(node.toDataURL());
+    }
     return new Promise(resolve =>
       resolve((node.cloneNode(false) as any) as HTMLElement)
     );
@@ -124,7 +125,7 @@ async function cloneNode(
     clone: HTMLElement,
     filter: Filter
   ) => {
-    let children = original.childNodes;
+    const children = original.childNodes;
     if (children.length === 0) return clone;
 
     const childrenList = Array.from(children);
@@ -180,10 +181,10 @@ const processClone = async (original: HTMLElement, clone: HTMLElement) => {
         element: PseudoElementName,
         style: CSSStyleDeclaration
       ) => {
-        let selector = `.${className}:${element}`;
+        const selector = `.${className}:${element}`;
 
         const formatCssText = (style: CSSStyleDeclaration) => {
-          let content = style.getPropertyValue("content");
+          const content = style.getPropertyValue("content");
           return style.cssText + " content: " + content + ";";
         };
 
@@ -201,9 +202,9 @@ const processClone = async (original: HTMLElement, clone: HTMLElement) => {
           );
         };
 
-        let cssText = style.cssText
-          ? formatCssText(style)
-          : formatCssProperties(style);
+        const cssText = style.cssText ?
+          formatCssText(style) :
+          formatCssProperties(style);
 
         return document.createTextNode(`${selector}{${cssText}}`);
       };
@@ -222,10 +223,12 @@ const processClone = async (original: HTMLElement, clone: HTMLElement) => {
   };
 
   const copyUserInput = () => {
-    if (original instanceof HTMLTextAreaElement)
+    if (original instanceof HTMLTextAreaElement) {
       clone.innerHTML = original.value;
-    if (original instanceof HTMLInputElement)
+    }
+    if (original instanceof HTMLInputElement) {
       clone.setAttribute("value", original.value);
+    }
   };
 
   const fixSvg = () => {
@@ -234,7 +237,7 @@ const processClone = async (original: HTMLElement, clone: HTMLElement) => {
 
     if (!(clone instanceof SVGRectElement)) return;
     ["width", "height"].forEach(function(attribute) {
-      let value = clone.getAttribute(attribute);
+      const value = clone.getAttribute(attribute);
       if (!value) return;
 
       clone.style.setProperty(attribute, value);
@@ -273,5 +276,5 @@ export default {
   toPng,
   toJpeg,
   toBlob,
-  toPixelData
+  toPixelData,
 };

@@ -24,5 +24,5 @@ export const inlineAll = async (node: HTMLElement) => {
 };
 
 export default {
-  inlineAll
+  inlineAll,
 };

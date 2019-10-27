@@ -8,13 +8,15 @@
         "dist"
     ],
     "types": "dist/index.d.ts",
-    "dependencies": {},
+    "dependencies": {
+        "remove": "^0.1.5"
+    },
     "devDependencies": {
-        "tslib": "^1.10.0",
         "@typescript-eslint/eslint-plugin": "^2.5.0",
         "@typescript-eslint/parser": "^2.5.0",
         "chai": "^2.2.0",
         "eslint": "^6.5.1",
+        "eslint-config-google": "^0.14.0",
         "grunt": "~0.4.5",
         "grunt-cli": "^1.2.0",
         "grunt-contrib-jshint": "^0.11.2",
@@ -31,6 +33,7 @@
         "rollup": "^1.25.2",
         "rollup-plugin-terser": "^5.1.2",
         "rollup-plugin-typescript2": "^0.24.3",
+        "tslib": "^1.10.0",
         "typescript": "^3.8.0-dev.20191024"
     },
     "scripts": {

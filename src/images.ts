@@ -40,5 +40,5 @@ export const inlineAll = async (node: Node): Promise<any> => {
 };
 
 export default {
-  inlineAll
+  inlineAll,
 };
