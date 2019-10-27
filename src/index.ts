@@ -136,7 +136,6 @@ async function cloneNode(
   };
 
   const clone = await makeNodeCopy(node);
-  console.log(console);
   const childrenClone = await cloneChildren(node, clone, filter);
   console.log(childrenClone);
   return processClone(node, childrenClone);
