@@ -34,15 +34,6 @@ export const isDataUrl = (url:string) => {
   return url.search(/^(data:)/) !== -1;
 };
 
-export const canvasToBlob = (canvas: HTMLCanvasElement) :Promise<Blob> => {
-  if (!canvas.toBlob) {
-    throw new Error("canvas.toBlob is not supported by browser")
-  }
-  return new Promise(resolve => {
-    canvas.toBlob(resolve);
-  });
-};
-
 export const resolveUrl = (url: string, baseUrl: string) => {
   const doc = document.implementation.createHTMLDocument();
   const base = doc.createElement("base");
@@ -145,7 +136,6 @@ export default {
   makeImage,
   uid,
   resolveUrl,
-  canvasToBlob,
   isDataUrl,
   mimeType,
   parseExtension,

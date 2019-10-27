@@ -82,7 +82,13 @@ export async function toBlob(
   options: Options = {}
 ): Promise<Blob> {
   const canvas = await draw(node, options);
-  return util.canvasToBlob(canvas);
+
+  if (!canvas.toBlob) {
+    throw new Error("canvas.toBlob is not supported by browser");
+  }
+  return new Promise(resolve => {
+    canvas.toBlob(resolve);
+  });
 }
 
 async function draw(domNode: HTMLElement, options: Options) {
