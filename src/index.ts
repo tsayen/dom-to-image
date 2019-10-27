@@ -24,18 +24,17 @@ async function toSvg(
   options: Options = {}
 ): Promise<string> {
   const applyOptions = (clone: HTMLElement) => {
-    const { bgcolor, width, height } = options;
+    const { bgcolor, width, height, style } = options;
 
     if (bgcolor) clone.style.backgroundColor = bgcolor;
 
     if (width) clone.style.width = width + "px";
     if (height) clone.style.height = height + "px";
-
-    const cloneStyle = { ...clone.style, ...option.style };
+    if (!style) return clone;
 
     clone.setAttribute(
       "style",
-      Object.entries(cloneStyle)
+      Object.entries(style)
         .map((k, v) => `${k}:${v}`)
         .join(";")
     );
@@ -43,6 +42,7 @@ async function toSvg(
   };
   const option = { ...defaultOptions, ...options };
   let clone = await cloneNode(node, options.filter);
+  console.log({ clone });
   clone = await fontFaces.inlineAll(clone);
   clone = await images.inlineAll(node);
   clone = applyOptions(clone);
@@ -133,11 +133,13 @@ async function cloneNode(
       const childClone = await cloneNode(child as HTMLElement, filter);
       if (childClone) clone.appendChild(childClone);
     });
+    return clone;
   };
 
   const clone = await makeNodeCopy(node);
+  console.log({ clone });
   const childrenClone = await cloneChildren(node, clone, filter);
-  console.log(childrenClone);
+  console.log({ childrenClone });
   return processClone(node, childrenClone);
 }
 
