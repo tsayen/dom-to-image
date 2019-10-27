@@ -35,30 +35,12 @@ export const isDataUrl = (url:string) => {
 };
 
 export const canvasToBlob = (canvas: HTMLCanvasElement) :Promise<Blob> => {
-  if (canvas.toBlob) {
-    return new Promise(resolve => {
-      canvas.toBlob(resolve);
-    });
+  if (!canvas.toBlob) {
+    throw new Error("canvas.toBlob is not supported by browser")
   }
-
-  const toBlobPolyfill = async (canvas:HTMLCanvasElement):Promise<Blob> => {
-    return new Promise(resolve=> {
-      const binaryString = window.atob(canvas.toDataURL().split(",")[1]);
-      const length = binaryString.length;
-      const binaryArray = new Uint8Array(length);
-      [...Array(length).keys()].forEach(
-        i => binaryArray[i] = binaryString.charCodeAt(i)
-      );
-
-      resolve(
-        new Blob([binaryArray], {
-          type: "image/png",
-        })
-      );
-    });
-  };
-
-  return toBlobPolyfill(canvas);
+  return new Promise(resolve => {
+    canvas.toBlob(resolve);
+  });
 };
 
 export const resolveUrl = (url: string, baseUrl: string) => {
