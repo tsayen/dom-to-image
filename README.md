@@ -244,6 +244,8 @@ for you, following steps are taken:
 
 -   at the time of writing, Firefox has a problem with some external stylesheets
     (see issue #13). In such case, the error will be caught and logged.  
+    
+-   if the DOM node you want to render includes a <img> element with an image url, make sure to include the condition allowTaint =    "true", in case it fails te get rendered int the image by the libraray.
 
 ## Authors
 
