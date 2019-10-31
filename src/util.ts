@@ -31,7 +31,7 @@ export const mimeType = (url: string) => {
 };
 
 export const isDataUrl = (url:string) => {
-  return url.search(/^(data:)/) !== -1;
+  return url.startsWith("data:");
 };
 
 export const resolveUrl = (url: string, baseUrl: string) => {
@@ -43,21 +43,6 @@ export const resolveUrl = (url: string, baseUrl: string) => {
   base.href = baseUrl;
   a.href = url;
   return a.href;
-};
-
-export const uid = () => {
-  let index = 0;
-
-  const gen = () => {
-    const fourRandomChars = () => {
-      /** @see http://stackoverflow.com/a/6248722/2519373 */
-      return (
-        "0000" + ((Math.random() * Math.pow(36, 4)) << 0).toString(36)
-      ).slice(-4);
-    };
-    return "u" + fourRandomChars() + index++;
-  };
-  return gen();
 };
 
 export const makeImage = (uri: string): Promise<HTMLImageElement> => {
@@ -75,7 +60,7 @@ export const getAndEncode = async (url: string, options?:Options) => {
   // TODO: implement timeout
   // const TIMEOUT = 30000;
 
-  if (options?.cacheBust) {
+  if (options.cacheBust) {
     // Cache bypass so we dont have CORS issues with cached images
     // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
     url += (/\?/.test(url) ? "&" : "?") + new Date().getTime();
@@ -107,34 +92,13 @@ export const escapeXhtml = (str: string) => {
   return str.replace(/#/g, "%23").replace(/\n/g, "%0A");
 };
 
-export const width = (node: Element) => {
-  const leftBorder = px(node, "border-left-width");
-  const rightBorder = px(node, "border-right-width");
-  return node.scrollWidth + leftBorder + rightBorder;
-};
-
-export const height = (node: Element) => {
-  const topBorder = px(node, "border-top-width");
-  const bottomBorder = px(node, "border-bottom-width");
-  return node.scrollHeight + topBorder + bottomBorder;
-};
-
-export const px = (node: Element, styleProperty: string) => {
-  const value = window.getComputedStyle(node).getPropertyValue(styleProperty);
-  return parseFloat(value.replace("px", ""));
-};
-
 export default {
-  width,
-  height,
-  px,
   escapeXhtml,
   sleep,
   escape,
   dataAsUrl,
   getAndEncode,
   makeImage,
-  uid,
   resolveUrl,
   isDataUrl,
   mimeType,

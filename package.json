@@ -33,7 +33,7 @@
     "scripts": {
         "build": "rollup -c",
         "dev": "rollup -cw",
-        "lint": "eslint ./*.js src/*.ts",
+        "lint": "eslint ./*.js src/*.ts spec/*.js",
         "test": "./node_modules/.bin/grunt test"
     },
     "repository": {

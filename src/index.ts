@@ -2,7 +2,6 @@ import util from "./util";
 import fontFaces from "./fontFaces";
 import images from "./images";
 
-export type Filter = (node: HTMLElement) => boolean;
 export type Options = {
   width?: number;
   height?: number;
@@ -11,12 +10,11 @@ export type Options = {
   quality?: number;
   imagePlaceholder?: string;
   cacheBust?: boolean;
-  filter?: Filter;
 };
 
 const defaultOptions: Options = {
   imagePlaceholder: undefined,
-  cacheBust: false,
+  cacheBust: false
 };
 
 async function toSvg(
@@ -41,16 +39,15 @@ async function toSvg(
     return clone;
   };
   const mergedOptions = { ...defaultOptions, ...options };
-  let clone = await cloneNode(node, mergedOptions.filter);
-  console.log({ clone });
+  let clone = node.cloneNode(true) as HTMLElement;
   clone = await fontFaces.inlineAll(clone);
   clone = await images.inlineAll(node);
   clone = applyOptions(clone);
 
   return makeSvgDataUri(
     clone,
-    mergedOptions.width || util.width(node),
-    mergedOptions.height || util.height(node)
+    mergedOptions.width || node.clientWidth,
+    mergedOptions.height || node.clientHeight
   );
 }
 
@@ -58,7 +55,7 @@ export async function toPixelData(node: HTMLElement, options: Options) {
   const canvas = await draw(node, options || {});
   return canvas
     .getContext("2d")
-    .getImageData(0, 0, util.width(node), util.height(node)).data;
+    .getImageData(0, 0, node.clientWidth, node.clientHeight).data;
 }
 
 export async function toPng(
@@ -98,8 +95,8 @@ async function draw(domNode: HTMLElement, options: Options) {
   await util.sleep(100);
 
   const canvas = document.createElement("canvas");
-  canvas.width = options.width || util.width(domNode);
-  canvas.height = options.height || util.height(domNode);
+  canvas.width = options.width || domNode.clientWidth;
+  canvas.height = options.height || domNode.clientHeight;
 
   if (options.bgcolor) {
     const ctx = canvas.getContext("2d");
@@ -110,153 +107,6 @@ async function draw(domNode: HTMLElement, options: Options) {
   canvas.getContext("2d").drawImage(img, 0, 0);
   return canvas;
 }
-
-async function cloneNode(
-  node: HTMLElement,
-  filter: Filter
-): Promise<HTMLElement> {
-  if (filter && !filter(node)) return;
-
-  const makeNodeCopy = (node: HTMLElement): Promise<HTMLElement> => {
-    if (node instanceof HTMLCanvasElement) {
-      return util.makeImage(node.toDataURL());
-    }
-    return new Promise(resolve =>
-      resolve((node.cloneNode(false) as any) as HTMLElement)
-    );
-  };
-
-  const cloneChildren = async (
-    original: HTMLElement,
-    clone: HTMLElement,
-    filter: Filter
-  ) => {
-    const children = original.childNodes;
-    if (children.length === 0) return clone;
-
-    const childrenList = Array.from(children);
-
-    childrenList.forEach(async child => {
-      const childClone = await cloneNode(child as HTMLElement, filter);
-      if (childClone) clone.appendChild(childClone);
-    });
-    return clone;
-  };
-
-  const clone = await makeNodeCopy(node);
-  console.log({ clone });
-  const childrenClone = await cloneChildren(node, clone, filter);
-  console.log({ childrenClone });
-  return processClone(node, childrenClone);
-}
-
-const processClone = async (original: HTMLElement, clone: HTMLElement) => {
-  if (!(clone instanceof Element)) return clone;
-
-  const cloneStyle = () => {
-    const source = window.getComputedStyle(original);
-    const target = clone.style;
-    if (source.cssText) target.cssText = source.cssText;
-    else {
-      Array.from(source).forEach(name => {
-        target.setProperty(
-          name,
-          source.getPropertyValue(name),
-          source.getPropertyPriority(name)
-        );
-      });
-    }
-  };
-
-  type PseudoElementName = ":before" | ":after";
-
-  const clonePseudoElements = () => {
-    const names: PseudoElementName[] = [":before", ":after"];
-
-    const clonePseudoElement = (name: PseudoElementName) => {
-      const style = window.getComputedStyle(original, name);
-      const content = style.getPropertyValue("content");
-
-      if (content === "" || content === "none") return;
-
-      const className = util.uid();
-      clone.classList.add(className);
-
-      const formatPseudoElementStyle = (
-        className: string,
-        element: PseudoElementName,
-        style: CSSStyleDeclaration
-      ) => {
-        const selector = `.${className}:${element}`;
-
-        const formatCssText = (style: CSSStyleDeclaration) => {
-          const content = style.getPropertyValue("content");
-          return style.cssText + " content: " + content + ";";
-        };
-
-        const formatCssProperties = (style: CSSStyleDeclaration) => {
-          return (
-            Array.from(style)
-              .map(
-                name =>
-                  name +
-                  ": " +
-                  style.getPropertyValue(name) +
-                  (style.getPropertyPriority(name) ? " !important" : "")
-              )
-              .join("; ") + ";"
-          );
-        };
-
-        const cssText = style.cssText ?
-          formatCssText(style) :
-          formatCssProperties(style);
-
-        return document.createTextNode(`${selector}{${cssText}}`);
-      };
-
-      const styleElement = document.createElement("style");
-      styleElement.appendChild(
-        formatPseudoElementStyle(className, name, style)
-      );
-
-      clone.appendChild(styleElement);
-    };
-
-    names.forEach(name => {
-      clonePseudoElement(name);
-    });
-  };
-
-  const copyUserInput = () => {
-    if (original instanceof HTMLTextAreaElement) {
-      clone.innerHTML = original.value;
-    }
-    if (original instanceof HTMLInputElement) {
-      clone.setAttribute("value", original.value);
-    }
-  };
-
-  const fixSvg = () => {
-    if (!(clone instanceof SVGElement)) return;
-    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-
-    if (!(clone instanceof SVGRectElement)) return;
-    ["width", "height"].forEach(function(attribute) {
-      const value = clone.getAttribute(attribute);
-      if (!value) return;
-
-      clone.style.setProperty(attribute, value);
-    });
-  };
-
-  cloneStyle();
-  clonePseudoElements();
-  copyUserInput();
-  fixSvg();
-
-  return clone;
-};
 
 function makeSvgDataUri(node: Element, width: number, height: number) {
   node.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
@@ -282,5 +132,5 @@ export default {
   toPng,
   toJpeg,
   toBlob,
-  toPixelData,
+  toPixelData
 };
