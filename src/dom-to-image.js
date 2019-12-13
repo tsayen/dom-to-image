@@ -59,6 +59,7 @@
             })
             .then(embedFonts)
             .then(inlineImages)
+            .then(backgroundImages)
             .then(applyOptions)
             .then(function (clone) {
                 return makeSvgDataUri(clone,
@@ -321,6 +322,13 @@
 
     function inlineImages(node) {
         return images.inlineAll(node)
+            .then(function () {
+                return node;
+            });
+    }
+
+    function backgroundImages(node) {
+        return images.backgroundAll(node)
             .then(function () {
                 return node;
             });
@@ -704,6 +712,7 @@
     function newImages() {
         return {
             inlineAll: inlineAll,
+            backgroundAll: backgroundAll,
             impl: {
                 newImage: newImage
             }
@@ -758,6 +767,40 @@
                             'background',
                             inlined,
                             node.style.getPropertyPriority('background')
+                        );
+                    })
+                    .then(function () {
+                        return node;
+                    });
+            }
+        }
+
+        function backgroundAll(node) {
+            if (!(node instanceof Element)) return Promise.resolve(node);
+
+            return inlineBackground(node)
+                .then(function () {
+                    if (node instanceof HTMLImageElement)
+                        return newImage(node).inline();
+                    else
+                        return Promise.all(
+                            util.asArray(node.childNodes).map(function (child) {
+                                return backgroundAll(child);
+                            })
+                        );
+                });
+
+            function inlineBackground(node) {
+                var background = node.style.getPropertyValue('background-image');
+
+                if (!background) return Promise.resolve(node);
+
+                return inliner.inlineAll(background)
+                    .then(function (inlined) {
+                        node.style.setProperty(
+                            'background-image',
+                            inlined,
+                            node.style.getPropertyPriority('background-image')
                         );
                     })
                     .then(function () {
