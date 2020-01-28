@@ -1,6 +1,6 @@
 ### Use case: description, code  
 
-[jsfiddle](https://jsfiddle.net/tsayen/ojb1b31r/2/)
+[jsfiddle](https://jsfiddle.net/IDisposable/emjL1ow8/)
 
 ### Expected behavior
 
@@ -12,4 +12,3 @@
 
 - [ ] Chrome 49+  
 - [ ] Firefox 45+  
-
