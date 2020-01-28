@@ -680,7 +680,8 @@
                 return Promise.all(
                     styleSheets.map(function (sheet) {
                         if (sheet.href) {
-                            return fetch(sheet.href)
+							// Fix issue when chrome save file request in cache with out Access-Control-Allow-Origin:* header so it throw Cors error
+							return fetch(sheet.href + (sheet.href.indexOf('?') === -1 ? '?' : '&') + "timestamp=" + new Date().getTime())
                                 .then(toText)
                                 .then(setBaseHref(sheet.href))
                                 .then(toStyleSheet);
@@ -713,30 +714,29 @@
                     }
 
                     // Source: http://stackoverflow.com/a/2676231/3786856
-                    function concatAndResolveUrl(url, concat) {
-                        var url1 = url.split('/');
-                        var url2 = concat.split('/');
-                        var url3 = [ ];
-                        for (var i = 0, l = url1.length; i < l; i ++) {
-                            if (url1[i] == '..') {
-                                url3.pop();
-                            } else if (url1[i] == '.') {
-                                continue;
-                            } else {
-                                url3.push(url1[i]);
-                            }
-                        }
-                        for (var i = 0, l = url2.length; i < l; i ++) {
-                            if (url2[i] == '..') {
-                                url3.pop();
-                            } else if (url2[i] == '.') {
-                                continue;
-                            } else {
-                                url3.push(url2[i]);
-                            }
-                        }
-                        return url3.join('/');
-                    }
+					function concatAndResolveUrl(url, concat) {
+						var url1 = url.split('/');
+						var url2 = concat.split('/');
+						var url3 = [ ];
+
+						processRelativeUrl(url1, url3);
+						processRelativeUrl(url2, url3);
+
+						function processRelativeUrl(urlToProcess, existUrl) {
+							for (var i = 0; i < urlToProcess.length; i ++) {
+								// Always keep the domain (will be the first 3 items in the exist url)
+								if (urlToProcess[i] === '..' && existUrl.length > 3) {
+									existUrl.pop();
+								} else if (urlToProcess[i] === '.') {
+									continue;
+								} else {
+									existUrl.push(urlToProcess[i]);
+								}
+							}
+						}
+
+						return url3.join('/');
+					}
                 }
 
                 function toStyleSheet(text) {
