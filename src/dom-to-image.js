@@ -762,7 +762,7 @@
                     function addBaseHrefToUrl(match, p1) {
                         var url = /^http/i.test(p1) ?
                             p1 : concatAndResolveUrl(base, p1)
-                        return 'url(\'' + url + '\')';
+                        return 'url(' + url + ')';
                     }
 
                     // Source: http://stackoverflow.com/a/2676231/3786856
@@ -797,7 +797,7 @@
 
                     styleElement.textContent = text;
                     doc.body.appendChild(styleElement);
-                    
+
                     return styleElement.sheet;
                 }
             }
@@ -805,9 +805,11 @@
             function getCssRules(styleSheets) {
                 var cssRules = [];
                 styleSheets.forEach(function(sheet) {
-                    if (sheet.hasOwnProperty("cssRules")) {
+                    if ("cssRules" in sheet) {
                         try {
-                            util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
+                            util.asArray(sheet.cssRules || []).forEach(function(cssRule) {
+                                cssRules.push(cssRule)
+                            });
                         } catch (e) {
                             console.log('Error while reading CSS rules from ' + sheet.href, e.toString());
                         }
