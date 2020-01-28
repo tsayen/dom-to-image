@@ -21,7 +21,9 @@
         "mocha": "^2.2.4"
     },
     "scripts": {
-        "test": "./node_modules/.bin/grunt test"
+        "test": "grunt test",
+        "build": "grunt build",
+        "postinstall": "yarn build"
     },
     "repository": {
         "type": "git",

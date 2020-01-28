@@ -659,6 +659,7 @@
 
         function readAll() {
             return Promise.resolve(util.asArray(document.styleSheets))
+                .then(loadExternalStyleSheets)
                 .then(getCssRules)
                 .then(selectWebFontRules)
                 .then(function (rules) {
@@ -673,6 +674,80 @@
                     .filter(function (rule) {
                         return inliner.shouldProcess(rule.style.getPropertyValue('src'));
                     });
+            }
+
+            function loadExternalStyleSheets(styleSheets) {
+                return Promise.all(
+                    styleSheets.map(function (sheet) {
+                        if (sheet.href) {
+							// Fix issue when chrome save file request in cache with out Access-Control-Allow-Origin:* header so it throw Cors error
+							return fetch(sheet.href + (sheet.href.indexOf('?') === -1 ? '?' : '&') + "timestamp=" + new Date().getTime())
+                                .then(toText)
+                                .then(setBaseHref(sheet.href))
+                                .then(toStyleSheet);
+                        } else {
+                            return Promise.resolve(sheet);
+                        }
+                    })
+                )
+
+                function toText(response) {
+                    return response.text();
+                }
+
+                function setBaseHref(base) {
+                    base = base.split('/');
+                    base.pop();
+                    base = base.join('/');
+
+                    return function(text) {
+                        return text.replace(
+                            /url\(['"]?([^'"]+?)['"]?\)/g,
+                            addBaseHrefToUrl
+                        );
+                    };
+
+                    function addBaseHrefToUrl(match, p1) {
+                        var url = /^http/i.test(p1) ?
+                            p1 : concatAndResolveUrl(base, p1)
+                        return 'url(\'' + url + '\')';
+                    }
+
+                    // Source: http://stackoverflow.com/a/2676231/3786856
+					function concatAndResolveUrl(url, concat) {
+						var url1 = url.split('/');
+						var url2 = concat.split('/');
+						var url3 = [ ];
+
+						processRelativeUrl(url1, url3);
+						processRelativeUrl(url2, url3);
+
+						function processRelativeUrl(urlToProcess, existUrl) {
+							for (var i = 0; i < urlToProcess.length; i ++) {
+								// Always keep the domain (will be the first 3 items in the exist url)
+								if (urlToProcess[i] === '..' && existUrl.length > 3) {
+									existUrl.pop();
+								} else if (urlToProcess[i] === '.') {
+									continue;
+								} else {
+									existUrl.push(urlToProcess[i]);
+								}
+							}
+						}
+
+						return url3.join('/');
+					}
+                }
+
+                function toStyleSheet(text) {
+                    var doc = document.implementation.createHTMLDocument('');
+                    var styleElement = document.createElement('style');
+
+                    styleElement.textContent = text;
+                    doc.body.appendChild(styleElement);
+                    
+                    return styleElement.sheet;
+                }
             }
 
             function getCssRules(styleSheets) {
