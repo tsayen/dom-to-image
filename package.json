@@ -22,8 +22,7 @@
     },
     "scripts": {
         "test": "grunt test",
-        "build": "grunt build",
-        "postinstall": "yarn build"
+        "build": "grunt build"
     },
     "repository": {
         "type": "git",
