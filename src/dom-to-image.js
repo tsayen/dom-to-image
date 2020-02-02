@@ -732,8 +732,7 @@
                 return Promise.all(
                     styleSheets.map(function (sheet) {
                         if (sheet.href) {
-							// Fix issue when chrome save file request in cache with out Access-Control-Allow-Origin:* header so it throw Cors error
-							return fetch(sheet.href + (sheet.href.indexOf('?') === -1 ? '?' : '&') + "timestamp=" + new Date().getTime())
+							return fetch(sheet.href, { mode: 'no-cors'})
                                 .then(toText)
                                 .then(setBaseHref(sheet.href))
                                 .then(toStyleSheet);
