@@ -735,7 +735,10 @@
 							return fetch(sheet.href, { mode: 'no-cors'})
                                 .then(toText)
                                 .then(setBaseHref(sheet.href))
-                                .then(toStyleSheet);
+                                .then(toStyleSheet)
+                                .catch(function(err) {
+                                    return document.createElement('style').sheet
+                                });
                         } else {
                             return Promise.resolve(sheet);
                         }
@@ -743,6 +746,9 @@
                 )
 
                 function toText(response) {
+                    if (!response.ok) {
+                        throw new Error('Failed to retrieve external stylesheet')
+                    }
                     return response.text();
                 }
 
@@ -803,15 +809,16 @@
 
             function getCssRules(styleSheets) {
                 var cssRules = [];
+
                 styleSheets.forEach(function(sheet) {
-                    if ("cssRules" in sheet) {
-                        try {
+                    try {
+                        if (sheet && "cssRules" in sheet) {
                             util.asArray(sheet.cssRules || []).forEach(function(cssRule) {
                                 cssRules.push(cssRule)
                             });
-                        } catch (e) {
-                            console.log('Error while reading CSS rules from ' + sheet.href, e.toString());
                         }
+                    } catch (e) {
+                        console.log('Error while reading CSS rules from ' + sheet.href, e.toString());
                     }
                 });
                 return cssRules;
