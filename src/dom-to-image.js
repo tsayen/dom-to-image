@@ -11,7 +11,9 @@
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
         // Default cache bust is false, it will use the cache
-        cacheBust: false
+        cacheBust: false,
+        // Default cors config is to request the image address directly
+        corsImg: undefined
     };
 
     var domtoimage = {
@@ -49,6 +51,11 @@
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
+     * @param {Object} options.corsImg - When the image is restricted by the server from cross-domain requests, the proxy address is passed in to get the image
+     *         - @param url - eg: https://cors-anywhere.herokuapp.com/
+     *         - @param method - get, post
+     *         - @param headers - eg: { "Content-Type", "application/json;charset=UTF-8" }
+     *         - @param data - post payload
      * */
     function toSvg(node, options) {
         options = options || {};
@@ -146,6 +153,12 @@
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
+        }
+
+        if (typeof(options.corsImg) === 'undefined') {
+            domtoimage.impl.options.corsImg = defaultOptions.corsImg;
+        } else {
+            domtoimage.impl.options.corsImg = options.corsImg;
         }
     }
 
@@ -475,8 +488,35 @@
                 request.ontimeout = timeout;
                 request.responseType = 'blob';
                 request.timeout = TIMEOUT;
-                request.open('GET', url, true);
-                request.send();
+
+                if ((url.indexOf('http://') !== -1 || url.indexOf('https://') !== -1) && domtoimage.impl.options.corsImg) {
+                    var method = domtoimage.impl.options.corsImg.method || 'GET';
+                    method = method.toUpperCase(method) === 'POST' ? 'POST' : 'GET';
+
+                    var reqUrl = domtoimage.impl.options.corsImg.url || '';
+                    reqUrl = reqUrl.replace('${cors}', url);
+
+                    var data = domtoimage.impl.options.corsImg.data || '';
+                    Object.keys(data).forEach(function (key) {
+                        if (typeof(data[key]) === 'string') {
+                            data[key] = data[key].replace('${cors}', url);
+                        }
+                    });
+                    request.open(method, reqUrl, true);
+
+                    var isJson = false;
+                    var headers = domtoimage.impl.options.corsImg.headers || {};
+                    Object.keys(headers).forEach(function (key) {
+                        if (headers[key].indexOf('application/json') !== -1) {
+                            isJson = true;
+                        }
+                        request.setRequestHeader(key, headers[key]);
+                    });
+                    request.send(isJson ? JSON.stringify(data) : data);
+                } else {
+                    request.open('GET', url, true);
+                    request.send();
+                }
 
                 var placeholder;
                 if(domtoimage.impl.options.imagePlaceholder) {
@@ -489,7 +529,7 @@
                 function done() {
                     if (request.readyState !== 4) return;
 
-                    if (request.status !== 200) {
+                    if (request.status >= 400) {
                         if(placeholder) {
                             resolve(placeholder);
                         } else {
