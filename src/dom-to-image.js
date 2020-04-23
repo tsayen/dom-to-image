@@ -52,10 +52,11 @@
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * @param {Object} options.corsImg - When the image is restricted by the server from cross-domain requests, the proxy address is passed in to get the image
-     *         - @param url - eg: https://cors-anywhere.herokuapp.com/
-     *         - @param method - get, post
-     *         - @param headers - eg: { "Content-Type", "application/json;charset=UTF-8" }
-     *         - @param data - post payload
+     * @param {Object} options.corsImg - When the image is restricted by the server from cross-domain requests, the proxy address is passed in to get the image
+     *         - @param {String} url - eg: https://cors-anywhere.herokuapp.com/
+     *         - @param {Enumerator} method - get, post
+     *         - @param {Object} headers - eg: { "Content-Type", "application/json;charset=UTF-8" }
+     *         - @param {Object} data - post payload
      * */
     function toSvg(node, options) {
         options = options || {};
@@ -489,21 +490,32 @@
                 request.responseType = 'blob';
                 request.timeout = TIMEOUT;
 
-                if ((url.indexOf('http://') !== -1 || url.indexOf('https://') !== -1) && domtoimage.impl.options.corsImg) {
+                if (
+                    url.indexOf('http') === 0 &&
+                    url.indexOf(window.location.origin) === -1 &&
+                    domtoimage.impl.options.corsImg
+                ) {
                     var method = domtoimage.impl.options.corsImg.method || 'GET';
                     method = method.toUpperCase(method) === 'POST' ? 'POST' : 'GET';
-
+  
                     var reqUrl = domtoimage.impl.options.corsImg.url || '';
-                    reqUrl = reqUrl.replace('${cors}', url);
-
+                    reqUrl = reqUrl.replace('#{cors}', url);
+  
                     var data = domtoimage.impl.options.corsImg.data || '';
+                    try {
+                        data = JSON.parse(JSON.stringify(data));
+                    } catch (e) {
+                        fail('corsImg.data is not available');
+                        return;
+                    }
+                    
                     Object.keys(data).forEach(function (key) {
                         if (typeof(data[key]) === 'string') {
-                            data[key] = data[key].replace('${cors}', url);
+                            data[key] = data[key].replace('#{cors}', url);
                         }
                     });
                     request.open(method, reqUrl, true);
-
+  
                     var isJson = false;
                     var headers = domtoimage.impl.options.corsImg.headers || {};
                     Object.keys(headers).forEach(function (key) {
