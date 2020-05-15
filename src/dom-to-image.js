@@ -6,6 +6,8 @@
     var fontFaces = newFontFaces();
     var images = newImages();
 
+    var cacheForResponses = [];
+
     // Default impl options
     var defaultOptions = {
         // Default is to fail on error, no placeholder
@@ -462,13 +464,17 @@
 
         function getAndEncode(url) {
             var TIMEOUT = 30000;
+            var _url = url.split('?')[0];
+            var _obj = cacheForResponses.find(el => el.url === _url);
+            if (_obj) return _obj.promise;
+
             if(domtoimage.impl.options.cacheBust) {
                 // Cache bypass so we dont have CORS issues with cached images
                 // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
                 url += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime();
             }
 
-            return new Promise(function (resolve) {
+            var promise = new Promise(function (resolve) {
                 var request = new XMLHttpRequest();
 
                 request.onreadystatechange = done;
@@ -520,6 +526,12 @@
                     resolve('');
                 }
             });
+            _obj = {
+                url: _url,
+                promise: promise
+            };
+            cacheForResponses.push(_obj);
+            return _obj.promise;
         }
 
         function dataAsUrl(content, type) {
