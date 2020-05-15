@@ -465,7 +465,9 @@
         function getAndEncode(url) {
             var TIMEOUT = 30000;
             var _url = url.split('?')[0];
-            var _obj = cacheForResponses.find(el => el.url === _url);
+            var _obj = cacheForResponses.find(function (el) {
+                return el.url === _url;
+            });
             if (_obj) return _obj.promise;
 
             if(domtoimage.impl.options.cacheBust) {
