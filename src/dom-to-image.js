@@ -502,7 +502,8 @@
                     var encoder = new FileReader();
                     encoder.onloadend = function () {
                         var content = encoder.result.split(/,/)[1];
-                        resolve(content);
+                        var dataUrl = util.dataAsUrl(content, util.mimeType(url) || request.getResponseHeader('Content-Type'));
+                        resolve(dataUrl);
                     };
                     encoder.readAsDataURL(request.response);
                 }
@@ -602,9 +603,6 @@
                     return baseUrl ? util.resolveUrl(url, baseUrl) : url;
                 })
                 .then(get || util.getAndEncode)
-                .then(function (data) {
-                    return util.dataAsUrl(data, util.mimeType(url));
-                })
                 .then(function (dataUrl) {
                     return string.replace(urlAsRegex(url), '$1' + dataUrl + '$3');
                 });
@@ -719,9 +717,6 @@
 
                 return Promise.resolve(element.src)
                     .then(get || util.getAndEncode)
-                    .then(function (data) {
-                        return util.dataAsUrl(data, util.mimeType(element.src));
-                    })
                     .then(function (dataUrl) {
                         return new Promise(function (resolve, reject) {
                             element.onload = resolve;
