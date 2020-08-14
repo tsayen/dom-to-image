@@ -548,7 +548,7 @@
         }
 
         function escapeXhtml(string) {
-            return string.replace(/#/g, '%23').replace(/\n/g, '%0A');
+            return string.replace(/%/g, "%25").replace(/#/g, '%23').replace(/\n/g, '%0A');
         }
 
         function width(node) {
