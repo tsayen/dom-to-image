@@ -730,7 +730,7 @@
             function getCssRules(styleSheets) {
                 var cssRules = [];
                 styleSheets.forEach(function(sheet) {
-                    if (sheet.hasOwnProperty("cssRules")) {
+                    if (Object.getPrototypeOf(sheet).hasOwnProperty("cssRules")) {
                         try {
                             util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
                         } catch (e) {
