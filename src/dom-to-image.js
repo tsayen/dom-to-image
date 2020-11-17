@@ -11,7 +11,9 @@
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
         // Default cache bust is false, it will use the cache
-        cacheBust: false
+        cacheBust: false,
+        // Default timeout
+        timeout: 30000
     };
 
     var domtoimage = {
@@ -146,6 +148,12 @@
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
+        }
+
+        if(typeof(options.timeout) === 'undefined') {
+            domtoimage.impl.options.timeout = defaultOptions.timeout;
+        } else {
+            domtoimage.impl.options.timeout = options.timeout;
         }
     }
 
@@ -461,7 +469,7 @@
         }
 
         function getAndEncode(url) {
-            var TIMEOUT = 30000;
+            var TIMEOUT = domtoimage.impl.options.timeout;
             if(domtoimage.impl.options.cacheBust) {
                 // Cache bypass so we dont have CORS issues with cached images
                 // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
