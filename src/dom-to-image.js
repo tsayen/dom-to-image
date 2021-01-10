@@ -646,6 +646,7 @@
 
         function readAll() {
             return Promise.resolve(util.asArray(document.styleSheets))
+                .then(loadExternalStyleSheets)
                 .then(getCssRules)
                 .then(selectWebFontRules)
                 .then(function (rules) {
@@ -685,6 +686,80 @@
                     }
                 };
             }
+        }
+    }
+
+    function loadExternalStyleSheets(styleSheets) {
+        return Promise.all(
+            styleSheets.map(function (sheet) {
+                if (sheet.href) {
+                    return fetch(sheet.href)
+                        .then(toText)
+                        .then(setBaseHref(sheet.href))
+                        .then(toStyleSheet);
+                } else {
+                    return Promise.resolve(sheet);
+                }
+            })
+        );
+
+        function toText(response) {
+            return response.text();
+        }
+
+        function setBaseHref(base) {
+            base = base.split('/');
+            base.pop();
+            base = base.join('/');
+
+            return function(text) {
+                return util.isSrcAsDataUrl(text) ? text : text.replace(
+                    /url\(['"]?([^'"]+?)['"]?\)/g,
+                    addBaseHrefToUrl
+                );
+            };
+
+            function addBaseHrefToUrl(match, p1) {
+                var url = /^http/i.test(p1) ?
+                    p1 : concatAndResolveUrl(base, p1)
+                return 'url(\'' + url + '\')';
+            }
+
+            // Source: http://stackoverflow.com/a/2676231/3786856
+            function concatAndResolveUrl(url, concat) {
+                var url1 = url.split('/');
+                var url2 = concat.split('/');
+                var url3 = [ ];
+                for (var i = 0, l = url1.length; i < l; i ++) {
+                    if (url1[i] == '..') {
+                        url3.pop();
+                    } else if (url1[i] == '.') {
+                        continue;
+                    } else {
+                        url3.push(url1[i]);
+                    }
+                }
+                for (var i = 0, l = url2.length; i < l; i ++) {
+                    if (url2[i] == '..') {
+                        url3.pop();
+                    } else if (url2[i] == '.') {
+                        continue;
+                    } else {
+                        url3.push(url2[i]);
+                    }
+                }
+                return url3.join('/');
+            }
+        }
+
+        function toStyleSheet(text) {
+            var doc = document.implementation.createHTMLDocument('');
+            var styleElement = document.createElement('style');
+
+            styleElement.textContent = text;
+            doc.body.appendChild(styleElement);
+
+            return styleElement.sheet;
         }
     }
 
