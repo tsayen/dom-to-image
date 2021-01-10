@@ -345,7 +345,7 @@
                 nodesArray.forEach((node) => {
                     node.style.opacity = node.oldOpacity;
                     node.style.visibility = node.oldVisibility;
-            });
+                });
                 return 'data:image/svg+xml;charset=utf-8,' + svg;
             });
     }
@@ -357,6 +357,7 @@
             mimeType: mimeType,
             dataAsUrl: dataAsUrl,
             isDataUrl: isDataUrl,
+            isSrcAsDataUrl: isSrcAsDataUrl,
             canvasToBlob: canvasToBlob,
             resolveUrl: resolveUrl,
             getAndEncode: getAndEncode,
@@ -419,6 +420,12 @@
                     type: 'image/png'
                 }));
             });
+        }
+
+        function isSrcAsDataUrl(text) {
+            var DATA_URL_REGEX = /url\(['"]?(data:)([^'"]+?)['"]?\)/;
+
+            return text.search(DATA_URL_REGEX) !== -1;
         }
 
         function canvasToBlob(canvas) {
