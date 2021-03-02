@@ -192,7 +192,7 @@
         }
 
         function cloneChildren(original, clone, filter) {
-            var children = original.childNodes;
+			var children = original.shadowRoot ? original.shadowRoot.childNodes : original.childNodes;
             if (children.length === 0) return Promise.resolve(clone);
 
             return cloneChildrenInOrder(clone, util.asArray(children), filter)
@@ -247,9 +247,9 @@
             }
 
             function clonePseudoElements() {
-                [':before', ':after'].forEach(function (element) {
-                    clonePseudoElement(element);
-                });
+				[':before', ':after', ':first-line'].forEach(function (element) {
+					clonePseudoElement(element);
+				});
 
                 function clonePseudoElement(element) {
                     var style = window.getComputedStyle(original, element);
