@@ -294,6 +294,16 @@
                                 source.getPropertyPriority(name)
                             );
                         });
+                        
+                        // Remove positioning of root elements, which stops them from being captured correctly
+                        if (root) {
+                            ['inset-block', 'inset-block-start', 'inset-block-end'].forEach((prop) => target.removeProperty(prop));
+                            ['left', 'right', 'top', 'bottom'].forEach((prop) => {
+                                if (target.getPropertyValue(prop)) {
+                                    target.setProperty(prop, '0px');
+                                }
+                            });
+                        }
                     }
                 }
             }
