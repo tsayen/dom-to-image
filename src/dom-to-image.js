@@ -1,6 +1,10 @@
 (function (global) {
     'use strict';
 
+    var logLevels = {
+        ERROR: 1,
+        WARNING: 2,
+    };
     var util = newUtil();
     var inliner = newInliner();
     var fontFaces = newFontFaces();
@@ -11,7 +15,8 @@
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
         // Default cache bust is false, it will use the cache
-        cacheBust: false
+        cacheBust: false,
+        logLevel: logLevels.WARNING,
     };
 
     var domtoimage = {
@@ -516,7 +521,7 @@
                 }
 
                 function fail(message) {
-                    console.error(message);
+                    error(message);
                     resolve('');
                 }
             });
@@ -681,7 +686,7 @@
                     try {
                         util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
                     } catch (e) {
-                        console.log('Error while reading CSS rules from ' + sheet.href, e.toString());
+                        warn('Error while reading CSS rules from ' + sheet.href, e.toString());
                     }
                 });
                 return cssRules;
@@ -764,6 +769,18 @@
                         return node;
                     });
             }
+        }
+    }
+
+    function error(message) {
+        if (domtoimage.impl.logLevel >= logLevels.ERROR) {
+            console.error(message);
+        }
+    }
+
+    function warn(message) {
+        if (domtoimage.impl.logLevel >= logLevels.WARNING) {
+            console.warn(message);
         }
     }
 })(this);
