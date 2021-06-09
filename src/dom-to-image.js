@@ -25,6 +25,7 @@
         toJpeg: toJpeg,
         toBlob: toBlob,
         toPixelData: toPixelData,
+        logLevels: logLevels,
         impl: {
             fontFaces: fontFaces,
             images: images,
@@ -151,6 +152,11 @@
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
+        }
+        if(typeof(options.logLevel) === 'undefined') {
+            domtoimage.impl.options.logLevel = domtoimage.impl.options.logLevel || defaultOptions.logLevel;
+        } else {
+            domtoimage.impl.options.logLevel = options.logLevel;
         }
     }
 
@@ -773,13 +779,13 @@
     }
 
     function error(message) {
-        if (domtoimage.impl.logLevel >= logLevels.ERROR) {
+        if (domtoimage.impl.options.logLevel >= logLevels.ERROR) {
             console.error(message);
         }
     }
 
     function warn(message) {
-        if (domtoimage.impl.logLevel >= logLevels.WARNING) {
+        if (domtoimage.impl.options.logLevel >= logLevels.WARNING) {
             console.warn(message);
         }
     }
