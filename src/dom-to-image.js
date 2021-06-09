@@ -1,6 +1,10 @@
 (function (global) {
     'use strict';
 
+    var logLevels = {
+        ERROR: 1,
+        WARNING: 2,
+    };
     var util = newUtil();
     var inliner = newInliner();
     var fontFaces = newFontFaces();
@@ -11,7 +15,8 @@
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
         // Default cache bust is false, it will use the cache
-        cacheBust: false
+        cacheBust: false,
+        logLevel: logLevels.WARNING,
     };
 
     var domtoimage = {
@@ -20,6 +25,7 @@
         toJpeg: toJpeg,
         toBlob: toBlob,
         toPixelData: toPixelData,
+        logLevels: logLevels,
         impl: {
             fontFaces: fontFaces,
             images: images,
@@ -146,6 +152,11 @@
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
+        }
+        if(typeof(options.logLevel) === 'undefined') {
+            domtoimage.impl.options.logLevel = domtoimage.impl.options.logLevel || defaultOptions.logLevel;
+        } else {
+            domtoimage.impl.options.logLevel = options.logLevel;
         }
     }
 
@@ -516,7 +527,7 @@
                 }
 
                 function fail(message) {
-                    console.error(message);
+                    error(message);
                     resolve('');
                 }
             });
@@ -681,7 +692,7 @@
                     try {
                         util.asArray(sheet.cssRules || []).forEach(cssRules.push.bind(cssRules));
                     } catch (e) {
-                        console.log('Error while reading CSS rules from ' + sheet.href, e.toString());
+                        warn('Error while reading CSS rules from ' + sheet.href, e.toString());
                     }
                 });
                 return cssRules;
@@ -764,6 +775,18 @@
                         return node;
                     });
             }
+        }
+    }
+
+    function error(message) {
+        if (domtoimage.impl.options.logLevel >= logLevels.ERROR) {
+            console.error(message);
+        }
+    }
+
+    function warn(message) {
+        if (domtoimage.impl.options.logLevel >= logLevels.WARNING) {
+            console.warn(message);
         }
     }
 })(this);
