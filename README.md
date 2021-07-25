@@ -250,6 +250,19 @@ for you, following steps are taken:
 
 1. Done!  
 
+## Using Typescript
+
+1. Use original `dom-to-image` type definition
+   `npm install @types/dom-to-image --save-dev`
+
+2. Create dom-to-image-more type definition (`dom-to-image-more.d.ts`)
+   ```javascript
+   declare module 'dom-to-image-more' {
+    import domToImage = require('dom-to-image');
+    export = domToImage;
+   }
+   ```
+
 ## Things to watch out for
 
 - if the DOM node you want to render includes a `<canvas>` element with
