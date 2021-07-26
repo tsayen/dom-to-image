@@ -261,7 +261,7 @@
                 });
 
             function cloneStyle() {
-                copyStyle(window.getComputedStyle(original), clone.style);
+                copyStyle(getUserComputedStyle(original), clone.style);
 
                 function copyFont(source, target) {
                     target.font = source.font;
@@ -314,7 +314,7 @@
                 });
 
                 function clonePseudoElement(element) {
-                    var style = window.getComputedStyle(original, element);
+                    var style = getUserComputedStyle(original, element);
                     var content = style.getPropertyValue('content');
 
                     if (content === '' || content === 'none') return;
@@ -469,7 +469,7 @@
 
         function toBlob(canvas) {
             return new Promise(function(resolve) {
-                var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
+                var binaryString = global.atob(canvas.toDataURL().split(',')[1]);
                 var length = binaryString.length;
                 var binaryArray = new Uint8Array(length);
 
@@ -637,7 +637,7 @@
         }
 
         function px(node, styleProperty) {
-            var value = window.getComputedStyle(node).getPropertyValue(styleProperty);
+            var value = getUserComputedStyle(node).getPropertyValue(styleProperty);
             return parseFloat(value.replace('px', ''));
         }
     }
@@ -841,5 +841,34 @@
                     });
             }
         }
+    }
+
+    function getUserComputedStyle(element, pseudo) {
+        var computedStyles = global.getComputedStyle(element, pseudo);
+        var inlineStyles = element.style;
+
+        if (pseudo) {
+            return computedStyles;
+        }
+
+        for (var i = 0; i < computedStyles.length; i++) {
+            var key = computedStyles[i];
+            var value = computedStyles.getPropertyValue(key);
+            var inlineValue = inlineStyles.getPropertyValue(key);
+
+            if (!inlineValue.length) {
+                inlineStyles.setProperty(key, 'initial');
+
+                var initialValue = computedStyles.getPropertyValue(key);
+
+                if (initialValue !== value) {
+                    inlineStyles.setProperty(key, value);
+                } else {
+                    inlineStyles.removeProperty(key);
+                }
+            }
+        }
+
+        return inlineStyles;
     }
 })(this);
