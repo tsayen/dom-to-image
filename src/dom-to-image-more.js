@@ -1,4 +1,4 @@
-(function(global) {
+(function(window) {
     'use strict';
 
     var util = newUtil();
@@ -35,7 +35,7 @@
     if (typeof exports === "object" && typeof module === "object")
         module.exports = domtoimage;
     else
-        global.domtoimage = domtoimage;
+        window.domtoimage = domtoimage;
 
     /**
      * @param {Node} node - The DOM Node object to render
@@ -261,7 +261,7 @@
                 });
 
             function cloneStyle() {
-                copyStyle(getUserComputedStyle(original), clone.style);
+                copyStyle(getUserComputedStyle(original, root), clone.style);
 
                 function copyFont(source, target) {
                     target.font = source.font;
@@ -314,7 +314,7 @@
                 });
 
                 function clonePseudoElement(element) {
-                    var style = getUserComputedStyle(original, element);
+                    var style = window.getComputedStyle(original, element);
                     var content = style.getPropertyValue('content');
 
                     if (content === '' || content === 'none') return;
@@ -469,7 +469,7 @@
 
         function toBlob(canvas) {
             return new Promise(function(resolve) {
-                var binaryString = global.atob(canvas.toDataURL().split(',')[1]);
+                var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
                 var length = binaryString.length;
                 var binaryArray = new Uint8Array(length);
 
@@ -637,7 +637,7 @@
         }
 
         function px(node, styleProperty) {
-            var value = getUserComputedStyle(node).getPropertyValue(styleProperty);
+            var value = window.getComputedStyle(node).getPropertyValue(styleProperty);
             return parseFloat(value.replace('px', ''));
         }
     }
@@ -843,8 +843,8 @@
         }
     }
 
-    function getUserComputedStyle(element, pseudo) {
-        var computedStyles = global.getComputedStyle(element, pseudo);
+    function getUserComputedStyle(element, root) {
+        var computedStyles = window.getComputedStyle(element);
         var inlineStyles = element.style;
 
         if (pseudo) {
@@ -857,7 +857,7 @@
             var inlineValue = inlineStyles.getPropertyValue(key);
 
             if (!inlineValue.length) {
-                inlineStyles.setProperty(key, 'initial');
+                inlineStyles.setProperty(key, root ? 'initial' : 'unset');
 
                 var initialValue = computedStyles.getPropertyValue(key);
 
