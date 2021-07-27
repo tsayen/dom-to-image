@@ -847,10 +847,6 @@
         var computedStyles = window.getComputedStyle(element);
         var inlineStyles = element.style;
 
-        if (pseudo) {
-            return computedStyles;
-        }
-
         for (var i = 0; i < computedStyles.length; i++) {
             var key = computedStyles[i];
             var value = computedStyles.getPropertyValue(key);
