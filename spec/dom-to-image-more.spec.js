@@ -180,7 +180,7 @@
             it('should render with external stylesheet', function(done) {
                 loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
                     .then(delay(1000))
-                    //.then(renderAndCheck)
+                    //.then(pass)//.then(renderAndCheck)
                     .then(done).catch(done);
             });
 
