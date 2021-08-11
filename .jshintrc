@@ -3,5 +3,6 @@
     "immed": true,
     "newcap": true,
     "unused": "strict",
-    "esnext": true
+    "esnext": true,
+    "laxbreak": true
 }
