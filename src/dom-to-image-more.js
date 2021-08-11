@@ -60,8 +60,8 @@
         options = options || {};
         copyOptions(options);
         return Promise.resolve(node)
-            .then(function(node) {
-                return cloneNode(node, options.filter, true);
+            .then(function(clonee) {
+                return cloneNode(clonee, options.filter, true);
             })
             .then(embedFonts)
             .then(inlineImages)
@@ -192,10 +192,10 @@
                 return canvas;
             });
 
-        function newCanvas(domNode, scale) {
+        function newCanvas(node, scale) {
             var canvas = document.createElement('canvas');
-            canvas.width = (options.width || util.width(domNode)) * scale;
-            canvas.height = (options.height || util.height(domNode)) * scale;
+            canvas.width = (options.width || util.width(node)) * scale;
+            canvas.height = (options.height || util.height(node)) * scale;
 
             if (options.bgcolor) {
                 var ctx = canvas.getContext('2d');
@@ -213,29 +213,29 @@
         return Promise.resolve(node)
             .then(makeNodeCopy)
             .then(function(clone) {
-                return cloneChildren(node, clone, filter);
+                return cloneChildren(node, clone);
             })
             .then(function(clone) {
                 return processClone(node, clone);
             });
 
-        function makeNodeCopy(node) {
-            if (node instanceof HTMLCanvasElement) return util.makeImage(node.toDataURL());
-            return node.cloneNode(false);
+        function makeNodeCopy(original) {
+            if (original instanceof HTMLCanvasElement) return util.makeImage(original.toDataURL());
+            return original.cloneNode(false);
         }
 
-        function cloneChildren(original, clone, filter) {
+        function cloneChildren(original, clone) {
             var children = original.childNodes;
             if (children.length === 0) return Promise.resolve(clone);
 
-            return cloneChildrenInOrder(clone, util.asArray(children), filter)
+            return cloneChildrenInOrder(clone, util.asArray(children))
                 .then(function() {
                     return clone;
                 });
 
-            function cloneChildrenInOrder(parent, children, filter) {
+            function cloneChildrenInOrder(parent, childs) {
                 var done = Promise.resolve();
-                children.forEach(function(child) {
+                childs.forEach(function(child) {
                     done = done
                         .then(function() {
                             return cloneNode(child, filter);
@@ -286,12 +286,12 @@
                         copyFont(source, target); // here we re-assign the font props.
                     } else copyProperties(source, target);
 
-                    function copyProperties(source, target) {
-                        util.asArray(source).forEach(function(name) {
-                            target.setProperty(
+                    function copyProperties(from, to) {
+                        util.asArray(from).forEach(function(name) {
+                            to.setProperty(
                                 name,
-                                source.getPropertyValue(name),
-                                source.getPropertyPriority(name)
+                                from.getPropertyValue(name),
+                                from.getPropertyPriority(name)
                             );
                         });
                         
@@ -326,20 +326,19 @@
                     }
 
                     var styleElement = document.createElement('style');
-                    styleElement.appendChild(formatPseudoElementStyle(className, element, style));
+                    styleElement.appendChild(formatPseudoElementStyle());
                     clone.appendChild(styleElement);
 
-                    function formatPseudoElementStyle(className, element, style) {
+                    function formatPseudoElementStyle() {
                         var selector = '.' + className + ':' + element;
-                        var cssText = style.cssText ? formatCssText(style) : formatCssProperties(style);
+                        var cssText = style.cssText ? formatCssText() : formatCssProperties();
                         return document.createTextNode(selector + '{' + cssText + '}');
 
-                        function formatCssText(style) {
-                            var content = style.getPropertyValue('content');
-                            return style.cssText + ' content: ' + content + ';';
+                        function formatCssText() {
+                            return style.cssText + ' content: ' +  style.getPropertyValue('content') + ';';
                         }
 
-                        function formatCssProperties(style) {
+                        function formatCssProperties() {
 
                             return util.asArray(style)
                                 .map(formatProperty)
@@ -394,9 +393,9 @@
 
     function makeSvgDataUri(node, width, height) {
         return Promise.resolve(node)
-            .then(function(node) {
-                node.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-                return new XMLSerializer().serializeToString(node);
+            .then(function(svg) {
+                svg.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+                return new XMLSerializer().serializeToString(svg);
             })
             .then(util.escapeXhtml)
             .then(function(xhtml) {
@@ -467,7 +466,7 @@
             return url.search(/^(data:)/) !== -1;
         }
 
-        function toBlob(canvas) {
+        function asBlob(canvas) {
             return new Promise(function(resolve) {
                 var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
                 var length = binaryString.length;
@@ -488,7 +487,7 @@
                     canvas.toBlob(resolve);
                 });
 
-            return toBlob(canvas);
+            return asBlob(canvas);
         }
 
         function resolveUrl(url, baseUrl) {
@@ -671,8 +670,8 @@
 
         function inline(string, url, baseUrl, get) {
             return Promise.resolve(url)
-                .then(function(url) {
-                    return baseUrl ? util.resolveUrl(url, baseUrl) : url;
+                .then(function(urlValue) {
+                    return baseUrl ? util.resolveUrl(urlValue, baseUrl) : urlValue;
                 })
                 .then(get || util.getAndEncode)
                 .then(function(data) {
@@ -682,8 +681,8 @@
                     return string.replace(urlAsRegex(url), '$1' + dataUrl + '$3');
                 });
 
-            function urlAsRegex(url) {
-                return new RegExp('(url\\([\'"]?)(' + util.escape(url) + ')([\'"]?\\))', 'g');
+            function urlAsRegex(urlValue) {
+                return new RegExp('(url\\([\'"]?)(' + util.escape(urlValue) + ')([\'"]?\\))', 'g');
             }
         }
 
@@ -695,8 +694,8 @@
                 .then(function(urls) {
                     var done = Promise.resolve(string);
                     urls.forEach(function(url) {
-                        done = done.then(function(string) {
-                            return inline(string, url, baseUrl, get);
+                        done = done.then(function(prefix) {
+                            return inline(prefix, url, baseUrl, get);
                         });
                     });
                     return done;
@@ -717,7 +716,7 @@
         };
 
         function resolveAll() {
-            return readAll(document)
+            return readAll()
                 .then(function(webFonts) {
                     return Promise.all(
                         webFonts.map(function(webFont) {
@@ -823,21 +822,21 @@
                         );
                 });
 
-            function inlineBackground(node) {
-                var background = node.style.getPropertyValue('background');
+            function inlineBackground(backgroudNode) {
+                var background = backgroudNode.style.getPropertyValue('background');
 
-                if (!background) return Promise.resolve(node);
+                if (!background) return Promise.resolve(backgroudNode);
 
                 return inliner.inlineAll(background)
                     .then(function(inlined) {
-                        node.style.setProperty(
+                        backgroudNode.style.setProperty(
                             'background',
                             inlined,
-                            node.style.getPropertyPriority('background')
+                            backgroud
                         );
                     })
                     .then(function() {
-                        return node;
+                        return backgroudNode;
                     });
             }
         }
