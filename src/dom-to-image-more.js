@@ -1,4 +1,4 @@
-(function(window) {
+(function(global) {
     'use strict';
 
     var util = newUtil();
@@ -35,7 +35,7 @@
     if (typeof exports === "object" && typeof module === "object")
         module.exports = domtoimage;
     else
-        window.domtoimage = domtoimage;
+        global.domtoimage = domtoimage;
 
     /**
      * @param {Node} node - The DOM Node object to render
