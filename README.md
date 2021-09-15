@@ -4,7 +4,7 @@
 
 ## What is it
 
-**dom-to-image-more** is a library which can turn arbitrary DOM node into
+**dom-to-image-more** is a library which can turn arbitrary DOM node, including same origin and blob iframes, into
 a vector (SVG) or raster (PNG or JPEG) image, written in JavaScript.
 
 This fork of [dom-to-image by Anatolii Saienko (tsayen)](https://github.com/tsayen/dom-to-image)
