@@ -221,7 +221,7 @@
 
         function makeNodeCopy(original) {
             if (original instanceof HTMLCanvasElement) return util.makeImage(original.toDataURL());
-            if(original.nodeName == "IFRAME"){
+            if(original.nodeName === "IFRAME"){
               return html2canvas(original.contentDocument.body)
               .then(canvas => {
                 return canvas.toDataURL();
