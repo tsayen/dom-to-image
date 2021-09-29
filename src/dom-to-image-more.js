@@ -51,6 +51,7 @@
      * @param {Object} options.style - an object whose properties to be copied to node's style before rendering.
      * @param {Number} options.quality - a Number between 0 and 1 indicating image quality (applicable to JPEG only),
                 defaults to 1.0.
+     * @param {Booolean} options.raster - Used internally to track whether the output is a raster image not requiring CSS reduction.
      * @param {Number} options.scale - a Number multiplier to scale up the canvas before rendering to reduce fuzzy images, defaults to 1.0.
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
@@ -61,7 +62,8 @@
         copyOptions(options);
         return Promise.resolve(node)
             .then(function(clonee) {
-                return cloneNode(clonee, options.filter, true);
+                const root = true;
+                return cloneNode(clonee, options.filter, root, !options.raster);
             })
             .then(embedFonts)
             .then(inlineImages)
@@ -101,7 +103,9 @@
      * @return {Promise} - A promise that is fulfilled with a Uint8Array containing RGBA pixel data.
      * */
     function toPixelData(node, options) {
-        return draw(node, options || {})
+        options = options || {};
+        options.raster = true;
+        return draw(node, options)
             .then(function(canvas) {
                 return canvas.getContext('2d').getImageData(
                     0,
@@ -118,7 +122,9 @@
      * @return {Promise} - A promise that is fulfilled with a PNG image data URL
      * */
     function toPng(node, options) {
-        return draw(node, options || {})
+        options = options || {};
+        options.raster = true;
+        return draw(node, options)
             .then(function(canvas) {
                 return canvas.toDataURL();
             });
@@ -131,6 +137,7 @@
      * */
     function toJpeg(node, options) {
         options = options || {};
+        options.raster = true;
         return draw(node, options)
             .then(function(canvas) {
                 return canvas.toDataURL('image/jpeg', options.quality || 1.0);
@@ -143,7 +150,9 @@
      * @return {Promise} - A promise that is fulfilled with a PNG image blob
      * */
     function toBlob(node, options) {
-        return draw(node, options || {})
+        options = options || {};
+        options.raster = true;
+        return draw(node, options)
             .then(util.canvasToBlob);
     }
 
@@ -207,7 +216,7 @@
         }
     }
 
-    function cloneNode(node, filter, root) {
+    function cloneNode(node, filter, root, vector) {
         if (!root && filter && !filter(node)) return Promise.resolve();
 
         return Promise.resolve(node)
@@ -216,7 +225,7 @@
                 return cloneChildren(node, clone);
             })
             .then(function(clone) {
-                return processClone(node, clone);
+                return processClone(node, clone, vector);
             });
 
         function makeNodeCopy(original) {
@@ -244,7 +253,7 @@
                 childs.forEach(function(child) {
                     done = done
                         .then(function() {
-                            return cloneNode(child, filter);
+                            return cloneNode(child, filter, vector);
                         })
                         .then(function(childClone) {
                             if (childClone) parent.appendChild(childClone);
@@ -254,7 +263,7 @@
             }
         }
 
-        function processClone(original, clone) {
+        function processClone(original, clone, vector) {
             if (!(clone instanceof Element)) return clone;
 
             return Promise.resolve()
@@ -267,7 +276,11 @@
                 });
 
             function cloneStyle() {
-                copyStyle(getUserComputedStyle(original, root), clone.style);
+                if (vector) {
+                    copyStyle(getUserComputedStyle(original, root), clone.style);
+                } else {
+                    copyStyle(global.getComputedStyle(original), clone.style);
+                }
 
                 function copyFont(source, target) {
                     target.font = source.font;
@@ -300,7 +313,7 @@
                                 from.getPropertyPriority(name)
                             );
                         });
-                        
+
                         // Remove positioning of root elements, which stops them from being captured correctly
                         if (root) {
                             ['inset-block', 'inset-block-start', 'inset-block-end'].forEach((prop) => target.removeProperty(prop));
@@ -828,27 +841,28 @@
                         );
                 });
 
-            function inlineBackground(backgroudNode) {
-                var background = backgroudNode.style.getPropertyValue('background');
+            function inlineBackground(backgroundNode) {
+                var background = backgroundNode.style.getPropertyValue('background');
 
-                if (!background) return Promise.resolve(backgroudNode);
+                if (!background) return Promise.resolve(backgroundNode);
 
                 return inliner.inlineAll(background)
                     .then(function(inlined) {
-                        backgroudNode.style.setProperty(
+                        backgroundNode.style.setProperty(
                             'background',
                             inlined,
-                            backgroud
+                            background
                         );
                     })
                     .then(function() {
-                        return backgroudNode;
+                        return backgroundNode;
                     });
             }
         }
     }
 
     function getUserComputedStyle(element, root) {
+        var clonedStyle = document.createElement(element.tagName).style;
         var computedStyles = window.getComputedStyle(element);
         var inlineStyles = element.style;
 
@@ -857,19 +871,18 @@
             var value = computedStyles.getPropertyValue(key);
             var inlineValue = inlineStyles.getPropertyValue(key);
 
-            if (!inlineValue.length) {
-                inlineStyles.setProperty(key, root ? 'initial' : 'unset');
+            inlineStyles.setProperty(key, root ? 'initial' : 'unset');
+            var initialValue = computedStyles.getPropertyValue(key);
 
-                var initialValue = computedStyles.getPropertyValue(key);
-
-                if (initialValue !== value) {
-                    inlineStyles.setProperty(key, value);
-                } else {
-                    inlineStyles.removeProperty(key);
-                }
+            if (initialValue !== value) {
+                clonedStyle.setProperty(key, value);
+            } else {
+                clonedStyle.removeProperty(key);
             }
+
+            inlineStyles.setProperty(key, inlineValue);
         }
 
-        return inlineStyles;
+        return clonedStyle;
     }
 })(this);
