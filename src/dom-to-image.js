@@ -175,7 +175,17 @@
     }
 
     function cloneNode(node, filter, root) {
-        if (!root && filter && !filter(node)) return Promise.resolve();
+        if (!root && filter) {
+            const filterRet = filter(node)
+            if (!filterRet) {
+                // false or undefined or null
+                return Promise.resolve();
+            }
+
+            // if filter returns boolean true, keep node unchanged
+            // else we use filter result as template node to clone
+            node = filterRet === true ? node : filterRet;
+        }
 
         return Promise.resolve(node)
             .then(makeNodeCopy)
