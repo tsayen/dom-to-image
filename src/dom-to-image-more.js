@@ -253,7 +253,7 @@
                 childs.forEach(function(child) {
                     done = done
                         .then(function() {
-                            return cloneNode(child, filter, vector);
+                            return cloneNode(child, filter, false, vector);
                         })
                         .then(function(childClone) {
                             if (childClone) parent.appendChild(childClone);
