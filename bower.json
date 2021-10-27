@@ -28,7 +28,7 @@
   ],
   "devDependencies": {
     "js-imagediff": "~1.0.8",
-    "jquery": "~2.1.3",
+    "jquery": "~3.0.0",
     "fontawesome": "~4.4.0"
   }
 }
