@@ -89,7 +89,7 @@
      * @return {Promise} - A promise that is fulfilled with a Uint8Array containing RGBA pixel data.
      * */
     function toPixelData(node, options) {
-        return draw(node, options || {})
+        return toCanvas(node, options || {})
             .then(function (canvas) {
                 return canvas.getContext('2d').getImageData(
                     0,
@@ -106,7 +106,7 @@
      * @return {Promise} - A promise that is fulfilled with a PNG image data URL
      * */
     function toPng(node, options) {
-        return draw(node, options || {})
+        return toCanvas(node, options || {})
             .then(function (canvas) {
                 return canvas.toDataURL();
             });
@@ -119,7 +119,7 @@
      * */
     function toJpeg(node, options) {
         options = options || {};
-        return draw(node, options)
+        return toCanvas(node, options)
             .then(function (canvas) {
                 return canvas.toDataURL('image/jpeg', options.quality || 1.0);
             });
@@ -131,7 +131,7 @@
      * @return {Promise} - A promise that is fulfilled with a PNG image blob
      * */
     function toBlob(node, options) {
-        return draw(node, options || {})
+        return toCanvas(node, options || {})
             .then(util.canvasToBlob);
     }
 
@@ -147,31 +147,6 @@
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
-        }
-    }
-
-    function draw(domNode, options) {
-        return toSvg(domNode, options)
-            .then(util.makeImage)
-            .then(util.delay(100))
-            .then(function (image) {
-                var canvas = newCanvas(domNode);
-                canvas.getContext('2d').drawImage(image, 0, 0);
-                return canvas;
-            });
-
-        function newCanvas(domNode) {
-            var canvas = document.createElement('canvas');
-            canvas.width = options.width || util.width(domNode);
-            canvas.height = options.height || util.height(domNode);
-
-            if (options.bgcolor) {
-                var ctx = canvas.getContext('2d');
-                ctx.fillStyle = options.bgcolor;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-
-            return canvas;
         }
     }
 
