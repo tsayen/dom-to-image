@@ -15,6 +15,7 @@
     };
 
     var domtoimage = {
+        toCanvas: toCanvas,
         toSvg: toSvg,
         toPng: toPng,
         toJpeg: toJpeg,
@@ -170,6 +171,28 @@
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
+            return canvas;
+        }
+    }
+
+    function toCanvas(domNode, options) {
+        return toSvg(domNode, options)
+            .then(util.makeImage)
+            .then(util.delay(100))
+            .then(function (image) {
+                var canvas = newCanvas(domNode);
+                canvas.getContext('2d').drawImage(image, 0, 0);
+                return canvas;
+            });
+        function newCanvas(domNode) {
+            var canvas = document.createElement('canvas');
+            canvas.width = options.width || util.width(domNode);
+            canvas.height = options.height || util.height(domNode);
+            if (options.bgcolor) {
+                var ctx = canvas.getContext('2d');
+                ctx.fillStyle = options.bgcolor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
             return canvas;
         }
     }
