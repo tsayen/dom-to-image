@@ -341,6 +341,8 @@
                     foreignObject + '</svg>';
             })
             .then(function (svg) {
+                // add U+200D ZERO WIDTH JOINER for Arabic-script letter connections that would be broken by a HTML tag:
+                svg = svg.replace(/(?<=[بتثپجحخچسشصضطظعغفقكکگلمنهيیی][ًٌٍَُِّّْ]*)((?:<\/?(?:span|b\b|del|em|ins|mark|s\b|strong|u\b)[^>]*>)+)(?=[ء-يٮ-ٳژکگی])/g, "%E2%80%8D$1%E2%80%8D");
                 return 'data:image/svg+xml;charset=utf-8,' + svg;
             });
     }
