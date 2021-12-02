@@ -10,10 +10,12 @@
     var defaultOptions = {
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
-        // Default cache bust is false, it will use the cache
-        cacheBust: false,
-        // Default timeout
-        timeout: 30000
+		// Default hard cache bust is false, it will use the cache
+		hardCacheBust: false,
+		// Default cache bust is false, it will use the cache
+		cacheBust: false,
+		// Default timeout
+		timeout: 30000
     };
 
     var domtoimage = {
@@ -49,7 +51,9 @@
      * @param {Number} options.quality - a Number between 0 and 1 indicating image quality (applicable to JPEG only),
                 defaults to 1.0.
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
-     * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
+     * @param {Boolean} options.hardCacheBust - set to true to cache bust by appending the time to the request url
+	 * @param {Boolean} options.cacheBust - set to true to cache bust by adding Cache-Control to the header
+	 * @param {Boolean} options.timeout - set to true to set a timeout
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
@@ -143,6 +147,13 @@
         } else {
             domtoimage.impl.options.imagePlaceholder = options.imagePlaceholder;
         }
+
+		if(typeof options.hardCacheBust === 'undefined') {
+			domtoimage.impl.options.hardCacheBust = defaultOptions.hardCacheBust;
+		} else {
+			domtoimage.impl.options.hardCacheBust = options.hardCacheBust;
+		}
+
 
         if(typeof(options.cacheBust) === 'undefined') {
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
@@ -470,7 +481,7 @@
 
         function getAndEncode(url) {
             var TIMEOUT = domtoimage.impl.options.timeout;
-            if(domtoimage.impl.options.cacheBust) {
+            if(domtoimage.impl.options.hardCacheBust) {
                 // Cache bypass so we dont have CORS issues with cached images
                 // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
                 url += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime();
@@ -484,6 +495,13 @@
                 request.responseType = 'blob';
                 request.timeout = TIMEOUT;
                 request.open('GET', url, true);
+
+				if(domtoimage.impl.options.cacheBust || domtoimage.impl.options.hardCacheBust) {
+					request.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+					request.setRequestHeader("Expires", "Tue, 01 Jan 1980 1:00:00 GMT");
+					request.setRequestHeader("Pragma", "no-cache");
+				}
+
                 request.send();
 
                 var placeholder;
