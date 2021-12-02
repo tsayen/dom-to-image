@@ -234,7 +234,7 @@
               return html2canvas(original.contentDocument.body)
               .then(canvas => {
                 return canvas.toDataURL();
-              }).then(util.makeImage);
+                    }).then(util.makeImage);
             }
             return original.cloneNode(false);
         }
@@ -333,7 +333,7 @@
                 });
 
                 function clonePseudoElement(element) {
-                    var style = window.getComputedStyle(original, element);
+                    var style = global.getComputedStyle(original, element);
                     var content = style.getPropertyValue('content');
 
                     if (content === '' || content === 'none') return;
@@ -487,7 +487,7 @@
 
         function asBlob(canvas) {
             return new Promise(function(resolve) {
-                var binaryString = window.atob(canvas.toDataURL().split(',')[1]);
+                var binaryString = global.atob(canvas.toDataURL().split(',')[1]);
                 var length = binaryString.length;
                 var binaryArray = new Uint8Array(length);
 
@@ -655,7 +655,7 @@
         }
 
         function px(node, styleProperty) {
-            var value = window.getComputedStyle(node).getPropertyValue(styleProperty);
+            var value = global.getComputedStyle(node).getPropertyValue(styleProperty);
             return parseFloat(value.replace('px', ''));
         }
     }
@@ -863,24 +863,23 @@
 
     function getUserComputedStyle(element, root) {
         var clonedStyle = document.createElement(element.tagName).style;
-        var computedStyles = window.getComputedStyle(element);
+        var computedStyles = global.getComputedStyle(element);
         var inlineStyles = element.style;
 
-        for (var i = 0; i < computedStyles.length; i++) {
-            var key = computedStyles[i];
-            var value = computedStyles.getPropertyValue(key);
-            var inlineValue = inlineStyles.getPropertyValue(key);
+        for (var style of computedStyles) {
+            var value = computedStyles.getPropertyValue(style);
+            var inlineValue = inlineStyles.getPropertyValue(style);
 
-            inlineStyles.setProperty(key, root ? 'initial' : 'unset');
-            var initialValue = computedStyles.getPropertyValue(key);
+            inlineStyles.setProperty(style, root ? 'initial' : 'unset');
+            var initialValue = computedStyles.getPropertyValue(style);
 
             if (initialValue !== value) {
-                clonedStyle.setProperty(key, value);
+                clonedStyle.setProperty(style, value);
             } else {
-                clonedStyle.removeProperty(key);
+                clonedStyle.removeProperty(style);
             }
 
-            inlineStyles.setProperty(key, inlineValue);
+            inlineStyles.setProperty(style, inlineValue);
         }
 
         return clonedStyle;
