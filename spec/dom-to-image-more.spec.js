@@ -137,11 +137,9 @@
                     .then(delay(1000))
                     .then(renderToPng)
                     .then(drawDataUrl)
-                    .then(pass) // the canvas text check is iffy
-                    /*
-                    .then(assertTextRendered(["JustBefore", "BothBefore"]))
-                    .then(assertTextRendered(["JustAfter", "BothAfterBefore"]))
-                    */
+                    // the canvas text check is iffy
+                    .then(assertTextRendered(["Before 2", "Before 4 Both"]))
+                    .then(assertTextRendered(["3 JustA", "BothA"]))
                     .then(done).catch(done);
             });
 
@@ -180,7 +178,7 @@
             it('should render with external stylesheet', function(done) {
                 loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
                     .then(delay(1000))
-                    //.then(pass)//.then(renderAndCheck)
+                    //.then(renderAndCheck)
                     .then(done).catch(done);
             });
 
@@ -190,10 +188,8 @@
                     .then(delay(1000))
                     .then(renderToPng)
                     .then(drawDataUrl)
-                    .then(pass) // the canvas text check is iffy
-                    /*
+                    // the canvas text check is iffy
                     .then(assertTextRendered(['O']))
-                    */
                     .then(done).catch(done);
             });
 
@@ -209,9 +205,11 @@
 
             it('should render background images', function(done) {
                 loadTestPage('css-bg/dom-node.html', 'css-bg/style.css')
+                    .then(delay(500))
                     .then(renderToPng)
                     .then(drawDataUrl)
-                    .then(pass)//.then(assertTextRendered(["JPG"]))
+                    .then(pass)
+                    //.then(assertTextRendered(["JPG"]))
                     .then(done).catch(done);
             });
 
