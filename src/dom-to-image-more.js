@@ -13,7 +13,9 @@
         // Default cache bust is false, it will use the cache
         cacheBust: false,
         // Use (existing) authentication credentials for external URIs (CORS requests)
-        useCredentials: false
+        useCredentials: false,
+        // Default resolve timeout 
+        httpTimeout: 30000
     };
 
     var domtoimage = {
@@ -549,7 +551,6 @@
         }
 
         function getAndEncode(url) {
-            var TIMEOUT = 30000;
             if (domtoimage.impl.options.cacheBust) {
                 // Cache bypass so we dont have CORS issues with cached images
                 // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
@@ -557,12 +558,13 @@
             }
 
             return new Promise(function(resolve) {
+                var httpTimeout = domtoimage.impl.options.httpTimeout;
                 var request = new XMLHttpRequest();
 
                 request.onreadystatechange = done;
                 request.ontimeout = timeout;
                 request.responseType = 'blob';
-                request.timeout = TIMEOUT;
+                request.timeout = httpTimeout;
                 if(domtoimage.impl.options.useCredentials) {
                     request.withCredentials = true;
                 }
@@ -602,7 +604,7 @@
                     if (placeholder) {
                         resolve(placeholder);
                     } else {
-                        fail('timeout of ' + TIMEOUT + 'ms occured while fetching resource: ' + url);
+                        fail('timeout of ' + httpTimeout + 'ms occured while fetching resource: ' + url);
                     }
                 }
 
