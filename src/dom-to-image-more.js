@@ -39,6 +39,10 @@
     else
         global.domtoimage = domtoimage;
 
+    // support node and browsers
+    const getComputedStyle = global.getComputedStyle || window.getComputedStyle;
+    const atob = global.atob || window.atob;
+
     /**
      * @param {Node} node - The DOM Node object to render
      * @param {Object} options - Rendering options
@@ -191,11 +195,14 @@
     function draw(domNode, options) {
         return toSvg(domNode, options)
             .then(util.makeImage)
-            .then(util.delay(100))
+            .then(util.delay(0))
             .then(function(image) {
                 var scale = typeof(options.scale) !== 'number' ? 1 : options.scale;
                 var canvas = newCanvas(domNode, scale);
                 var ctx = canvas.getContext('2d');
+                ctx.mozImageSmoothingEnabled = false;
+                ctx.msImageSmoothingEnabled = false;
+                ctx.imageSmoothingEnabled = false;
                 if (image) {
                     ctx.scale(scale, scale);
                     ctx.drawImage(image, 0, 0);
@@ -281,7 +288,7 @@
                 if (vector) {
                     copyStyle(getUserComputedStyle(original, root), clone.style);
                 } else {
-                    copyStyle(global.getComputedStyle(original), clone.style);
+                    copyStyle(getComputedStyle(original), clone.style);
                 }
 
                 function copyFont(source, target) {
@@ -335,7 +342,7 @@
                 });
 
                 function clonePseudoElement(element) {
-                    var style = global.getComputedStyle(original, element);
+                    var style = getComputedStyle(original, element);
                     var content = style.getPropertyValue('content');
 
                     if (content === '' || content === 'none') return;
@@ -489,7 +496,7 @@
 
         function asBlob(canvas) {
             return new Promise(function(resolve) {
-                var binaryString = global.atob(canvas.toDataURL().split(',')[1]);
+                var binaryString = atob(canvas.toDataURL().split(',')[1]);
                 var length = binaryString.length;
                 var binaryArray = new Uint8Array(length);
 
@@ -657,7 +664,7 @@
         }
 
         function px(node, styleProperty) {
-            var value = global.getComputedStyle(node).getPropertyValue(styleProperty);
+            var value = getComputedStyle(node).getPropertyValue(styleProperty);
             return parseFloat(value.replace('px', ''));
         }
     }
@@ -865,7 +872,7 @@
 
     function getUserComputedStyle(element, root) {
         var clonedStyle = document.createElement(element.tagName).style;
-        var computedStyles = global.getComputedStyle(element);
+        var computedStyles = getComputedStyle(element);
         var inlineStyles = element.style;
 
         for (var style of computedStyles) {
