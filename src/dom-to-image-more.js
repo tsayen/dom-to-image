@@ -191,11 +191,14 @@
     function draw(domNode, options) {
         return toSvg(domNode, options)
             .then(util.makeImage)
-            .then(util.delay(100))
+            .then(util.delay(0))
             .then(function(image) {
                 var scale = typeof(options.scale) !== 'number' ? 1 : options.scale;
                 var canvas = newCanvas(domNode, scale);
                 var ctx = canvas.getContext('2d');
+                ctx.mozImageSmoothingEnabled = false;
+                ctx.msImageSmoothingEnabled = false;
+                ctx.imageSmoothingEnabled = false;
                 if (image) {
                     ctx.scale(scale, scale);
                     ctx.drawImage(image, 0, 0);
