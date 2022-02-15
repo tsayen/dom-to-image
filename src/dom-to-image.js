@@ -5,6 +5,7 @@
     var inliner = newInliner();
     var fontFaces = newFontFaces();
     var images = newImages();
+    var globalCanvas;
 
     // Default impl options
     var defaultOptions = {
@@ -136,13 +137,13 @@
 
     function copyOptions(options) {
         // Copy options to impl options for use in impl
-        if(typeof(options.imagePlaceholder) === 'undefined') {
+        if (typeof (options.imagePlaceholder) === 'undefined') {
             domtoimage.impl.options.imagePlaceholder = defaultOptions.imagePlaceholder;
         } else {
             domtoimage.impl.options.imagePlaceholder = options.imagePlaceholder;
         }
 
-        if(typeof(options.cacheBust) === 'undefined') {
+        if (typeof (options.cacheBust) === 'undefined') {
             domtoimage.impl.options.cacheBust = defaultOptions.cacheBust;
         } else {
             domtoimage.impl.options.cacheBust = options.cacheBust;
@@ -160,12 +161,15 @@
             });
 
         function newCanvas(domNode) {
-            var canvas = document.createElement('canvas');
+            if (!globalCanvas) {
+                globalCanvas = document.createElement('canvas');
+            }
+            var canvas = globalCanvas;
             canvas.width = options.width || util.width(domNode);
             canvas.height = options.height || util.height(domNode);
-
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (options.bgcolor) {
-                var ctx = canvas.getContext('2d');
                 ctx.fillStyle = options.bgcolor;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
@@ -462,7 +466,7 @@
 
         function getAndEncode(url) {
             var TIMEOUT = 30000;
-            if(domtoimage.impl.options.cacheBust) {
+            if (domtoimage.impl.options.cacheBust) {
                 // Cache bypass so we dont have CORS issues with cached images
                 // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
                 url += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime();
@@ -479,9 +483,9 @@
                 request.send();
 
                 var placeholder;
-                if(domtoimage.impl.options.imagePlaceholder) {
+                if (domtoimage.impl.options.imagePlaceholder) {
                     var split = domtoimage.impl.options.imagePlaceholder.split(/,/);
-                    if(split && split[1]) {
+                    if (split && split[1]) {
                         placeholder = split[1];
                     }
                 }
@@ -490,7 +494,7 @@
                     if (request.readyState !== 4) return;
 
                     if (request.status !== 200) {
-                        if(placeholder) {
+                        if (placeholder) {
                             resolve(placeholder);
                         } else {
                             fail('cannot fetch resource: ' + url + ', status: ' + request.status);
@@ -508,7 +512,7 @@
                 }
 
                 function timeout() {
-                    if(placeholder) {
+                    if (placeholder) {
                         resolve(placeholder);
                     } else {
                         fail('timeout of ' + TIMEOUT + 'ms occured while fetching resource: ' + url);
