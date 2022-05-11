@@ -168,6 +168,8 @@
      * @return {Promise} - A promise that is fulfilled with a canvas object
      * */
     function toCanvas(node, options) {
+        options = options || {};
+        options.raster = true;
         return draw(node, options || {});
     }
 
