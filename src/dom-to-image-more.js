@@ -14,7 +14,7 @@
         cacheBust: false,
         // Use (existing) authentication credentials for external URIs (CORS requests)
         useCredentials: false,
-        // Default resolve timeout 
+        // Default resolve timeout
         httpTimeout: 30000
     };
 
@@ -57,7 +57,7 @@
      * @param {Object} options.style - an object whose properties to be copied to node's style before rendering.
      * @param {Number} options.quality - a Number between 0 and 1 indicating image quality (applicable to JPEG only),
                 defaults to 1.0.
-     * @param {Booolean} options.raster - Used internally to track whether the output is a raster image not requiring CSS reduction.
+     * @param {Boolean} options.raster - Used internally to track whether the output is a raster image not requiring CSS reduction.
      * @param {Number} options.scale - a Number multiplier to scale up the canvas before rendering to reduce fuzzy images, defaults to 1.0.
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
@@ -168,6 +168,8 @@
      * @return {Promise} - A promise that is fulfilled with a canvas object
      * */
     function toCanvas(node, options) {
+        options = options || {};
+        options.raster = true;
         return draw(node, options || {});
     }
 
@@ -207,6 +209,7 @@
                     ctx.scale(scale, scale);
                     ctx.drawImage(image, 0, 0);
                 }
+                removeSandbox();
                 return canvas;
             });
 
@@ -225,7 +228,7 @@
         }
     }
 
-    function cloneNode(node, filter, root, vector) {
+    function cloneNode(node, filter, root, vector, parentComputedStyles = null) {
         if (!root && filter && !filter(node)) return Promise.resolve();
 
         return Promise.resolve(node)
@@ -258,11 +261,12 @@
                 });
 
             function cloneChildrenInOrder(parent, childs) {
+                var computedStyles = getComputedStyle(original);
                 var done = Promise.resolve();
                 childs.forEach(function(child) {
                     done = done
                         .then(function() {
-                            return cloneNode(child, filter, false, vector);
+                            return cloneNode(child, filter, false, vector, computedStyles);
                         })
                         .then(function(childClone) {
                             if (childClone) parent.appendChild(childClone);
@@ -285,11 +289,7 @@
                 });
 
             function cloneStyle() {
-                if (vector) {
-                    copyStyle(getUserComputedStyle(original, root), clone.style);
-                } else {
-                    copyStyle(getComputedStyle(original), clone.style);
-                }
+                copyStyle(original, clone);
 
                 function copyFont(source, target) {
                     target.font = source.font;
@@ -308,27 +308,25 @@
                     target.fontWeight = source.fontWeight;
                 }
 
-                function copyStyle(source, target) {
-                    if (source.cssText) {
-                        target.cssText = source.cssText;
-                        copyFont(source, target); // here we re-assign the font props.
-                    } else copyProperties(source, target);
-
-                    function copyProperties(from, to) {
-                        util.asArray(from).forEach(function(name) {
-                            to.setProperty(
-                                name,
-                                from.getPropertyValue(name),
-                                from.getPropertyPriority(name)
-                            );
-                        });
+                function copyStyle(sourceElement, targetElement) {
+                    var sourceComputedStyles = getComputedStyle(sourceElement);
+                    if (sourceComputedStyles.cssText) {
+                        targetElement.style.cssText = sourceComputedStyles.cssText;
+                        copyFont(sourceComputedStyles, targetElement.style); // here we re-assign the font props.
+                    } else {
+                        if (vector) {
+                            copyUserComputedStyle(sourceElement, sourceComputedStyles, targetElement, root);
+                        } else {
+                            copyUserComputedStyleFast(sourceComputedStyles, parentComputedStyles, targetElement);
+                        }
 
                         // Remove positioning of root elements, which stops them from being captured correctly
                         if (root) {
-                            ['inset-block', 'inset-block-start', 'inset-block-end'].forEach((prop) => target.removeProperty(prop));
+                            ['inset-block', 'inset-block-start', 'inset-block-end']
+                              .forEach((prop) => targetElement.style.removeProperty(prop));
                             ['left', 'right', 'top', 'bottom'].forEach((prop) => {
-                                if (target.getPropertyValue(prop)) {
-                                    target.setProperty(prop, '0px');
+                                if (targetElement.style.getPropertyValue(prop)) {
+                                    targetElement.style.setProperty(prop, '0px');
                                 }
                             });
                         }
@@ -870,27 +868,97 @@
         }
     }
 
-    function getUserComputedStyle(element, root) {
-        var clonedStyle = document.createElement(element.tagName).style;
-        var computedStyles = getComputedStyle(element);
-        var inlineStyles = element.style;
+    // `copyUserComputedStyle` and `copyUserComputedStyleFast` copy element styles, omitting defaults to reduce memory
+    // consumption. The former is slow and omits all defaults, while the latter is faster and omits most defaults. Out
+    // of ~340 CSS rules, usually <=10 are set, so it makes sense to only copy what we need. By omitting defaults, the
+    // data URI is <=10% of the original length, which means we can capture pages 10 times as complex before hitting
+    // the Firefox 97+ data URI max length, which is 32 MB. In addition, generated SVGs are much more performant.
+    // See https://stackoverflow.com/questions/42025329/how-to-get-the-applied-style-from-an-element.
+    function copyUserComputedStyle(sourceElement, sourceComputedStyles, targetElement, root) {
+        var targetStyle = targetElement.style;
+        var inlineStyles = sourceElement.style;
 
-        for (var style of computedStyles) {
-            var value = computedStyles.getPropertyValue(style);
+        for (var style of sourceComputedStyles) {
+            var value = sourceComputedStyles.getPropertyValue(style);
             var inlineValue = inlineStyles.getPropertyValue(style);
 
             inlineStyles.setProperty(style, root ? 'initial' : 'unset');
-            var initialValue = computedStyles.getPropertyValue(style);
+            var initialValue = sourceComputedStyles.getPropertyValue(style);
 
             if (initialValue !== value) {
-                clonedStyle.setProperty(style, value);
+                targetStyle.setProperty(style, value);
             } else {
-                clonedStyle.removeProperty(style);
+                targetStyle.removeProperty(style);
             }
 
             inlineStyles.setProperty(style, inlineValue);
         }
-
-        return clonedStyle;
     }
+
+    function copyUserComputedStyleFast(sourceComputedStyles, parentComputedStyles, targetElement) {
+        var defaultStyle = getDefaultStyle(targetElement.tagName);
+        var targetStyle = targetElement.style;
+
+        util.asArray(sourceComputedStyles).forEach(function(name) {
+            var sourceValue = sourceComputedStyles.getPropertyValue(name);
+            // If the style does not match the default, or it does not match the parent's, set it. We don't know which
+            // styles are inherited from the parent and which aren't, so we have to always check both.
+            if (sourceValue !== defaultStyle[name] ||
+              (parentComputedStyles && sourceValue !== parentComputedStyles.getPropertyValue(name))) {
+                targetStyle.setProperty(name, sourceValue, sourceComputedStyles.getPropertyPriority(name));
+            }
+        });
+    }
+
+    var removeDefaultStylesTimeoutId = null;
+    var sandbox = null;
+    var tagNameDefaultStyles = {};
+
+    function getDefaultStyle(tagName) {
+        if (tagNameDefaultStyles[tagName]) {
+            return tagNameDefaultStyles[tagName];
+        }
+        if (!sandbox) {
+            // Create a hidden sandbox <iframe> element within we can create default HTML elements and query their
+            // computed styles. Elements must be rendered in order to query their computed styles. The <iframe> won't
+            // render at all with `display: none`, so we have to use `visibility: hidden` with `position: fixed`.
+            sandbox = document.createElement('iframe');
+            sandbox.style.visibility = 'hidden';
+            sandbox.style.position = 'fixed';
+            document.body.appendChild(sandbox);
+            // Ensure that the iframe is rendered in standard mode
+            sandbox.contentWindow.document.write('<!DOCTYPE html><meta charset="UTF-8"><title>sandbox</title><body>');
+        }
+        var defaultElement = document.createElement(tagName);
+        sandbox.contentWindow.document.body.appendChild(defaultElement);
+        // Ensure that there is some content, so that properties like margin are applied.
+        defaultElement.textContent = '.';
+        var defaultComputedStyle = sandbox.contentWindow.getComputedStyle(defaultElement);
+        var defaultStyle = {};
+        // Copy styles to an object, making sure that 'width' and 'height' are given the default value of 'auto', since
+        // their initial value is always 'auto' despite that the default computed value is sometimes an absolute length.
+        util.asArray(defaultComputedStyle).forEach(function(name) {
+            defaultStyle[name] =
+              (name === 'width' || name === 'height') ? 'auto' : defaultComputedStyle.getPropertyValue(name);
+        });
+        sandbox.contentWindow.document.body.removeChild(defaultElement);
+        tagNameDefaultStyles[tagName] = defaultStyle;
+        return defaultStyle;
+    }
+
+    function removeSandbox() {
+        if (!sandbox) {
+            return;
+        }
+        document.body.removeChild(sandbox);
+        sandbox = null;
+        if (removeDefaultStylesTimeoutId) {
+            clearTimeout(removeDefaultStylesTimeoutId);
+        }
+        removeDefaultStylesTimeoutId = setTimeout(() => {
+            removeDefaultStylesTimeoutId = null;
+            tagNameDefaultStyles = {};
+        }, 20*1000);
+    }
+
 })(this);
