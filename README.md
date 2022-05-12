@@ -277,7 +277,7 @@ for you, following steps are taken:
 
 Marc Brooks, Anatolii Saienko (original dom-to-image), Paul Bakaus (original idea),
 Aidas Klimas (fixes), Edgardo Di Gesto (fixes), 樊冬 Fan Dong (fixes), Shrijan Tripathi (docs),
-SNDST00M (optimize)
+SNDST00M (optimize), Joseph White (performance CSS)
 
 ## License
 
