@@ -258,7 +258,7 @@
                     if (content === '' || content === 'none') return;
 
                     var className = util.uid();
-                    clone.className = clone.className + ' ' + className;
+                    clone.setAttribute('class', clone.className + ' ' + className)
                     var styleElement = document.createElement('style');
                     styleElement.appendChild(formatPseudoElementStyle(className, element, style));
                     clone.appendChild(styleElement);
