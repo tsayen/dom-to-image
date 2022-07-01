@@ -31,20 +31,10 @@ import domtoimage from "dom-to-image-more";
 var domtoimage = require("dom-to-image-more");
 ```
 
-### Bower
+## Bower
 
-`bower install dom-to-image-more`
+~Removed~
 
-Include either `src/dom-to-image-more.js` or `dist/dom-to-image-more.min.js` in your page
-and it will make the `domtoimage` variable available in the global scope.
-
-```html
-<script src="path/to/dom-to-image-more.min.js" />
-<script>
-  domtoimage.toPng(node);
-  //...
-</script>
-```
 
 ## Usage
 
