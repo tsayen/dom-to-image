@@ -31,7 +31,7 @@ import domtoimage from "dom-to-image-more";
 var domtoimage = require("dom-to-image-more");
 ```
 
-## Bower
+### Bower
 
 ~Removed~
 
