@@ -9,17 +9,17 @@ module.exports = function(config) {
                 included: false,
                 served: true
             }, {
-                pattern: 'bower_components/fontawesome/fonts/*.*',
+                pattern: 'test-lib/fontawesome/fonts/*.*',
                 included: false,
                 served: true
             }, {
-                pattern: 'bower_components/fontawesome/css/*.*',
+                pattern: 'test-lib/fontawesome/css/*.*',
                 included: false,
                 served: true
             },
 
-            'bower_components/jquery/dist/jquery.js',
-            'bower_components/js-imagediff/imagediff.js',
+            'test-lib/jquery/dist/jquery.js',
+            'test-lib/js-imagediff/imagediff.js',
             'test-lib/tesseract-1.0.10.js',
 
             'src/dom-to-image-more.js',
