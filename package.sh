@@ -1,5 +1,4 @@
-npm test
-./node_modules/.bin/grunt uglify
+npm run build
 git push
 git push --tags
 npm publish
