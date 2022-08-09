@@ -1,5 +1,5 @@
 (function (global) {
-  'use strict';
+  ('use strict');
 
   var util = newUtil();
   var inliner = newInliner();
@@ -14,9 +14,9 @@
     cacheBust: false,
     // Use (existing) authentication credentials for external URIs (CORS requests)
     useCredentials: false,
-    // Default resolve timeout
+    // set resolve timeout
     httpTimeout: 30000,
-    // 根据手机屏分辨率倍数来放大图片倍数，以免图片失真
+    // 自定义图像缩放比例,
     scale: window.devicePixelRatio,
   };
 
@@ -53,6 +53,9 @@
 	            defaults to 1.0.
 	 * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
 	 * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
+   * @param {Boolean} options.useCredentials - Use (existing) authentication credentials for external URIs (CORS requests) ,default to false
+   * @param {Number} options.httpTimeout -  set request timeout,default to 30000
+   * @param {Number} options.scale - custome image zoom scale
 	 * @return {Promise} - A promise that is fulfilled with a SVG image data URL
 	 * */
   function toSvg(node, options) {
