@@ -4,7 +4,7 @@
     const assert = global.chai.assert;
     const imagediff = global.imagediff;
     const domtoimage = global.domtoimage;
-    const promise = global.Promise;
+    const Promise = global.Promise;
     const delay = domtoimage.impl.util.delay;
     const BASE_URL = '/base/spec/resources/';
 
@@ -379,19 +379,19 @@
             }
 
             function renderAndCheck() {
-                return promise.resolve()
+                return Promise.resolve()
                     .then(renderToPng)
                     .then(check);
             }
 
             function check(dataUrl) {
-                return promise.resolve(dataUrl)
+                return Promise.resolve(dataUrl)
                     .then(drawDataUrl)
                     .then(compareToControlImage);
             }
 
             function drawDataUrl(dataUrl, dimensions) {
-                return promise.resolve(dataUrl)
+                return Promise.resolve(dataUrl)
                     .then(makeImgElement)
                     .then(function(image) {
                         return drawImgElement(image, null, dimensions);
@@ -400,7 +400,7 @@
 
             function assertTextRendered(lines) {
                 return function() {
-                    return new promise(function(resolve, reject) {
+                    return new Promise(function(resolve, reject) {
                         Tesseract.recognize(canvas())
                             .then(function(result) {
                                 lines.forEach(function(line) {
@@ -417,7 +417,7 @@
             }
 
             function makeImgElement(src) {
-                return new promise(function(resolve) {
+                return new Promise(function(resolve) {
                     const image = new Image();
                     image.onload = function() {
                         resolve(image);
@@ -463,7 +463,7 @@
                 inline('url(http://acme.com/image.png), url(foo.com)', 'http://acme.com/image.png',
                         NO_BASE_URL,
                         function() {
-                            return promise.resolve('AAA');
+                            return Promise.resolve('AAA');
                         })
                     .then(function(result) {
                         assert.equal(result, 'url(data:image/png;base64,AAA), url(foo.com)');
@@ -476,7 +476,7 @@
 
                 inline('url(images/image.png)', 'images/image.png', 'http://acme.com/',
                         function(url) {
-                            return promise.resolve({
+                            return Promise.resolve({
                                 'http://acme.com/images/image.png': 'AAA'
                             }[url]);
                         }
@@ -493,7 +493,7 @@
                 inlineAll('url(http://acme.com/image.png), url("foo.com/font.ttf")',
                         NO_BASE_URL,
                         function(url) {
-                            return promise.resolve({
+                            return Promise.resolve({
                                 'http://acme.com/image.png': 'AAA',
                                 'foo.com/font.ttf': 'BBB'
                             }[url]);
@@ -620,7 +620,7 @@
                 img.src = originalSrc;
 
                 domtoimage.impl.images.impl.newImage(img).inline(function() {
-                        return promise.resolve('XXX');
+                        return Promise.resolve('XXX');
                     })
                     .then(function() {
                         assert.equal(img.src, originalSrc);
@@ -689,7 +689,7 @@
             request.open('GET', url, true);
             request.responseType = 'text';
 
-            return new promise(function(resolve, reject) {
+            return new Promise(function(resolve, reject) {
                 request.onload = function() {
                     if (this.status === 200) {
                         resolve(request.response.toString().trim());
