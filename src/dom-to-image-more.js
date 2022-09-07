@@ -30,6 +30,7 @@
             images: images,
             util: util,
             inliner: inliner,
+            urlCache: [],
             options: {}
         }
     };
@@ -80,7 +81,13 @@
                     options.width || util.width(node),
                     options.height || util.height(node)
                 );
-            });
+            })
+            .then(clearCache);
+
+        function clearCache(result) {
+            domtoimage.impl.urlCache = [];
+            return result;
+        }
 
         function applyOptions(clone) {
             if (options.bgcolor) { clone.style.backgroundColor = options.bgcolor; }
@@ -568,68 +575,83 @@
         }
 
         function getAndEncode(url) {
-            if (domtoimage.impl.options.cacheBust) {
-                // Cache bypass so we dont have CORS issues with cached images
-                // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
-                url += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime();
+            let cacheEntry = domtoimage.impl.urlCache.find(function (el) {
+                return el.url === url;
+            });
+
+            if (!cacheEntry) {
+                cacheEntry = {
+                    url: url,
+                    promise: null
+                };
+                domtoimage.impl.urlCache.push(cacheEntry);
             }
 
-            return new Promise(function (resolve) {
-                const httpTimeout = domtoimage.impl.options.httpTimeout;
-                const request = new XMLHttpRequest();
-
-                request.onreadystatechange = done;
-                request.ontimeout = timeout;
-                request.responseType = 'blob';
-                request.timeout = httpTimeout;
-                if (domtoimage.impl.options.useCredentials) {
-                    request.withCredentials = true;
+            if (cacheEntry.promise === null) {
+                if (domtoimage.impl.options.cacheBust) {
+                    // Cache bypass so we dont have CORS issues with cached images
+                    // Source: https://developer.mozilla.org/en/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache
+                    url += ((/\?/).test(url) ? "&" : "?") + (new Date()).getTime();
                 }
-                request.open('GET', url, true);
-                request.send();
 
-                let placeholder;
-                if (domtoimage.impl.options.imagePlaceholder) {
-                    const split = domtoimage.impl.options.imagePlaceholder.split(/,/);
-                    if (split && split[1]) {
-                        placeholder = split[1];
+                cacheEntry.promise = new Promise(function (resolve) {
+                    const httpTimeout = domtoimage.impl.options.httpTimeout;
+                    const request = new XMLHttpRequest();
+
+                    request.onreadystatechange = done;
+                    request.ontimeout = timeout;
+                    request.responseType = 'blob';
+                    request.timeout = httpTimeout;
+                    if (domtoimage.impl.options.useCredentials) {
+                        request.withCredentials = true;
                     }
-                }
+                    request.open('GET', url, true);
+                    request.send();
 
-                function done() {
-                    if (request.readyState !== 4) { return; }
+                    let placeholder;
+                    if (domtoimage.impl.options.imagePlaceholder) {
+                        const split = domtoimage.impl.options.imagePlaceholder.split(/,/);
+                        if (split && split[1]) {
+                            placeholder = split[1];
+                        }
+                    }
 
-                    if (request.status !== 200) {
+                    function done() {
+                        if (request.readyState !== 4) { return; }
+
+                        if (request.status !== 200) {
+                            if (placeholder) {
+                                resolve(placeholder);
+                            } else {
+                                fail(`cannot fetch resource: ${url}, status: ${request.status}`);
+                            }
+
+                            return;
+                        }
+
+                        const encoder = new FileReader();
+                        encoder.onloadend = function () {
+                            const content = encoder.result.split(/,/)[1];
+                            resolve(content);
+                        };
+                        encoder.readAsDataURL(request.response);
+                    }
+
+                    function timeout() {
                         if (placeholder) {
                             resolve(placeholder);
                         } else {
-                            fail(`cannot fetch resource: ${url}, status: ${request.status}`);
+                            fail(`timeout of ${httpTimeout}ms occured while fetching resource: ${url}`);
                         }
-
-                        return;
                     }
 
-                    const encoder = new FileReader();
-                    encoder.onloadend = function () {
-                        const content = encoder.result.split(/,/)[1];
-                        resolve(content);
-                    };
-                    encoder.readAsDataURL(request.response);
-                }
-
-                function timeout() {
-                    if (placeholder) {
-                        resolve(placeholder);
-                    } else {
-                        fail(`timeout of ${httpTimeout}ms occured while fetching resource: ${url}`);
+                    function fail(message) {
+                        console.error(message);
+                        resolve('');
                     }
-                }
-
-                function fail(message) {
-                    console.error(message);
-                    resolve('');
-                }
-            });
+                });
+            }
+            return cacheEntry.promise;
         }
 
         function dataAsUrl(content, type) {
