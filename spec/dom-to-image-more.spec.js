@@ -1,14 +1,12 @@
 (function(global) {
     'use strict';
 
-    var assert = global.chai.assert;
-    var imagediff = global.imagediff;
-    var domtoimage = global.domtoimage;
-    var Promise = global.Promise;
-
-    var delay = domtoimage.impl.util.delay;
-
-    var BASE_URL = '/base/spec/resources/';
+    const assert = global.chai.assert;
+    const imagediff = global.imagediff;
+    const domtoimage = global.domtoimage;
+    const promise = global.Promise;
+    const delay = domtoimage.impl.util.delay;
+    const BASE_URL = '/base/spec/resources/';
 
     describe('domtoimage', function() {
 
@@ -77,9 +75,9 @@
             it('should render bigger node', function(done) {
                 loadTestPage('bigger/dom-node.html', 'bigger/style.css', 'bigger/control-image')
                     .then(function() {
-                        var parent = $('#dom-node');
-                        var child = $('.dom-child-node');
-                        for (var i = 0; i < 10; i++) {
+                        const parent = $('#dom-node');
+                        const child = $('.dom-child-node');
+                        for (let i = 0; i < 10; i++) {
                             parent.append(child.clone());
                         }
                     })
@@ -106,7 +104,7 @@
             });
 
             it('should render whole node when its scrolled', function(done) {
-                var domNode;
+                let domNode;
                 loadTestPage('scroll/dom-node.html', 'scroll/style.css', 'scroll/control-image')
                     .then(function() {
                         domNode = $('#scrolled')[0];
@@ -137,7 +135,6 @@
                     .then(delay(1000))
                     .then(renderToPng)
                     .then(drawDataUrl)
-                    // the canvas text check is iffy
                     .then(assertTextRendered(["Before 2", "Before 4 Both"]))
                     .then(assertTextRendered(["3 JustA", "BothA"]))
                     .then(done).catch(done);
@@ -145,7 +142,7 @@
 
             it('should use node filter', function(done) {
                 function filter(node) {
-                    if (node.classList) return !node.classList.contains('omit');
+                    if (node.classList) { return !node.classList.contains('omit'); }
                     return true;
                 }
 
@@ -161,7 +158,7 @@
 
             it('should not apply node filter to root node', function(done) {
                 function filter(node) {
-                    if (node.classList) return node.classList.contains('include');
+                    if (node.classList) { return node.classList.contains('include');}
                     return false;
                 }
 
@@ -178,7 +175,7 @@
             it('should render with external stylesheet', function(done) {
                 loadTestPage('sheet/dom-node.html', 'sheet/style.css', 'sheet/control-image')
                     .then(delay(1000))
-                    //.then(renderAndCheck)
+                    .then(renderAndCheck)
                     .then(done).catch(done);
             });
 
@@ -188,7 +185,6 @@
                     .then(delay(1000))
                     .then(renderToPng)
                     .then(drawDataUrl)
-                    // the canvas text check is iffy
                     .then(assertTextRendered(['O']))
                     .then(done).catch(done);
             });
@@ -208,8 +204,8 @@
                     .then(delay(500))
                     .then(renderToPng)
                     .then(drawDataUrl)
-                    .then(pass)
                     //.then(assertTextRendered(["JPG"]))
+                    .then(pass)
                     .then(done).catch(done);
             });
 
@@ -238,8 +234,8 @@
             it('should render content from <canvas>', function(done) {
                 loadTestPage('canvas/dom-node.html', 'canvas/style.css')
                     .then(function() {
-                        var canvas = document.getElementById('content');
-                        var ctx = canvas.getContext('2d');
+                        const canvas = document.getElementById('content');
+                        const ctx = canvas.getContext('2d');
                         ctx.fillStyle = '#ffffff';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         ctx.fillStyle = '#000000';
@@ -255,10 +251,10 @@
             it('should handle zero-width <canvas>', function(done) {
                 loadTestPage('canvas/empty-data.html', 'canvas/empty-style.css')
                     .then(function() {
-                        var node = document.getElementById('dom-node');
+                        const node = document.getElementById('dom-node');
                             domtoimage.toSvg(node)
                             .then(function(dataUrl) {
-                                var img = new Image();
+                                const img = new Image();
                                 document.getElementById('result').appendChild(img);
                                 img.src = dataUrl;
                             });
@@ -305,9 +301,9 @@
                         return domtoimage.toPixelData(domNode());
                     })
                     .then(function(pixels) {
-                        for (var y = 0; y < domNode().scrollHeight; ++y) {
-                            for (var x = 0; x < domNode().scrollWidth; ++x) {
-                                var rgba = [0, 0, 0, 0];
+                        for (let y = 0; y < domNode().scrollHeight; ++y) {
+                            for (let x = 0; x < domNode().scrollWidth; ++x) {
+                                const rgba = [0, 0, 0, 0];
 
                                 if (y < 10) {
                                     rgba[0] = 255;
@@ -325,7 +321,7 @@
                                     rgba[3] = parseInt(0.2 * 255);
                                 }
 
-                                var offset = (4 * y * domNode().scrollHeight) + (4 * x);
+                                const offset = (4 * y * domNode().scrollHeight) + (4 * x);
                                 assert.deepEqual(Uint8Array.from(pixels.slice(offset, offset + 4)), Uint8Array.from(rgba));
                             }
                         }
@@ -383,19 +379,19 @@
             }
 
             function renderAndCheck() {
-                return Promise.resolve()
+                return promise.resolve()
                     .then(renderToPng)
                     .then(check);
             }
 
             function check(dataUrl) {
-                return Promise.resolve(dataUrl)
+                return promise.resolve(dataUrl)
                     .then(drawDataUrl)
                     .then(compareToControlImage);
             }
 
             function drawDataUrl(dataUrl, dimensions) {
-                return Promise.resolve(dataUrl)
+                return promise.resolve(dataUrl)
                     .then(makeImgElement)
                     .then(function(image) {
                         return drawImgElement(image, null, dimensions);
@@ -404,7 +400,7 @@
 
             function assertTextRendered(lines) {
                 return function() {
-                    return new Promise(function(resolve, reject) {
+                    return new promise(function(resolve, reject) {
                         Tesseract.recognize(canvas())
                             .then(function(result) {
                                 lines.forEach(function(line) {
@@ -421,8 +417,8 @@
             }
 
             function makeImgElement(src) {
-                return new Promise(function(resolve) {
-                    var image = new Image();
+                return new promise(function(resolve) {
+                    const image = new Image();
                     image.onload = function() {
                         resolve(image);
                     };
@@ -446,29 +442,28 @@
         });
 
         describe('inliner', function() {
-
-            var NO_BASE_URL = null;
+            const NO_BASE_URL = null;
 
             it('should parse urls', function() {
-                var parse = domtoimage.impl.inliner.impl.readUrls;
+                const parse = domtoimage.impl.inliner.impl.readUrls;
 
                 assert.deepEqual(parse('url("http://acme.com/file")'), ['http://acme.com/file']);
                 assert.deepEqual(parse('url(foo.com), url(\'bar.org\')'), ['foo.com', 'bar.org']);
             });
 
             it('should ignore data urls', function() {
-                var parse = domtoimage.impl.inliner.impl.readUrls;
+                const parse = domtoimage.impl.inliner.impl.readUrls;
 
                 assert.deepEqual(parse('url(foo.com), url(data:AAA)'), ['foo.com']);
             });
 
             it('should inline url', function(done) {
-                var inline = domtoimage.impl.inliner.impl.inline;
+                const inline = domtoimage.impl.inliner.impl.inline;
 
                 inline('url(http://acme.com/image.png), url(foo.com)', 'http://acme.com/image.png',
                         NO_BASE_URL,
                         function() {
-                            return Promise.resolve('AAA');
+                            return promise.resolve('AAA');
                         })
                     .then(function(result) {
                         assert.equal(result, 'url(data:image/png;base64,AAA), url(foo.com)');
@@ -477,11 +472,11 @@
             });
 
             it('should resolve urls if base url given', function(done) {
-                var inline = domtoimage.impl.inliner.impl.inline;
+                const inline = domtoimage.impl.inliner.impl.inline;
 
                 inline('url(images/image.png)', 'images/image.png', 'http://acme.com/',
                         function(url) {
-                            return Promise.resolve({
+                            return promise.resolve({
                                 'http://acme.com/images/image.png': 'AAA'
                             }[url]);
                         }
@@ -493,12 +488,12 @@
             });
 
             it('should inline all urls', function(done) {
-                var inlineAll = domtoimage.impl.inliner.inlineAll;
+                const inlineAll = domtoimage.impl.inliner.inlineAll;
 
                 inlineAll('url(http://acme.com/image.png), url("foo.com/font.ttf")',
                         NO_BASE_URL,
                         function(url) {
-                            return Promise.resolve({
+                            return promise.resolve({
                                 'http://acme.com/image.png': 'AAA',
                                 'foo.com/font.ttf': 'BBB'
                             }[url]);
@@ -514,10 +509,10 @@
         describe('util', function() {
 
             it('should get and encode resource', function(done) {
-                var getAndEncode = domtoimage.impl.util.getAndEncode;
+                const getAndEncode = domtoimage.impl.util.getAndEncode;
                 getResource('util/fontawesome.base64')
                     .then(function(testResource) {
-                        return getAndEncode(BASE_URL + 'util/fontawesome.woff2')
+                        return getAndEncode(`${BASE_URL}util/fontawesome.woff2`)
                             .then(function(resource) {
                                 assert.equal(resource, testResource);
                             });
@@ -526,26 +521,26 @@
             });
 
             it('should return empty result if cannot get resource', function(done) {
-                domtoimage.impl.util.getAndEncode(BASE_URL + 'util/not-found')
+                domtoimage.impl.util.getAndEncode(`${BASE_URL}util/not-found`)
                     .then(function(resource) {
                         assert.equal(resource, '');
                     }).then(done).catch(done);
             });
 
             it('should return placeholder result if cannot get resource and placeholder is provided', function(done) {
-                var placeholder = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY7h79y4ABTICmGnXPbMAAAAASUVORK5CYII=";
-                var original = domtoimage.impl.options.imagePlaceholder;
+                const placeholder = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY7h79y4ABTICmGnXPbMAAAAASUVORK5CYII=";
+                const original = domtoimage.impl.options.imagePlaceholder;
                 domtoimage.impl.options.imagePlaceholder = placeholder;
-                domtoimage.impl.util.getAndEncode(BASE_URL + 'util/not-found')
+                domtoimage.impl.util.getAndEncode(`${BASE_URL}util/image-not-found`)
                     .then(function(resource) {
-                        var placeholderData = placeholder.split(/,/)[1];
+                        const placeholderData = placeholder.split(/,/)[1];
                         assert.equal(resource, placeholderData);
                         domtoimage.impl.options.imagePlaceholder = original;
                     }).then(done).catch(done);
             });
 
             it('should parse extension', function() {
-                var parse = domtoimage.impl.util.parseExtension;
+                const parse = domtoimage.impl.util.parseExtension;
 
                 assert.equal(parse('http://acme.com/font.woff'), 'woff');
                 assert.equal(parse('../FONT.TTF'), 'TTF');
@@ -554,7 +549,7 @@
             });
 
             it('should guess mime type from url', function() {
-                var mime = domtoimage.impl.util.mimeType;
+                const mime = domtoimage.impl.util.mimeType;
 
                 assert.equal(mime('http://acme.com/font.woff'), 'application/font-woff');
                 assert.equal(mime('IMAGE.PNG'), 'image/png');
@@ -562,7 +557,7 @@
             });
 
             it('should resolve url', function() {
-                var resolve = domtoimage.impl.util.resolveUrl;
+                const resolve = domtoimage.impl.util.resolveUrl;
 
                 assert.equal(resolve('font.woff', 'http://acme.com'), 'http://acme.com/font.woff');
                 assert.equal(resolve('/font.woff', 'http://acme.com/fonts/woff'), 'http://acme.com/font.woff');
@@ -572,14 +567,14 @@
             });
 
             it('should generate uids', function() {
-                var uid = domtoimage.impl.util.uid;
+                const uid = domtoimage.impl.util.uid;
                 assert(uid().length >= 4);
                 assert.notEqual(uid(), uid());
             });
         });
 
         describe('web fonts', function() {
-            var fontFaces = domtoimage.impl.fontFaces;
+            const fontFaces = domtoimage.impl.fontFaces;
 
             it('should read non-local font faces', function(done) {
                 loadTestPage('fonts/web-fonts/empty.html', 'fonts/web-fonts/rules.css')
@@ -625,7 +620,7 @@
                 img.src = originalSrc;
 
                 domtoimage.impl.images.impl.newImage(img).inline(function() {
-                        return Promise.resolve('XXX');
+                        return promise.resolve('XXX');
                     })
                     .then(function() {
                         assert.equal(img.src, originalSrc);
@@ -642,23 +637,25 @@
                     });
                 })
                 .then(function() {
-                    if (css)
+                    if (css) {
                         return getResource(css).then(function(css) {
                             $('#style').append(document.createTextNode(css));
                         });
+                    }
                 })
                 .then(function() {
-                    if (controlImage)
+                    if (controlImage) {
                         return getResource(controlImage).then(function(image) {
                             $('#control-image').attr('src', image);
                         });
+                    }
                 });
         }
 
         function loadPage() {
             return getResource('page.html')
                 .then(function(html) {
-                    var root = document.createElement('div');
+                    const root = document.createElement('div');
                     root.id = 'test-root';
                     root.innerHTML = html;
                     document.body.appendChild(root);
@@ -666,8 +663,8 @@
         }
 
         function purgePage() {
-            var root = $('#test-root');
-            if (root) root.remove();
+            const root = $('#test-root');
+            if (root) {root.remove();}
         }
 
         function domNode() {
@@ -687,17 +684,18 @@
         }
 
         function getResource(fileName) {
-            var url = BASE_URL + fileName;
-            var request = new XMLHttpRequest();
+            const url = BASE_URL + fileName;
+            const request = new XMLHttpRequest();
             request.open('GET', url, true);
             request.responseType = 'text';
 
-            return new Promise(function(resolve, reject) {
+            return new promise(function(resolve, reject) {
                 request.onload = function() {
-                    if (this.status === 200)
+                    if (this.status === 200) {
                         resolve(request.response.toString().trim());
-                    else
-                        reject(new Error('cannot load ' + url));
+                    } else{
+                        reject(new Error(`cannot load ${url}`));
+                    }
                 };
                 request.send();
             });
