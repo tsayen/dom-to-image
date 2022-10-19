@@ -1,0 +1,20 @@
+#dom-node {
+  width: 400px;
+  height: 400px;
+  background-color: white;
+  color: black;
+}
+
+.high-gloss {
+  background: linear-gradient(180deg,
+      rgba(50, 50, 50, 0.95) 24%,
+      rgba(186, 186, 186, 1) 45%,
+      rgba(226, 235, 238, 0.9514006286108193) 49%,
+      rgba(50, 50, 50, 0.93) 50%,
+      rgba(50, 50, 50, 0.97) 100%);
+  color: transparent;
+  text-shadow: rgba(0, 0, 0, 0.1) 5px 5px 10px;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

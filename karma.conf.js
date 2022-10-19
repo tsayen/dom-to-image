@@ -9,7 +9,7 @@ module.exports = function(config) {
                 included: false,
                 served: true
             }, {
-                pattern: 'test-lib/fontawesome/fonts/*.*',
+                pattern: 'test-lib/fontawesome/webfonts/*.*',
                 included: false,
                 served: true
             }, {
@@ -20,7 +20,7 @@ module.exports = function(config) {
 
             'test-lib/jquery/dist/jquery.js',
             'test-lib/js-imagediff/imagediff.js',
-            'test-lib/tesseract-1.0.10.js',
+            'test-lib/tesseract-1.0.19.js',
 
             'src/dom-to-image-more.js',
             'spec/dom-to-image-more.spec.js'
@@ -40,7 +40,8 @@ module.exports = function(config) {
         customLaunchers: {
             chrome: {
                 base: 'Chrome',
-                flags: ['--no-sandbox']
+                flags: ['--no-sandbox'],
+                debug: true
             }
         },
 
