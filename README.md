@@ -85,11 +85,11 @@ domtoimage.toJpeg(document.getElementById('my-node'), { quality: 0.95 })
 Get an SVG data URL, but filter out all the `<i>` elements:
 
 ```javascript
-function filter (node) {
-    return (node.tagName !== 'i');
+function filter(node) {
+    return node.tagName !== 'I';
 }
 
-domtoimage.toSvg(document.getElementById('my-node'), {filter: filter})
+domtoimage.toSvg(document.getElementById('my-node'), { filter: filter })
     .then(function (dataUrl) {
         /* do something */
     });
@@ -122,36 +122,36 @@ for unit testing._
 
 ### Rendering options
 
-#### filter
+#### `filter`
 
 A function taking DOM node as argument. Should return true if passed node
 should be included in the output (excluding node means excluding it's
 children as well). Not called on the root node.
 
-#### bgcolor
+#### `bgcolor`
 
 A string value for the background color, any valid CSS color value.
 
-#### height, width
+#### `height`, `width`
 
 Height and width in pixels to be applied to node before rendering.
 
-#### style
+#### `style`
 
 An object whose properties to be copied to node's style before rendering.
 You might want to check [this reference](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Properties_Reference)
 for JavaScript names of CSS properties.
 
-#### quality
+#### `quality`
 
-A number between 0 and 1 indicating image quality (e.g. 0.92 => 92%) of the
-JPEG image. Defaults to 1.0 (100%)
+A number between `0` and `1` indicating image quality (e.g. `0.92` => 92%) of the
+JPEG image. Defaults to `1.0` (100%)
 
-#### cacheBust
+#### `cacheBust`
 
 Set to true to append the current time as a query string to URL requests to enable cache busting. Defaults to false
 
-#### imagePlaceholder
+#### `imagePlaceholder`
 
 A data URL for a placeholder image that will be used when fetching an image fails. Defaults to undefined and will throw an error on failed images
 
@@ -229,7 +229,7 @@ for you, following steps are taken:
 6.  Wrap XML into the `<foreignObject>` tag, then into the SVG, then make it a
     data URL
 
-7.  Optionally, to get PNG content or raw pixel data as a Uint8Array, create an
+7.  Optionally, to get PNG content or raw pixel data as a `Uint8Array`, create an
     Image element with the SVG as a source, and render it on an off-screen
     canvas, that you have also created, then read the content from the canvas
 
