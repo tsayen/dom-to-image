@@ -887,18 +887,26 @@
                 });
 
             function inlineBackground(backgroundNode) {
-                const background = backgroundNode.style.getPropertyValue('background');
+                const properties = ['background', 'background-image'];
 
-                if (!background) { return Promise.resolve(backgroundNode); }
+                const inliningTasks = properties.map(function (propertyName) {
+                    const value = backgroundNode.style.getPropertyValue(propertyName);
 
-                return inliner.inlineAll(background)
-                    .then(function (inlined) {
-                        backgroundNode.style.setProperty(
-                            'background',
-                            inlined,
-                            background
-                        );
-                    })
+                    if(!value) {
+                        return Promise.resolve();
+                    }
+
+                    return inliner.inlineAll(value)
+                        .then(function (inlined) {
+                            backgroundNode.style.setProperty(
+                                propertyName,
+                                inlined,
+                                backgroundNode.style.getPropertyPriority(propertyName)
+                            );
+                        });
+                });
+
+                return Promise.all(inliningTasks)
                     .then(function () {
                         return backgroundNode;
                     });
