@@ -873,7 +873,7 @@
         function inlineAll(node) {
             if (!(node instanceof Element)) { return Promise.resolve(node); }
 
-            return inlineBackground(node)
+            return inlineCSSProperty(node)
                 .then(function () {
                     if (node instanceof HTMLImageElement) {
                         return newImage(node).inline();
@@ -886,22 +886,23 @@
                     }
                 });
 
-            function inlineBackground(backgroundNode) {
+            function inlineCSSProperty(node) {
                 const properties = ['background', 'background-image'];
 
                 const inliningTasks = properties.map(function (propertyName) {
-                    const value = backgroundNode.style.getPropertyValue(propertyName);
+                    const value = node.style.getPropertyValue(propertyName);
+                    const priority = node.style.getPropertyPriority(propertyName);
 
                     if(!value) {
                         return Promise.resolve();
                     }
 
                     return inliner.inlineAll(value)
-                        .then(function (inlined) {
-                            backgroundNode.style.setProperty(
+                        .then(function (inlinedValue) {
+                            node.style.setProperty(
                                 propertyName,
-                                inlined,
-                                backgroundNode.style.getPropertyPriority(propertyName)
+                                inlinedValue,
+                                priority
                             );
                         });
                 });
