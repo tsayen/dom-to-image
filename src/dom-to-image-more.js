@@ -202,6 +202,12 @@
         } else {
             domtoimage.impl.options.useCredentials = options.useCredentials;
         }
+        
+        if (typeof (options.httpTimeout) === 'undefined') {
+            domtoimage.impl.options.httpTimeout = defaultOptions.httpTimeout;
+        } else {
+            domtoimage.impl.options.httpTimeout = options.httpTimeout;
+        }
     }
 
     function draw(domNode, options) {
