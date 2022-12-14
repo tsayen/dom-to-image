@@ -1,89 +1,4 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Tesseract = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-'use strict';
-/* eslint-disable no-unused-vars */
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-var propIsEnumerable = Object.prototype.propertyIsEnumerable;
-
-function toObject(val) {
-	if (val === null || val === undefined) {
-		throw new TypeError('Object.assign cannot be called with null or undefined');
-	}
-
-	return Object(val);
-}
-
-function shouldUseNative() {
-	try {
-		if (!Object.assign) {
-			return false;
-		}
-
-		// Detect buggy property enumeration order in older V8 versions.
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=4118
-		var test1 = new String('abc');  // eslint-disable-line
-		test1[5] = 'de';
-		if (Object.getOwnPropertyNames(test1)[0] === '5') {
-			return false;
-		}
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
-		var test2 = {};
-		for (var i = 0; i < 10; i++) {
-			test2['_' + String.fromCharCode(i)] = i;
-		}
-		var order2 = Object.getOwnPropertyNames(test2).map(function (n) {
-			return test2[n];
-		});
-		if (order2.join('') !== '0123456789') {
-			return false;
-		}
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
-		var test3 = {};
-		'abcdefghijklmnopqrst'.split('').forEach(function (letter) {
-			test3[letter] = letter;
-		});
-		if (Object.keys(Object.assign({}, test3)).join('') !==
-				'abcdefghijklmnopqrst') {
-			return false;
-		}
-
-		return true;
-	} catch (e) {
-		// We don't expect any of the above to throw, but better to be safe.
-		return false;
-	}
-}
-
-module.exports = shouldUseNative() ? Object.assign : function (target, source) {
-	var from;
-	var to = toObject(target);
-	var symbols;
-
-	for (var s = 1; s < arguments.length; s++) {
-		from = Object(arguments[s]);
-
-		for (var key in from) {
-			if (hasOwnProperty.call(from, key)) {
-				to[key] = from[key];
-			}
-		}
-
-		if (Object.getOwnPropertySymbols) {
-			symbols = Object.getOwnPropertySymbols(from);
-			for (var i = 0; i < symbols.length; i++) {
-				if (propIsEnumerable.call(from, symbols[i])) {
-					to[symbols[i]] = from[symbols[i]];
-				}
-			}
-		}
-	}
-
-	return to;
-};
-
-},{}],2:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -254,6 +169,10 @@ process.off = noop;
 process.removeListener = noop;
 process.removeAllListeners = noop;
 process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');
@@ -265,16 +184,15 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 module.exports={
   "name": "tesseract.js",
-  "version": "1.0.10",
+  "version": "1.0.19",
   "description": "Pure Javascript Multilingual OCR",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" & exit 1",
-    "start": "watchify src/index.js  -t [ envify --NODE_ENV development ] -t [ babelify --presets [ es2015 ] ] -o dist/tesseract.dev.js --standalone Tesseract & watchify src/browser/worker.js  -t [ envify --NODE_ENV development ] -t [ babelify --presets [ es2015 ] ] -o dist/worker.dev.js & http-server -p 7355",
-    "build": "browserify src/index.js -t [ babelify --presets [ es2015 ] ] -o dist/tesseract.js --standalone Tesseract && browserify src/browser/worker.js -t [ babelify --presets [ es2015 ] ] -o dist/worker.js",
+    "start": "concurrently --kill-others \"watchify src/index.js  -t [ envify --TESS_ENV development ] -t [ babelify --presets [ es2015 ] ] -o dist/tesseract.dev.js --standalone Tesseract\" \"watchify src/browser/worker.js  -t [ envify --TESS_ENV development ] -t [ babelify --presets [ es2015 ] ] -o dist/worker.dev.js\" \"http-server -p 7355\"",
+    "build": "browserify src/index.js -t [ babelify --presets [ es2015 ] ] -o dist/tesseract.js --standalone Tesseract && browserify src/browser/worker.js -t [ babelify --presets [ es2015 ] ] -o dist/worker.js && uglifyjs dist/tesseract.js --source-map -o dist/tesseract.min.js && uglifyjs dist/worker.js --source-map -o dist/worker.min.js",
     "release": "npm run build && git commit -am 'new release' && git push && git tag `jq -r '.version' package.json` && git push origin --tags && npm publish"
   },
   "browser": {
@@ -286,14 +204,17 @@ module.exports={
     "babel-preset-es2015": "^6.16.0",
     "babelify": "^7.3.0",
     "browserify": "^13.1.0",
+    "concurrently": "^3.1.0",
     "envify": "^3.4.1",
     "http-server": "^0.9.0",
     "pako": "^1.0.3",
+    "uglify-js": "^3.4.9",
     "watchify": "^3.7.0"
   },
   "dependencies": {
     "file-type": "^3.8.0",
-    "is-url": "^1.2.2",
+    "isomorphic-fetch": "^2.2.1",
+    "is-url": "1.2.2",
     "jpeg-js": "^0.2.0",
     "level-js": "^2.2.4",
     "node-fetch": "^1.6.3",
@@ -311,30 +232,32 @@ module.exports={
   "homepage": "https://github.com/naptha/tesseract.js"
 }
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 (function (process){
 'use strict';
 
 var defaultOptions = {
-    // workerPath: 'https://cdn.rawgit.com/naptha/tesseract.js/0.2.0/dist/worker.js',
-    corePath: 'https://cdn.rawgit.com/naptha/tesseract.js-core/0.1.0/index.js',
-    langPath: 'https://cdn.rawgit.com/naptha/tessdata/gh-pages/3.02/'
+    // workerPath: 'https://cdn.jsdelivr.net/gh/naptha/tesseract.js@0.2.0/dist/worker.js',
+    corePath: 'https://cdn.jsdelivr.net/gh/naptha/tesseract.js-core@0.1.0/index.js',
+    langPath: 'https://tessdata.projectnaptha.com/3.02/'
 };
 
-if (process.env.NODE_ENV === "development") {
+if (process.env.TESS_ENV === "development") {
     console.debug('Using Development Configuration');
     defaultOptions.workerPath = location.protocol + '//' + location.host + '/dist/worker.dev.js?nocache=' + Math.random().toString(36).slice(3);
 } else {
     var version = require('../../package.json').version;
-    defaultOptions.workerPath = 'https://cdn.rawgit.com/naptha/tesseract.js/' + version + '/dist/worker.js';
+    defaultOptions.workerPath = 'https://cdn.jsdelivr.net/gh/naptha/tesseract.js@' + version + '/dist/worker.js';
 }
 
 exports.defaultOptions = defaultOptions;
 
 exports.spawnWorker = function spawnWorker(instance, workerOptions) {
-    if (window.Blob && window.URL) {
-        var blob = new Blob(['importScripts("' + workerOptions.workerPath + '");']);
-        var worker = new Worker(window.URL.createObjectURL(blob));
+    if (Blob && URL) {
+        var blob = new Blob(['importScripts("' + workerOptions.workerPath + '");'], {
+            type: 'application/javascript'
+        });
+        var worker = new Worker(URL.createObjectURL(blob));
     } else {
         var worker = new Worker(workerOptions.workerPath);
     }
@@ -369,20 +292,26 @@ function loadImage(image, cb) {
             im.onload = function (e) {
                 return loadImage(im, cb);
             };
+            im.onerror = function (e) {
+                throw e;
+            };
             return;
         } else {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', image, true);
             xhr.responseType = "blob";
+
             xhr.onload = function (e) {
-                return loadImage(xhr.response, cb);
-            };
-            xhr.onerror = function (e) {
-                if (/^https?:\/\//.test(image) && !/^https:\/\/crossorigin.me/.test(image)) {
-                    console.debug('Attempting to load image with CORS proxy');
-                    loadImage('https://crossorigin.me/' + image, cb);
+                if (xhr.status >= 400) {
+                    throw new Error('Fail to get image as Blob');
+                } else {
+                    loadImage(xhr.response, cb);
                 }
             };
+            xhr.onerror = function (e) {
+                throw e;
+            };
+
             xhr.send(null);
             return;
         }
@@ -391,6 +320,9 @@ function loadImage(image, cb) {
         var fr = new FileReader();
         fr.onload = function (e) {
             return loadImage(fr.result, cb);
+        };
+        fr.onerror = function (e) {
+            throw e;
         };
         fr.readAsDataURL(image);
         return;
@@ -418,7 +350,7 @@ function loadImage(image, cb) {
 }
 
 }).call(this,require('_process'))
-},{"../../package.json":3,"_process":2}],5:[function(require,module,exports){
+},{"../../package.json":2,"_process":1}],4:[function(require,module,exports){
 "use strict";
 
 // The result of dump.js is a big JSON tree
@@ -485,7 +417,7 @@ module.exports = function circularize(page) {
     return page;
 };
 
-},{}],6:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -596,7 +528,7 @@ module.exports = function () {
     return TesseractJob;
 }();
 
-},{"../node/index.js":4}],7:[function(require,module,exports){
+},{"../node/index.js":3}],6:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -606,16 +538,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var adapter = require('./node/index.js');
 var circularize = require('./common/circularize.js');
 var TesseractJob = require('./common/job');
-var objectAssign = require('object-assign');
 var version = require('../package.json').version;
 
-function create(workerOptions) {
-	workerOptions = workerOptions || {};
-	var worker = new TesseractWorker(objectAssign({}, adapter.defaultOptions, workerOptions));
+var create = function create() {
+	var workerOptions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+	var worker = new TesseractWorker(Object.assign({}, adapter.defaultOptions, workerOptions));
 	worker.create = create;
 	worker.version = version;
 	return worker;
-}
+};
 
 var TesseractWorker = function () {
 	function TesseractWorker(workerOptions) {
@@ -629,26 +561,25 @@ var TesseractWorker = function () {
 
 	_createClass(TesseractWorker, [{
 		key: 'recognize',
-		value: function recognize(image, options) {
+		value: function recognize(image) {
 			var _this = this;
 
+			var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
 			return this._delay(function (job) {
-				if (typeof options === 'string') {
-					options = { lang: options };
-				} else {
-					options = options || {};
-					options.lang = options.lang || 'eng';
-				}
+				if (typeof options === 'string') options = { lang: options };
+				options.lang = options.lang || 'eng';
 
 				job._send('recognize', { image: image, options: options, workerOptions: _this.workerOptions });
 			});
 		}
 	}, {
 		key: 'detect',
-		value: function detect(image, options) {
+		value: function detect(image) {
 			var _this2 = this;
 
-			options = options || {};
+			var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
 			return this._delay(function (job) {
 				job._send('detect', { image: image, options: options, workerOptions: _this2.workerOptions });
 			});
@@ -658,6 +589,8 @@ var TesseractWorker = function () {
 		value: function terminate() {
 			if (this.worker) adapter.terminateWorker(this);
 			this.worker = null;
+			this._currentJob = null;
+			this._queue = [];
 		}
 	}, {
 		key: '_delay',
@@ -679,14 +612,13 @@ var TesseractWorker = function () {
 		key: '_dequeue',
 		value: function _dequeue() {
 			this._currentJob = null;
-			if (this._queue.length > 0) {
+			if (this._queue.length) {
 				this._queue[0]();
 			}
 		}
 	}, {
 		key: '_recv',
 		value: function _recv(packet) {
-
 			if (packet.status === 'resolve' && packet.action === 'recognize') {
 				packet.data = circularize(packet.data);
 			}
@@ -702,9 +634,7 @@ var TesseractWorker = function () {
 	return TesseractWorker;
 }();
 
-var DefaultTesseract = create();
+module.exports = create();
 
-module.exports = DefaultTesseract;
-
-},{"../package.json":3,"./common/circularize.js":5,"./common/job":6,"./node/index.js":4,"object-assign":1}]},{},[7])(7)
+},{"../package.json":2,"./common/circularize.js":4,"./common/job":5,"./node/index.js":3}]},{},[6])(6)
 });

@@ -1,6 +1,8 @@
 #dom-node {
     width: 100px;
     height: 100px;
+    background-color: white;
+    color: black;
 }
 .with-background {
     background: url(/base/spec/resources/css-bg/image.jpeg) no-repeat left top;
