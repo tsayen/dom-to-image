@@ -387,8 +387,8 @@
                     const controlUrl = getImageBase64(control, 'image/png');
                     const same = assert.equal(imageUrl, controlUrl, 'rendered and control images should be same');
                     if (!same) {
-                        console.log(`  image: ${imageUrl}`)
-                        console.log(`control: ${controlUrl}`)
+                        console.log(`  image: ${imageUrl}`);
+                        console.log(`control: ${controlUrl}`);
                     }
                 }
             }
@@ -431,7 +431,7 @@
                                 });
                                 resolve();
                             });
-                    })
+                    });
                 };
             }
 

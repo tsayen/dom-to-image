@@ -485,8 +485,8 @@
         };
 
         function getWindow(node) {
-            const ownerDocument = node?.ownerDocument;
-            return ownerDocument?.defaultView || ownerWindow;
+            const ownerDocument = node ? node.ownerDocument : undefined;
+            return (ownerDocument ? ownerDocument.defaultView : undefined) || ownerWindow;
         }
 
         function isElement(value) {
