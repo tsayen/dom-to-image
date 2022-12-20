@@ -246,6 +246,7 @@ for you, following steps are taken:
    `npm install @types/dom-to-image --save-dev`
 
 2. Create dom-to-image-more type definition (`dom-to-image-more.d.ts`)
+
    ```javascript
    declare module 'dom-to-image-more' {
     import domToImage = require('dom-to-image');
@@ -267,8 +268,8 @@ for you, following steps are taken:
 
 Marc Brooks, Anatolii Saienko (original dom-to-image), Paul Bakaus (original idea),
 Aidas Klimas (fixes), Edgardo Di Gesto (fixes), 樊冬 Fan Dong (fixes), Shrijan Tripathi (docs),
-SNDST00M (optimize), Joseph White (performance CSS), Phani Rithvij (test), 
-David DOLCIMASCOLO (packaging)
+SNDST00M (optimize), Joseph White (performance CSS), Phani Rithvij (test),
+David DOLCIMASCOLO (packaging), @meche-gh (node copy cleaning)
 
 ## License
 

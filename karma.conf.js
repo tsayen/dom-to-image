@@ -19,7 +19,7 @@ module.exports = function(config) {
             },
 
             'test-lib/jquery/dist/jquery.js',
-            'test-lib/js-imagediff/imagediff.js',
+            'node_modules/imagediff/imagediff.js',
             'test-lib/tesseract-1.0.19.js',
 
             'src/dom-to-image-more.js',
@@ -40,12 +40,12 @@ module.exports = function(config) {
         customLaunchers: {
             chrome: {
                 base: 'Chrome',
-                flags: ['--no-sandbox'],
+                flags: ['--no-sandbox --remote-debugging-port=9876'],
                 debug: true
             }
         },
 
         singleRun: false,
-        browserNoActivityTimeout: 60000
+        browserNoActivityTimeout: 300000
     });
 };

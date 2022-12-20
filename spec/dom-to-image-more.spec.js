@@ -196,7 +196,7 @@
                     .then(done).catch(done);
             });
 
-            it.skip('should render iframe of street view', function (done) {
+            it('should render iframe of street view', function (done) {
                 this.timeout(60000);
                 loadTestPage('iframe/street-view.html', 'iframe/style.css', 'iframe/control-image')
                     .then(renderAndCheck)
@@ -260,7 +260,7 @@
                 loadTestPage('bgcolor/dom-node.html', 'bgcolor/style.css', 'bgcolor/control-image')
                     .then(function () {
                         return domtoimage.toPng(domNode(), {
-                            bgcolor: "#ff0000"
+                            bgcolor: "#ffff00"
                         });
                     })
                     .then(check)
@@ -271,7 +271,7 @@
                 loadTestPage('bgcolor/dom-node.html', 'bgcolor/style.css', 'bgcolor/control-image')
                     .then(function () {
                         return domtoimage.toSvg(domNode(), {
-                            bgcolor: "#ff0000"
+                            bgcolor: "#ffff00"
                         });
                     })
                     .then(check)
@@ -353,10 +353,8 @@
                         return domtoimage.toPng(domNode());
                     })
                     .then(check)
-                    .then(done)
-                    .catch(done);
+                    .then(done).catch(done);
             });
-
 
             it('should combine dimensions and style', function (done) {
                 loadTestPage('scale/dom-node.html', 'scale/style.css', 'scale/control-image')
@@ -377,6 +375,15 @@
                     .then(done).catch(done);
             });
 
+            it('should render svg style attributes', function (done) {
+                loadTestPage('svg-styles/dom-node.html', 'svg-styles/style.css', 'svg-styles/control-image')
+                    .then(function () {
+                        return domtoimage.toSvg(domNode());
+                    })
+                    .then(check)
+                    .then(done).catch(done);
+            });
+
             function compareToControlImage(image, tolerance) {
                 const control = controlImage();
                 if (imagediff.equal(image, control, tolerance)) {
@@ -385,10 +392,11 @@
                     // get the data representation so we can update the control images easily
                     const imageUrl = getImageBase64(image, 'image/png');
                     const controlUrl = getImageBase64(control, 'image/png');
-                    const same = assert.equal(imageUrl, controlUrl, 'rendered and control images should be same');
-                    if (!same) {
-                        console.log(`  image: ${imageUrl}`);
-                        console.log(`control: ${controlUrl}`);
+                    assert.equal(imageUrl, controlUrl, 'rendered and control images should be same');
+                    if (imageUrl !== controlUrl) {
+                        console.log(`        image: ${image.src}`);
+                        console.log(`  imageBase64: ${imageUrl}`);
+                        console.log(`controlBase64: ${controlUrl}`);
                     }
                 }
             }
@@ -543,7 +551,8 @@
                 domtoimage.impl.util.getAndEncode(`${BASE_URL}util/not-found`)
                     .then(function (resource) {
                         assert.equal(resource, '');
-                    }).then(done).catch(done);
+                    })
+                    .then(done).catch(done);
             });
 
             it('should return placeholder result if cannot get resource and placeholder is provided', function (done) {
@@ -555,7 +564,8 @@
                         const placeholderData = placeholder.split(/,/)[1];
                         assert.equal(resource, placeholderData);
                         domtoimage.impl.options.imagePlaceholder = original;
-                    }).then(done).catch(done);
+                    })
+                    .then(done).catch(done);
             });
 
             it('should parse extension', function () {

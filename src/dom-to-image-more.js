@@ -59,7 +59,6 @@
      * @param {Object} options.style - an object whose properties to be copied to node's style before rendering.
      * @param {Number} options.quality - a Number between 0 and 1 indicating image quality (applicable to JPEG only),
                 defaults to 1.0.
-     * @param {Boolean} options.raster - Used internally to track whether the output is a raster image not requiring CSS reduction.
      * @param {Number} options.scale - a Number multiplier to scale up the canvas before rendering to reduce fuzzy images, defaults to 1.0.
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
@@ -72,7 +71,7 @@
         return Promise.resolve(node)
             .then(function (clonee) {
                 const root = true;
-                return cloneNode(clonee, options.filter, root, !options.raster, null, ownerWindow);
+                return cloneNode(clonee, options.filter, root, null, ownerWindow);
             })
             .then(embedFonts)
             .then(inlineImages)
@@ -120,8 +119,6 @@
      * @return {Promise} - A promise that is fulfilled with a Uint8Array containing RGBA pixel data.
      * */
     function toPixelData(node, options) {
-        options = options || {};
-        options.raster = true;
         return draw(node, options)
             .then(function (canvas) {
                 return canvas.getContext('2d').getImageData(
@@ -139,8 +136,6 @@
      * @return {Promise} - A promise that is fulfilled with a PNG image data URL
      * */
     function toPng(node, options) {
-        options = options || {};
-        options.raster = true;
         return draw(node, options)
             .then(function (canvas) {
                 return canvas.toDataURL();
@@ -153,11 +148,9 @@
      * @return {Promise} - A promise that is fulfilled with a JPEG image data URL
      * */
     function toJpeg(node, options) {
-        options = options || {};
-        options.raster = true;
         return draw(node, options)
             .then(function (canvas) {
-                return canvas.toDataURL('image/jpeg', options.quality || 1.0);
+                return canvas.toDataURL('image/jpeg', (options ? options.quality : undefined) || 1.0);
             });
     }
 
@@ -167,8 +160,6 @@
      * @return {Promise} - A promise that is fulfilled with a PNG image blob
      * */
     function toBlob(node, options) {
-        options = options || {};
-        options.raster = true;
         return draw(node, options)
             .then(util.canvasToBlob);
     }
@@ -179,9 +170,7 @@
      * @return {Promise} - A promise that is fulfilled with a canvas object
      * */
     function toCanvas(node, options) {
-        options = options || {};
-        options.raster = true;
-        return draw(node, options || {});
+        return draw(node, options);
     }
 
     function copyOptions(options) {
@@ -212,6 +201,7 @@
     }
 
     function draw(domNode, options) {
+        options = options || {};
         return toSvg(domNode, options)
             .then(util.makeImage)
             .then(util.delay(0))
@@ -245,7 +235,7 @@
         }
     }
 
-    function cloneNode(node, filter, root, vector, parentComputedStyles, ownerWindow) {
+    function cloneNode(node, filter, root, parentComputedStyles, ownerWindow) {
         if (!root && filter && !filter(node)) {
             return Promise.resolve();
         }
@@ -256,7 +246,7 @@
                 return cloneChildren(node, clone);
             })
             .then(function (clone) {
-                return processClone(node, clone, vector);
+                return processClone(node, clone);
             });
         
         function makeNodeCopy(original) {
@@ -282,7 +272,7 @@
                 childs.forEach(function (child) {
                     done = done
                         .then(function () {
-                            return cloneNode(child, filter, false, vector, computedStyles, ownerWindow);
+                            return cloneNode(child, filter, false, computedStyles, ownerWindow);
                         })
                         .then(function (childClone) {
                             if (childClone) { parent.appendChild(childClone); }
@@ -292,7 +282,7 @@
             }
         }
 
-        function processClone(original, clone, vector) {
+        function processClone(original, clone) {
             if (!util.isElement(clone)) { return clone; }
 
             return Promise.resolve()
@@ -330,11 +320,7 @@
                         targetElement.style.cssText = sourceComputedStyles.cssText;
                         copyFont(sourceComputedStyles, targetElement.style); // here we re-assign the font props.
                     } else {
-                        if (vector) {
-                            copyUserComputedStyle(sourceElement, sourceComputedStyles, targetElement, root);
-                        } else {
-                            copyUserComputedStyleFast(sourceComputedStyles, parentComputedStyles, targetElement);
-                        }
+                        copyUserComputedStyleFast(sourceComputedStyles, parentComputedStyles, targetElement);
 
                         // Remove positioning of root elements, which stops them from being captured correctly
                         if (root) {
@@ -976,33 +962,6 @@
             if (needs_prefixing) {
                 targetStyle.setProperty(`-webkit-${name}`, value);
             }
-        }
-    }
-
-    // `copyUserComputedStyle` and `copyUserComputedStyleFast` copy element styles, omitting defaults to reduce memory
-    // consumption. The former is slow and omits all defaults, while the latter is faster and omits most defaults. Out
-    // of ~340 CSS rules, usually <=10 are set, so it makes sense to only copy what we need. By omitting defaults, the
-    // data URI is <=10% of the original length, which means we can capture pages 10 times as complex before hitting
-    // the Firefox 97+ data URI max length, which is 32 MB. In addition, generated SVGs are much more performant.
-    // See https://stackoverflow.com/questions/42025329/how-to-get-the-applied-style-from-an-element.
-    function copyUserComputedStyle(sourceElement, sourceComputedStyles, targetElement, root) {
-        const targetStyle = targetElement.style;
-        const inlineStyles = sourceElement.style;
-
-        for (let style of sourceComputedStyles) {
-            const value = sourceComputedStyles.getPropertyValue(style);
-            const inlineValue = inlineStyles.getPropertyValue(style);
-
-            inlineStyles.setProperty(style, root ? 'initial' : 'unset');
-            const initialValue = sourceComputedStyles.getPropertyValue(style);
-
-            if (initialValue !== value) {
-                setStyleProperty(targetStyle, style, value, undefined);
-            } else {
-                targetStyle.removeProperty(style);
-            }
-
-            setStyleProperty(inlineStyles, style, inlineValue);
         }
     }
 
