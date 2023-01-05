@@ -472,7 +472,7 @@
 
         function getWindow(node) {
             const ownerDocument = node ? node.ownerDocument : undefined;
-            return (ownerDocument ? ownerDocument.defaultView : undefined) || ownerWindow;
+            return (ownerDocument ? ownerDocument.defaultView : undefined) || global || window;
         }
 
         function isElement(value) {
