@@ -2,6 +2,17 @@
 
 [![Build Status](https://travis-ci.org/1904labs/dom-to-image-more.svg?branch=master)](https://travis-ci.org/1904labs/dom-to-image-more)
 
+## Breaking Change Notice
+
+The 3.x release branch will include some breaking changes in the vary infrequently used ability to configure some utility methods used in this internal processing of dom-to-image-more. As browsers have matured, many of the hacks we're accumulated over the years are not needed, or better ways have been found to handle some edge-cases. With the help of folks like @meche-gh, in #99 we're stripping out the following members:
+
+* `.mimes` - was the not-very-comprehensive list of mime types used to handle inlining things
+* `.parseExtension` - was a method to extract the extension from a filename, used to guess mime types
+* `.mimeType` - was a method to map file extensions to mime types
+* `.dataAsUrl` - was a method to reassemble a `data:` URI from a Base64 representation and mime type
+
+The 3.x release branch should also fix more node compatibility and `iframe` issues.
+
 ## What is it
 
 **dom-to-image-more** is a library which can turn arbitrary DOM node, including same origin and blob iframes, into
@@ -34,7 +45,6 @@ var domtoimage = require("dom-to-image-more");
 ### Bower
 
 ~Removed~
-
 
 ## Usage
 
@@ -178,17 +188,17 @@ _Safari [is not supported](https://github.com/tsayen/dom-to-image/issues/27), as
 
 Only standard lib is currently used, but make sure your browser supports:
 
-- [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)
-- SVG `<foreignObject>` tag
+* [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+* SVG `<foreignObject>` tag
 
 ### Tests
 
-Most importantly, tests depend on:
+Most importantly, tests **only** depend on:
 
-- [js-imagediff](https://github.com/HumbleSoftware/js-imagediff),
+* [js-imagediff](https://github.com/HumbleSoftware/js-imagediff),
   to compare rendered and control images
 
-- [ocrad.js](https://github.com/antimatter15/ocrad.js), for the
+* [ocrad.js](https://github.com/antimatter15/ocrad.js), for the
   parts when you can't compare images (due to the browser
   rendering differences) and just have to test whether the text is rendered
 
@@ -208,25 +218,25 @@ for you, following steps are taken:
 1. Compute the style for the node and each sub-node and copy it to
    corresponding clone
 
-   - and don't forget to recreate pseudo-elements, as they are not
+   * and don't forget to recreate pseudo-elements, as they are not
      cloned in any way, of course
 
 1. Embed web fonts
 
-   - find all the `@font-face` declarations that might represent web fonts
+   * find all the `@font-face` declarations that might represent web fonts
 
-   - parse file URLs, download corresponding files
+   * parse file URLs, download corresponding files
 
-   - base64-encode and inline content as `data:` URLs
+   * base64-encode and inline content as `data:` URLs
 
-   - concatenate all the processed CSS rules and put them into one `<style>`
+   * concatenate all the processed CSS rules and put them into one `<style>`
      element, then attach it to the clone
 
 1. Embed images
 
-   - embed image URLs in `<img>` elements
+   * embed image URLs in `<img>` elements
 
-   - inline images used in `background` CSS property, in a fashion similar to
+   * inline images used in `background` CSS property, in a fashion similar to
      fonts
 
 1. Serialize the cloned node to XML
@@ -256,12 +266,12 @@ for you, following steps are taken:
 
 ## Things to watch out for
 
-- if the DOM node you want to render includes a `<canvas>` element with
+* if the DOM node you want to render includes a `<canvas>` element with
   something drawn on it, it should be handled fine, unless the canvas is
   [tainted](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image) -
   in this case rendering will rather not succeed.
 
-- at the time of writing, Firefox has a problem with some external stylesheets
+* at the time of writing, Firefox has a problem with some external stylesheets
   (see issue #13). In such case, the error will be caught and logged.
 
 ## Authors
@@ -269,7 +279,7 @@ for you, following steps are taken:
 Marc Brooks, Anatolii Saienko (original dom-to-image), Paul Bakaus (original idea),
 Aidas Klimas (fixes), Edgardo Di Gesto (fixes), 樊冬 Fan Dong (fixes), Shrijan Tripathi (docs),
 SNDST00M (optimize), Joseph White (performance CSS), Phani Rithvij (test),
-David DOLCIMASCOLO (packaging), @meche-gh (node copy cleaning)
+David DOLCIMASCOLO (packaging), @meche-gh (many major updates)
 
 ## License
 
