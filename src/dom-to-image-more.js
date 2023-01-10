@@ -948,7 +948,10 @@
             sandbox.style.position = 'fixed';
             document.body.appendChild(sandbox);
             // Ensure that the iframe is rendered in standard mode
-            sandbox.contentWindow.document.write('<!DOCTYPE html><meta charset="UTF-8"><title>sandbox</title><body>');
+            const charset = document.createElement('meta');
+            charset.setAttribute('charset', document.characterSet || 'UTF-8');
+            sandbox.contentDocument.head.appendChild(charset);
+            sandbox.contentDocument.title = 'sandbox';
         }
         const defaultElement = document.createElement(tagName);
         sandbox.contentWindow.document.body.appendChild(defaultElement);
