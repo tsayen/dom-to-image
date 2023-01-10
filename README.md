@@ -6,10 +6,10 @@
 
 The 3.x release branch will include some breaking changes in the vary infrequently used ability to configure some utility methods used in this internal processing of dom-to-image-more. As browsers have matured, many of the hacks we're accumulated over the years are not needed, or better ways have been found to handle some edge-cases. With the help of folks like @meche-gh, in #99 we're stripping out the following members:
 
-* `.mimes` - was the not-very-comprehensive list of mime types used to handle inlining things
-* `.parseExtension` - was a method to extract the extension from a filename, used to guess mime types
-* `.mimeType` - was a method to map file extensions to mime types
-* `.dataAsUrl` - was a method to reassemble a `data:` URI from a Base64 representation and mime type
+-   `.mimes` - was the not-very-comprehensive list of mime types used to handle inlining things
+-   `.parseExtension` - was a method to extract the extension from a filename, used to guess mime types
+-   `.mimeType` - was a method to map file extensions to mime types
+-   `.dataAsUrl` - was a method to reassemble a `data:` URI from a Base64 representation and mime type
 
 The 3.x release branch should also fix more node compatibility and `iframe` issues.
 
@@ -37,14 +37,10 @@ Then load
 
 ```javascript
 /* in ES 6 */
-import domtoimage from "dom-to-image-more";
+import domtoimage from 'dom-to-image-more';
 /* in ES 5 */
-var domtoimage = require("dom-to-image-more");
+var domtoimage = require('dom-to-image-more');
 ```
-
-### Bower
-
-~Removed~
 
 ## Usage
 
@@ -53,26 +49,26 @@ and return promises, which are fulfilled with corresponding data URLs.
 Get a PNG image base64-encoded data URL and display right away:
 
 ```javascript
-var node = document.getElementById("my-node");
+var node = document.getElementById('my-node');
 
 domtoimage
-  .toPng(node)
-  .then(function (dataUrl) {
-    var img = new Image();
-    img.src = dataUrl;
-    document.body.appendChild(img);
-  })
-  .catch(function (error) {
-    console.error("oops, something went wrong!", error);
-  });
+    .toPng(node)
+    .then(function (dataUrl) {
+        var img = new Image();
+        img.src = dataUrl;
+        document.body.appendChild(img);
+    })
+    .catch(function (error) {
+        console.error('oops, something went wrong!', error);
+    });
 ```
 
 Get a PNG image blob and download it (using [FileSaver](https://github.com/eligrey/FileSaver.js/),
 for example):
 
 ```javascript
-domtoimage.toBlob(document.getElementById("my-node")).then(function (blob) {
-  window.saveAs(blob, "my-node.png");
+domtoimage.toBlob(document.getElementById('my-node')).then(function (blob) {
+    window.saveAs(blob, 'my-node.png');
 });
 ```
 
@@ -80,51 +76,51 @@ Save and download a compressed JPEG image:
 
 ```javascript
 domtoimage
-  .toJpeg(document.getElementById("my-node"), { quality: 0.95 })
-  .then(function (dataUrl) {
-    var link = document.createElement("a");
-    link.download = "my-image-name.jpeg";
-    link.href = dataUrl;
-    link.click();
-  });
+    .toJpeg(document.getElementById('my-node'), { quality: 0.95 })
+    .then(function (dataUrl) {
+        var link = document.createElement('a');
+        link.download = 'my-image-name.jpeg';
+        link.href = dataUrl;
+        link.click();
+    });
 ```
 
 Get an SVG data URL, but filter out all the `<i>` elements:
 
 ```javascript
 function filter(node) {
-  return node.tagName !== "i";
+    return node.tagName !== 'i';
 }
 
 domtoimage
-  .toSvg(document.getElementById("my-node"), { filter: filter })
-  .then(function (dataUrl) {
-    /* do something */
-  });
+    .toSvg(document.getElementById('my-node'), { filter: filter })
+    .then(function (dataUrl) {
+        /* do something */
+    });
 ```
 
 Get the raw pixel data as a [Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)
 with every 4 array elements representing the RGBA data of a pixel:
 
 ```javascript
-var node = document.getElementById("my-node");
+var node = document.getElementById('my-node');
 
 domtoimage.toPixelData(node).then(function (pixels) {
-  for (var y = 0; y < node.scrollHeight; ++y) {
-    for (var x = 0; x < node.scrollWidth; ++x) {
-      pixelAtXYOffset = 4 * y * node.scrollHeight + 4 * x;
-      /* pixelAtXY is a Uint8Array[4] containing RGBA values of the pixel at (x, y) in the range 0..255 */
-      pixelAtXY = pixels.slice(pixelAtXYOffset, pixelAtXYOffset + 4);
+    for (var y = 0; y < node.scrollHeight; ++y) {
+        for (var x = 0; x < node.scrollWidth; ++x) {
+            pixelAtXYOffset = 4 * y * node.scrollHeight + 4 * x;
+            /* pixelAtXY is a Uint8Array[4] containing RGBA values of the pixel at (x, y) in the range 0..255 */
+            pixelAtXY = pixels.slice(pixelAtXYOffset, pixelAtXYOffset + 4);
+        }
     }
-  }
 });
 ```
 
 Get a canvas object:
 
 ```javascript
-domtoimage.toCanvas(document.getElementById("my-node")).then(function (canvas) {
-  console.log("canvas", canvas.width, canvas.height);
+domtoimage.toCanvas(document.getElementById('my-node')).then(function (canvas) {
+    console.log('canvas', canvas.width, canvas.height);
 });
 ```
 
@@ -188,19 +184,19 @@ _Safari [is not supported](https://github.com/tsayen/dom-to-image/issues/27), as
 
 Only standard lib is currently used, but make sure your browser supports:
 
-* [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)
-* SVG `<foreignObject>` tag
+-   [Promise](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+-   SVG `<foreignObject>` tag
 
 ### Tests
 
 Most importantly, tests **only** depend on:
 
-* [js-imagediff](https://github.com/HumbleSoftware/js-imagediff),
-  to compare rendered and control images
+-   [js-imagediff](https://github.com/HumbleSoftware/js-imagediff),
+    to compare rendered and control images
 
-* [ocrad.js](https://github.com/antimatter15/ocrad.js), for the
-  parts when you can't compare images (due to the browser
-  rendering differences) and just have to test whether the text is rendered
+-   [ocrad.js](https://github.com/antimatter15/ocrad.js), for the
+    parts when you can't compare images (due to the browser
+    rendering differences) and just have to test whether the text is rendered
 
 ## How it works
 
@@ -218,26 +214,26 @@ for you, following steps are taken:
 1. Compute the style for the node and each sub-node and copy it to
    corresponding clone
 
-   * and don't forget to recreate pseudo-elements, as they are not
-     cloned in any way, of course
+    - and don't forget to recreate pseudo-elements, as they are not
+      cloned in any way, of course
 
 1. Embed web fonts
 
-   * find all the `@font-face` declarations that might represent web fonts
+    - find all the `@font-face` declarations that might represent web fonts
 
-   * parse file URLs, download corresponding files
+    - parse file URLs, download corresponding files
 
-   * base64-encode and inline content as `data:` URLs
+    - base64-encode and inline content as `data:` URLs
 
-   * concatenate all the processed CSS rules and put them into one `<style>`
-     element, then attach it to the clone
+    - concatenate all the processed CSS rules and put them into one `<style>`
+      element, then attach it to the clone
 
 1. Embed images
 
-   * embed image URLs in `<img>` elements
+    - embed image URLs in `<img>` elements
 
-   * inline images used in `background` CSS property, in a fashion similar to
-     fonts
+    - inline images used in `background` CSS property, in a fashion similar to
+      fonts
 
 1. Serialize the cloned node to XML
 
@@ -257,22 +253,18 @@ for you, following steps are taken:
 
 2. Create dom-to-image-more type definition (`dom-to-image-more.d.ts`)
 
-   ```javascript
-   declare module 'dom-to-image-more' {
-    import domToImage = require('dom-to-image');
-    export = domToImage;
-   }
-   ```
+    ```javascript
+    declare module 'dom-to-image-more' {
+     import domToImage = require('dom-to-image');
+     export = domToImage;
+    }
+    ```
 
 ## Things to watch out for
 
-* if the DOM node you want to render includes a `<canvas>` element with
-  something drawn on it, it should be handled fine, unless the canvas is
-  [tainted](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image) -
-  in this case rendering will rather not succeed.
+-   if the DOM node you want to render includes a `<canvas>` element with something drawn on it, it should be handled fine, unless the canvas is [tainted](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image) - in this case rendering will rather not succeed.
 
-* at the time of writing, Firefox has a problem with some external stylesheets
-  (see issue #13). In such case, the error will be caught and logged.
+-   at the time of writing, Firefox has a problem with some external stylesheets (see issue #13). In such case, the error will be caught and logged.
 
 ## Authors
 

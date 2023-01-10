@@ -1,6 +1,7 @@
 @font-face {
     font-family: 'Font1';
-    src: url('http://fonts.com/font1.woff2') format('woff2'), url('http://fonts.com/font1.woff') format('woff'), local(Arial);
+    src: url('http://fonts.com/font1.woff2') format('woff2'),
+        url('http://fonts.com/font1.woff') format('woff'), local(Arial);
     font-weight: normal;
     font-style: normal;
 }

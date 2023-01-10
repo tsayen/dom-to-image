@@ -1,60 +1,64 @@
 {
-  "name": "dom-to-image-more",
-  "version": "3.0.0-rc1",
-  "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
-  "main": "dist/dom-to-image-more.min.js",
-  "devDependencies": {
-    "chai": "^4.3.7",
-    "grunt": "^1.5.3",
-    "grunt-cli": "^1.4.3",
-    "grunt-contrib-jshint": "^3.2.0",
-    "grunt-contrib-uglify": "^5.2.2",
-    "grunt-contrib-watch": "^1.1.0",
-    "grunt-karma": "^4.0.2",
-    "imagediff": "^1.0.8",
-    "js-yaml": "^4.1.0",
-    "karma": "^6.4.1",
-    "karma-chai": "^0.1.0",
-    "karma-chrome-launcher": "^3.1.1",
-    "karma-firefox-launcher": "^2.1.2",
-    "karma-mocha": "^2.0.1",
-    "karma-mocha-reporter": "^2.2.5",
-    "mocha": "^10.2.0"
-  },
-  "scripts": {
-    "test": "grunt test",
-    "build": "grunt"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/1904labs/dom-to-image-more.git"
-  },
-  "keywords": [
-    "dom",
-    "image",
-    "raster",
-    "render",
-    "html",
-    "canvas",
-    "svg"
-  ],
-  "author": "Marc Brooks <idisposable@gmail.com>",
-  "contributors": [
-    "Anatolii Saienko <anatoly.sayenko@gmail.com>",
-    "Marc Brooks <idisposable@gmail.com>",
-    "Daniel Fischer <daniel.fischer@iqdoq.de>",
-    "Aidas Klimas",
-    "Edgardo Di Gesto",
-    "樊冬 Fan Dong <CG-man@outlook.com>",
-    "Joseph White @JosWhite",
-    "Phani Rithvij @phanirithvij",
-    "David DOLCIMASCOLO @ddolcimascolo",
-    "Nikita Staroseltsev @Nikitozz13",
-    "@meche-gh"
-  ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/1904labs/dom-to-image-more/issues"
-  },
-  "homepage": "https://github.com/1904labs/dom-to-image-more#readme"
+    "name": "dom-to-image-more",
+    "version": "3.0.0-rc1",
+    "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
+    "main": "dist/dom-to-image-more.min.js",
+    "devDependencies": {
+        "chai": "^4.3.7",
+        "eslint": "^8.31.0",
+        "grunt": "^1.5.3",
+        "grunt-cli": "^1.4.3",
+        "grunt-contrib-jshint": "^3.2.0",
+        "grunt-contrib-uglify": "^5.2.2",
+        "grunt-contrib-watch": "^1.1.0",
+        "grunt-karma": "^4.0.2",
+        "imagediff": "^1.0.8",
+        "js-yaml": "^4.1.0",
+        "karma": "^6.4.1",
+        "karma-chai": "^0.1.0",
+        "karma-chrome-launcher": "^3.1.1",
+        "karma-firefox-launcher": "^2.1.2",
+        "karma-mocha": "^2.0.1",
+        "karma-mocha-reporter": "^2.2.5",
+        "mocha": "^10.2.0",
+        "prettier": "^2.8.2"
+    },
+    "scripts": {
+        "format": "eslint src --fix && prettier --write .",
+        "lint": "eslint --max-warnings=0 src && prettier --check .",
+        "test": "grunt test",
+        "build": "grunt"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/1904labs/dom-to-image-more.git"
+    },
+    "keywords": [
+        "dom",
+        "image",
+        "raster",
+        "render",
+        "html",
+        "canvas",
+        "svg"
+    ],
+    "author": "Marc Brooks <idisposable@gmail.com>",
+    "contributors": [
+        "Anatolii Saienko <anatoly.sayenko@gmail.com>",
+        "Marc Brooks <idisposable@gmail.com>",
+        "Daniel Fischer <daniel.fischer@iqdoq.de>",
+        "Aidas Klimas",
+        "Edgardo Di Gesto",
+        "樊冬 Fan Dong <CG-man@outlook.com>",
+        "Joseph White @JosWhite",
+        "Phani Rithvij @phanirithvij",
+        "David DOLCIMASCOLO @ddolcimascolo",
+        "Nikita Staroseltsev @Nikitozz13",
+        "@meche-gh"
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/1904labs/dom-to-image-more/issues"
+    },
+    "homepage": "https://github.com/1904labs/dom-to-image-more#readme"
 }
