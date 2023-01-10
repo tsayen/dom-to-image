@@ -70,8 +70,7 @@
         copyOptions(options);
         return Promise.resolve(node)
             .then(function (clonee) {
-                const root = true;
-                return cloneNode(clonee, options.filter, root, null, ownerWindow);
+                return cloneNode(clonee, options.filter, true, null, ownerWindow);
             })
             .then(embedFonts)
             .then(inlineImages)
@@ -236,27 +235,41 @@
     }
 
     function cloneNode(node, filter, root, parentComputedStyles, ownerWindow) {
-        if (!root && filter && !filter(node)) {
+        if (!root && (filter && !filter(node))) {
             return Promise.resolve();
         }
 
         return Promise.resolve(node)
             .then(makeNodeCopy)
             .then(function (clone) {
-                return cloneChildren(node, clone);
+                return cloneChildren(util.hasOpenShadowRoot(node) ? node.shadowRoot : node, clone);
             })
             .then(function (clone) {
                 return processClone(node, clone);
             });
-        
+
         function makeNodeCopy(original) {
-            return util.isHTMLCanvasElement(original)
-                ? util.makeImage(original.toDataURL())
-                : original.cloneNode(false);
+            if (util.isHTMLCanvasElement(original)) {
+                return util.makeImage(original.toDataURL());
+            }
+            if (util.isInShadowRoot(original) && !util.isHTMLScriptElement(original)) {
+                return cloneShadowNode(original);
+            }
+            return original.cloneNode(false);
+        }
+
+        function cloneShadowNode(original) {
+            const nextSibling = original.nextSibling;
+            const parentNode = original.parentNode;
+            // Bypass element encapsulation, by detaching from shadow node then restoring.
+            parentNode.removeChild(original);
+            const clone = original.cloneNode(false);
+            parentNode.insertBefore(original, nextSibling);
+            return clone;
         }
 
         function cloneChildren(original, clone) {
-            const children = original.childNodes;
+            const children = util.isShadowSlotElement(original) ? original.assignedNodes() : original.childNodes;
             if (children.length === 0) {
                 return Promise.resolve(clone);
             }
@@ -267,7 +280,7 @@
                 });
 
             function cloneChildrenInOrder(parent, childs) {
-                const computedStyles = getComputedStyle(original);
+                const computedStyles = getComputedStyle(util.isShadowRoot(original) ? original.host : original);
                 let done = Promise.resolve();
                 childs.forEach(function (child) {
                     done = done
@@ -283,7 +296,7 @@
         }
 
         function processClone(original, clone) {
-            if (!util.isElement(clone)) { return clone; }
+            if (!util.isElement(clone) || util.isShadowSlotElement(original)) { return Promise.resolve(clone); }
 
             return Promise.resolve()
                 .then(cloneStyle)
@@ -458,8 +471,13 @@
             height: height,
             getWindow: getWindow,
             isElement: isElement,
+            hasOpenShadowRoot: hasOpenShadowRoot,
+            isShadowRoot: isShadowRoot,
+            isInShadowRoot: isInShadowRoot,
             isHTMLElement: isHTMLElement,
             isHTMLCanvasElement: isHTMLCanvasElement,
+            isHTMLScriptElement: isHTMLScriptElement,
+            isShadowSlotElement: isShadowSlotElement,
             isHTMLInputElement: isHTMLInputElement,
             isHTMLImageElement: isHTMLImageElement,
             isHTMLTextAreaElement: isHTMLTextAreaElement,
@@ -469,7 +487,23 @@
 
         function getWindow(node) {
             const ownerDocument = node ? node.ownerDocument : undefined;
-            return (ownerDocument ? ownerDocument.defaultView : undefined) || global || window;
+            return ownerDocument ? ownerDocument.defaultView : (global || window);
+        }
+
+        function hasOpenShadowRoot(value) {
+            return isElement(value) && value.shadowRoot !== null;
+        }
+
+        function isShadowRoot(value) {
+            return value instanceof getWindow(value).ShadowRoot;
+        }
+
+        function isInShadowRoot(value) {
+            return value !== null && value.getRootNode && isShadowRoot(value.getRootNode());
+        }
+
+        function isShadowSlotElement(value) {
+            return isInShadowRoot(value) && value instanceof getWindow(value).HTMLSlotElement;
         }
 
         function isElement(value) {
@@ -478,6 +512,10 @@
 
         function isHTMLCanvasElement(value) {
             return value instanceof getWindow(value).HTMLCanvasElement;
+        }
+
+        function isHTMLScriptElement(value) {
+            return value instanceof getWindow(value).HTMLScriptElement;
         }
 
         function isHTMLElement(value) {
@@ -954,7 +992,7 @@
             sandbox.contentDocument.title = 'sandbox';
         }
         const defaultElement = document.createElement(tagName);
-        sandbox.contentWindow.document.body.appendChild(defaultElement);
+        sandbox.contentDocument.body.appendChild(defaultElement);
         // Ensure that there is some content, so that properties like margin are applied.
         defaultElement.textContent = '.';
         const defaultComputedStyle = sandbox.contentWindow.getComputedStyle(defaultElement);
