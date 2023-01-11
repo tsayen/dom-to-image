@@ -252,7 +252,7 @@
             if (util.isHTMLCanvasElement(original)) {
                 return util.makeImage(original.toDataURL());
             }
-            if (util.isInShadowRoot(original) && !util.isHTMLScriptElement(original)) {
+            if (util.isInShadowRoot(original)) {
                 return cloneShadowNode(original);
             }
             return original.cloneNode(false);
@@ -476,7 +476,6 @@
             isInShadowRoot: isInShadowRoot,
             isHTMLElement: isHTMLElement,
             isHTMLCanvasElement: isHTMLCanvasElement,
-            isHTMLScriptElement: isHTMLScriptElement,
             isShadowSlotElement: isShadowSlotElement,
             isHTMLInputElement: isHTMLInputElement,
             isHTMLImageElement: isHTMLImageElement,
@@ -512,10 +511,6 @@
 
         function isHTMLCanvasElement(value) {
             return value instanceof getWindow(value).HTMLCanvasElement;
-        }
-
-        function isHTMLScriptElement(value) {
-            return value instanceof getWindow(value).HTMLScriptElement;
         }
 
         function isHTMLElement(value) {
