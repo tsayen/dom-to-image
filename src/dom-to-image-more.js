@@ -258,32 +258,27 @@
         }
 
         function cloneChildren(original, clone) {
-            const children = original.childNodes;
+            const originalChildren = original.childNodes;
+            let done = Promise.resolve();
             
-            if (children.length === 0) {
-                return Promise.resolve(clone);
-            }
+            if (originalChildren.length !== 0) {
+                const originalComputedStyles = getComputedStyle(original);
 
-            return cloneChildrenInOrder(clone, util.asArray(children)).then(function () {
-                return clone;
-            });
-
-            function cloneChildrenInOrder(parent, childs) {
-                const computedStyles = getComputedStyle(original);
-                let done = Promise.resolve();
-                childs.forEach(function (child) {
-                    done = done
-                        .then(function () {
-                            return cloneNode(child, filter, computedStyles, ownerWindow);
-                        })
-                        .then(function (childClone) {
-                            if (childClone) {
-                                parent.appendChild(childClone);
-                            }
+                util.asArray(originalChildren)
+                    .forEach(function (originalChild) {
+                        done = done.then(function () {
+                            return cloneNode(originalChild, filter, originalComputedStyles, ownerWindow)
+                                .then(function (clonedChild) {
+                                    if (clonedChild) {
+                                        clone.appendChild(clonedChild);
+                                    }
+                                });
                         });
-                });
-                return done;
+                    });
             }
+
+            return done
+                .then(function() { return clone; });
         }
 
         function processClone(original, clone) {
@@ -1012,7 +1007,8 @@
         const defaultElement = document.createElement(tagName);
         sandbox.contentWindow.document.body.appendChild(defaultElement);
         // Ensure that there is some content, so that properties like margin are applied.
-        defaultElement.textContent = '.';
+        // we use zero-width space to handle FireFox adding a pixel
+        defaultElement.textContent = '\0x200B';
         const defaultComputedStyle =
             sandbox.contentWindow.getComputedStyle(defaultElement);
         const defaultStyle = {};
