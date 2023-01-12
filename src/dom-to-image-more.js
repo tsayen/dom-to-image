@@ -1008,7 +1008,7 @@
         sandbox.contentWindow.document.body.appendChild(defaultElement);
         // Ensure that there is some content, so that properties like margin are applied.
         // we use zero-width space to handle FireFox adding a pixel
-        defaultElement.textContent = '\0x200B';
+        defaultElement.textContent = '\u200b';
         const defaultComputedStyle =
             sandbox.contentWindow.getComputedStyle(defaultElement);
         const defaultStyle = {};
