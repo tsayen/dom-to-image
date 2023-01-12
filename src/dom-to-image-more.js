@@ -70,8 +70,7 @@
         copyOptions(options);
         return Promise.resolve(node)
             .then(function (clonee) {
-                const root = true;
-                return cloneNode(clonee, options.filter, root, null, ownerWindow);
+                return cloneNode(clonee, options.filter, null, ownerWindow);
             })
             .then(embedFonts)
             .then(inlineImages)
@@ -206,7 +205,6 @@
         options = options || {};
         return toSvg(domNode, options)
             .then(util.makeImage)
-            .then(util.delay(0))
             .then(function (image) {
                 const scale = typeof options.scale !== 'number' ? 1 : options.scale;
                 const canvas = newCanvas(domNode, scale);
@@ -237,8 +235,10 @@
         }
     }
 
-    function cloneNode(node, filter, root, parentComputedStyles, ownerWindow) {
-        if (!root && filter && !filter(node)) {
+    let sandbox = null;
+
+    function cloneNode(node, filter, parentComputedStyles, ownerWindow) {
+        if (node === sandbox || (parentComputedStyles !== null && filter && !filter(node))) {
             return Promise.resolve();
         }
 
@@ -259,6 +259,7 @@
 
         function cloneChildren(original, clone) {
             const children = original.childNodes;
+            
             if (children.length === 0) {
                 return Promise.resolve(clone);
             }
@@ -273,13 +274,7 @@
                 childs.forEach(function (child) {
                     done = done
                         .then(function () {
-                            return cloneNode(
-                                child,
-                                filter,
-                                false,
-                                computedStyles,
-                                ownerWindow
-                            );
+                            return cloneNode(child, filter, computedStyles, ownerWindow);
                         })
                         .then(function (childClone) {
                             if (childClone) {
@@ -337,8 +332,8 @@
                             targetElement
                         );
 
-                        // Remove positioning of root elements, which stops them from being captured correctly
-                        if (root) {
+                        // Remove positioning of initial element, which stops them from being captured correctly
+                        if (parentComputedStyles === null) {
                             [
                                 'inset-block',
                                 'inset-block-start',
@@ -994,7 +989,6 @@
     }
 
     let removeDefaultStylesTimeoutId = null;
-    let sandbox = null;
     let tagNameDefaultStyles = {};
 
     function getDefaultStyle(tagName) {
