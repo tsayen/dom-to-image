@@ -684,20 +684,32 @@
         }
 
         function width(node) {
-            const leftBorder = px(node, 'border-left-width');
-            const rightBorder = px(node, 'border-right-width');
-            return node.scrollWidth + leftBorder + rightBorder;
+            var width = px(node, "width");
+            if (isNaN(width)) {
+              const leftBorder = px(node, 'border-left-width');
+              const rightBorder = px(node, 'border-right-width');
+              width = node.scrollWidth + leftBorder + rightBorder;
+            }
+            return width;
         }
 
         function height(node) {
-            const topBorder = px(node, 'border-top-width');
-            const bottomBorder = px(node, 'border-bottom-width');
-            return node.scrollHeight + topBorder + bottomBorder;
+            var height = px(node, "height");
+            if (isNaN(height)) {
+              const topBorder = px(node, 'border-top-width');
+              const bottomBorder = px(node, 'border-bottom-width');
+              height = node.scrollHeight + topBorder + bottomBorder;
+            }
+            return height;
         }
 
         function px(node, styleProperty) {
-            const value = getComputedStyle(node).getPropertyValue(styleProperty);
-            return parseFloat(value.replace('px', ''));
+            let value = getComputedStyle(node).getPropertyValue(styleProperty);
+            if (value.slice(-2) !== 'px') {
+            	return NaN;
+            }
+            value = value.slice(0, -2);
+            return parseFloat(value);
         }
     }
 
@@ -928,7 +940,7 @@
         util.asArray(sourceComputedStyles).forEach(function (name) {
             const sourceValue = sourceComputedStyles.getPropertyValue(name);
             const defaultValue = defaultStyle[name];
-            const parentValue = parentComputedStyles?.getPropertyValue(name);
+            const parentValue = parentComputedStyles ? parentComputedStyles.getPropertyValue(name) : undefined;
 
             // If the style does not match the default, or it does not match the parent's, set it. We don't know which
             // styles are inherited from the parent and which aren't, so we have to always check both.
@@ -983,7 +995,7 @@
     }
 
     function removeSandbox() {
-        if (!sandbox) {
+        if (sandbox) {
             document.body.removeChild(sandbox);
             sandbox = null;
         }
