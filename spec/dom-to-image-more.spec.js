@@ -473,8 +473,13 @@
                 return image;
             }
 
+            function cloneCatcher(clone){
+                clonedNode().replaceChildren(clone);
+                return clone;
+            }
+
             function renderToPng(node) {
-                return domtoimage.toPng(node || domNode());
+                return domtoimage.toPng(node || domNode(), { onclone: cloneCatcher });
             }
         });
 
@@ -692,6 +697,10 @@
 
         function domNode() {
             return $('#dom-node')[0];
+        }
+
+        function clonedNode() {
+            return $('#cloned-node')[0];
         }
 
         function controlImage() {
