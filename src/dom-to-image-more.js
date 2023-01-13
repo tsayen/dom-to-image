@@ -439,7 +439,7 @@
                 return `<foreignObject width="${width}" height="${height}">${xhtml}</foreignObject>`;
             })
             .then(function (foreignObject) {
-                return `<svg xmlns="http://www.w3.org/2000/svg">${foreignObject}</svg>`;
+                return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${foreignObject}</svg>`;
             })
             .then(function (svg) {
                 return `data:image/svg+xml;charset=utf-8,${svg}`;
