@@ -1,6 +1,6 @@
 {
     "name": "dom-to-image-more",
-    "version": "3.0.0-rc1",
+    "version": "3.0.1-rc1",
     "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
     "main": "dist/dom-to-image-more.min.js",
     "devDependencies": {
@@ -12,7 +12,6 @@
         "grunt-contrib-uglify": "^5.2.2",
         "grunt-contrib-watch": "^1.1.0",
         "grunt-karma": "^4.0.2",
-        "imagediff": "^1.0.8",
         "js-yaml": "^4.1.0",
         "karma": "^6.4.1",
         "karma-chai": "^0.1.0",

@@ -531,24 +531,30 @@
                     .catch(done);
             });
 
+            it('should honor zero-padding table elements', function (done) {
+                loadTestPage(
+                    'padding/dom-node.html',
+                    'padding/style.css',
+                    'padding/control-image'
+                )
+                    .then(renderAndCheck)
+                    .then(done)
+                    .catch(done);
+            });
+
             function compareToControlImage(image, tolerance) {
                 const control = controlImage();
-                if (imagediff.equal(image, control, tolerance)) {
-                    assert.isTrue(true, 'rendered and control images should be same');
-                } else {
-                    // get the data representation so we can update the control images easily
-                    const imageUrl = getImageBase64(image, 'image/png');
-                    const controlUrl = getImageBase64(control, 'image/png');
-                    assert.equal(
-                        imageUrl,
-                        controlUrl,
-                        'rendered and control images should be same'
-                    );
-                    if (imageUrl !== controlUrl) {
-                        console.log(`        image: ${image.src}`);
-                        console.log(`  imageBase64: ${imageUrl}`);
-                        console.log(`controlBase64: ${controlUrl}`);
-                    }
+                const imageUrl = getImageBase64(image, 'image/png');
+                const controlUrl = getImageBase64(control, 'image/png');
+                assert.equal(
+                    imageUrl,
+                    controlUrl,
+                    'rendered and control images should be same'
+                );
+                if (imageUrl !== controlUrl) {
+                    console.log(`        image: ${image.src}`);
+                    console.log(`  imageBase64: ${imageUrl}`);
+                    console.log(`controlBase64: ${controlUrl}`);
                 }
             }
 
@@ -612,8 +618,13 @@
                 return image;
             }
 
+            function cloneCatcher(clone){
+                clonedNode().replaceChildren(clone);
+                return clone;
+            }
+
             function renderToPng(node) {
-                return domtoimage.toPng(node || domNode());
+                return domtoimage.toPng(node || domNode(), { onclone: cloneCatcher });
             }
         });
 
@@ -626,6 +637,7 @@
                 assert.deepEqual(parse('url("http://acme.com/file")'), [
                     'http://acme.com/file',
                 ]);
+                // eslint-disable-next-line quotes
                 assert.deepEqual(parse("url(foo.com), url('bar.org')"), [
                     'foo.com',
                     'bar.org',
@@ -883,6 +895,10 @@
 
         function domNode() {
             return $('#dom-node')[0];
+        }
+
+        function clonedNode() {
+            return $('#cloned-node')[0];
         }
 
         function controlImage() {

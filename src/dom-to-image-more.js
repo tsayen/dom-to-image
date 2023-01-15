@@ -194,7 +194,7 @@
             domtoimage.impl.options.useCredentials = options.useCredentials;
         }
 
-        if (typeof options.httpTimeout === 'undefined') {
+        if (typeof (options.httpTimeout) === 'undefined') {
             domtoimage.impl.options.httpTimeout = defaultOptions.httpTimeout;
         } else {
             domtoimage.impl.options.httpTimeout = options.httpTimeout;
@@ -371,6 +371,7 @@
                         const cssText = style.cssText
                             ? formatCssText()
                             : formatCssProperties();
+
                         return document.createTextNode(`${selector}{${cssText}}`);
 
                         function formatCssText() {
@@ -447,7 +448,7 @@
             })
             .then(util.escapeXhtml)
             .then(function (xhtml) {
-                return `<foreignObject x="0" y="0" width="100%" height="100%">${xhtml}</foreignObject>`;
+                return `<foreignObject width="${width}" height="${height}">${xhtml}</foreignObject>`;
             })
             .then(function (foreignObject) {
                 return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${foreignObject}</svg>`;
@@ -711,20 +712,32 @@
         }
 
         function width(node) {
-            const leftBorder = px(node, 'border-left-width');
-            const rightBorder = px(node, 'border-right-width');
-            return node.scrollWidth + leftBorder + rightBorder;
+            var width = px(node, "width");
+            if (isNaN(width)) {
+              const leftBorder = px(node, 'border-left-width');
+              const rightBorder = px(node, 'border-right-width');
+              width = node.scrollWidth + leftBorder + rightBorder;
+            }
+            return width;
         }
 
         function height(node) {
-            const topBorder = px(node, 'border-top-width');
-            const bottomBorder = px(node, 'border-bottom-width');
-            return node.scrollHeight + topBorder + bottomBorder;
+            var height = px(node, "height");
+            if (isNaN(height)) {
+              const topBorder = px(node, 'border-top-width');
+              const bottomBorder = px(node, 'border-bottom-width');
+              height = node.scrollHeight + topBorder + bottomBorder;
+            }
+            return height;
         }
 
         function px(node, styleProperty) {
-            const value = getComputedStyle(node).getPropertyValue(styleProperty);
-            return parseFloat(value.replace('px', ''));
+            let value = getComputedStyle(node).getPropertyValue(styleProperty);
+            if (value.slice(-2) !== 'px') {
+            	return NaN;
+            }
+            value = value.slice(0, -2);
+            return parseFloat(value);
         }
     }
 
@@ -970,12 +983,14 @@
 
         util.asArray(sourceComputedStyles).forEach(function (name) {
             const sourceValue = sourceComputedStyles.getPropertyValue(name);
+            const defaultValue = defaultStyle[name];
+            const parentValue = parentComputedStyles ? parentComputedStyles.getPropertyValue(name) : undefined;
+
             // If the style does not match the default, or it does not match the parent's, set it. We don't know which
             // styles are inherited from the parent and which aren't, so we have to always check both.
             if (
-                sourceValue !== defaultStyle[name] ||
-                (parentComputedStyles &&
-                    sourceValue !== parentComputedStyles.getPropertyValue(name))
+                sourceValue !== defaultValue ||
+                (parentComputedStyles && sourceValue !== parentValue)
             ) {
                 const priority = sourceComputedStyles.getPropertyPriority(name);
                 setStyleProperty(targetStyle, name, sourceValue, priority);
@@ -1004,13 +1019,15 @@
             sandbox.contentDocument.head.appendChild(charset);
             sandbox.contentDocument.title = 'sandbox';
         }
-        const defaultElement = document.createElement(tagName);
-        sandbox.contentWindow.document.body.appendChild(defaultElement);
+        const sandboxWindow = sandbox.contentWindow;
+        const defaultElement = sandboxWindow.document.createElement(tagName);
+        sandboxWindow.document.body.appendChild(defaultElement);
         // Ensure that there is some content, so that properties like margin are applied.
         // we use zero-width space to handle FireFox adding a pixel
         defaultElement.textContent = '\u200b';
         const defaultComputedStyle =
             sandbox.contentWindow.getComputedStyle(defaultElement);
+
         const defaultStyle = {};
         // Copy styles to an object, making sure that 'width' and 'height' are given the default value of 'auto', since
         // their initial value is always 'auto' despite that the default computed value is sometimes an absolute length.
@@ -1020,20 +1037,21 @@
                     ? 'auto'
                     : defaultComputedStyle.getPropertyValue(name);
         });
-        sandbox.contentWindow.document.body.removeChild(defaultElement);
+        sandboxWindow.document.body.removeChild(defaultElement);
         tagNameDefaultStyles[tagName] = defaultStyle;
         return defaultStyle;
     }
 
     function removeSandbox() {
-        if (!sandbox) {
-            return;
+        if (sandbox) {
+            document.body.removeChild(sandbox);
+            sandbox = null;
         }
-        document.body.removeChild(sandbox);
-        sandbox = null;
+
         if (removeDefaultStylesTimeoutId) {
             clearTimeout(removeDefaultStylesTimeoutId);
         }
+
         removeDefaultStylesTimeoutId = setTimeout(() => {
             removeDefaultStylesTimeoutId = null;
             tagNameDefaultStyles = {};
