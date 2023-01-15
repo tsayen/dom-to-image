@@ -1019,14 +1019,13 @@
             sandbox.contentDocument.head.appendChild(charset);
             sandbox.contentDocument.title = 'sandbox';
         }
-        const sandboxWindow = sandbox.contentWindow;
-        const defaultElement = sandboxWindow.document.createElement(tagName);
-        sandboxWindow.document.body.appendChild(defaultElement);
+        const contentWindow = sandbox.contentWindow;
+        const defaultElement = contentWindow.document.createElement(tagName);
+        contentWindow.document.body.appendChild(defaultElement);
         // Ensure that there is some content, so that properties like margin are applied.
         // we use zero-width space to handle FireFox adding a pixel
         defaultElement.textContent = '\u200b';
-        const defaultComputedStyle =
-            sandbox.contentWindow.getComputedStyle(defaultElement);
+        const defaultComputedStyle = contentWindow.getComputedStyle(defaultElement);
 
         const defaultStyle = {};
         // Copy styles to an object, making sure that 'width' and 'height' are given the default value of 'auto', since
@@ -1037,7 +1036,7 @@
                     ? 'auto'
                     : defaultComputedStyle.getPropertyValue(name);
         });
-        sandboxWindow.document.body.removeChild(defaultElement);
+        contentWindow.document.body.removeChild(defaultElement);
         tagNameDefaultStyles[tagName] = defaultStyle;
         return defaultStyle;
     }
