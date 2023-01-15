@@ -17,7 +17,7 @@ div.both::after {
 #dom-node {
     background-color: white;
     color: black;
-    font-family: sans-serif;
+    font-family: monospace;
     font-size: 20px;
     height: 400px;
     width: 400px;

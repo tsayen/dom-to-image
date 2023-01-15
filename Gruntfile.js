@@ -1,35 +1,34 @@
-module.exports = function(grunt) {
-
+module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         jshint: {
             files: ['Gruntfile.js', 'src/**/*.js', 'spec/**/*.js'],
             options: {
-                jshintrc: true
-            }
+                jshintrc: true,
+            },
         },
         karma: {
             unit: {
                 configFile: 'karma.conf.js',
                 background: false,
-                singleRun: true
-            }
+                singleRun: true,
+            },
         },
         uglify: {
             options: {
                 banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */\n',
-                sourceMap: true
+                sourceMap: true,
             },
             dist: {
                 files: {
-                    'dist/<%= pkg.name %>.min.js': ['src/dom-to-image-more.js']
-                }
-            }
+                    'dist/<%= pkg.name %>.min.js': ['src/dom-to-image-more.js'],
+                },
+            },
         },
         watch: {
             files: ['<%= jshint.files %>'],
-            tasks: ['test']
-        }
+            tasks: ['test'],
+        },
     });
 
     grunt.loadNpmTasks('grunt-contrib-jshint');
