@@ -2,7 +2,6 @@
     'use strict';
 
     const assert = global.chai.assert;
-    const imagediff = global.imagediff;
     const domtoimage = global.domtoimage;
     const Promise = global.Promise;
     const BASE_URL = '/base/spec/resources/';
@@ -384,20 +383,16 @@
                     .then(done).catch(done);
             });
 
-            function compareToControlImage(image, tolerance) {
+            function compareToControlImage(image) {
                 const control = controlImage();
-                if (imagediff.equal(image, control, tolerance)) {
-                    assert.isTrue(true, 'rendered and control images should be same');
-                } else {
-                    // get the data representation so we can update the control images easily
-                    const imageUrl = getImageBase64(image, 'image/png');
-                    const controlUrl = getImageBase64(control, 'image/png');
-                    assert.equal(imageUrl, controlUrl, 'rendered and control images should be same');
-                    if (imageUrl !== controlUrl) {
-                        console.log(`        image: ${image.src}`);
-                        console.log(`  imageBase64: ${imageUrl}`);
-                        console.log(`controlBase64: ${controlUrl}`);
-                    }
+                const imageUrl = getImageBase64(image, 'image/png');
+                const controlUrl = getImageBase64(control, 'image/png');
+
+                assert.equal(imageUrl, controlUrl, 'rendered and control images should be same');
+                if (imageUrl !== controlUrl) {
+                    console.log(`        image: ${image.src}`);
+                    console.log(`  imageBase64: ${imageUrl}`);
+                    console.log(`controlBase64: ${controlUrl}`);
                 }
             }
 

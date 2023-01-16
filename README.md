@@ -185,9 +185,6 @@ Only standard lib is currently used, but make sure your browser supports:
 
 Most importantly, tests depend on:
 
-- [js-imagediff](https://github.com/HumbleSoftware/js-imagediff),
-  to compare rendered and control images
-
 - [ocrad.js](https://github.com/antimatter15/ocrad.js), for the
   parts when you can't compare images (due to the browser
   rendering differences) and just have to test whether the text is rendered
