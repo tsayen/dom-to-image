@@ -189,10 +189,9 @@ Only standard lib is currently used, but make sure your browser supports:
 
 ### Tests
 
-Most importantly, tests **only** depend on:
+As of this v3 branch chain, the testing jig is taking advantage of the `onclone` hook to insert the clone-output into the testing page. This should make it a tiny bit easier to track down where exactly the inlining of CSS styles against the DOM nodes is wrong.
 
--   [js-imagediff](https://github.com/HumbleSoftware/js-imagediff),
-    to compare rendered and control images
+Most importantly, tests **only** depend on:
 
 -   [ocrad.js](https://github.com/antimatter15/ocrad.js), for the
     parts when you can't compare images (due to the browser

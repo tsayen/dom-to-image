@@ -194,7 +194,7 @@
             domtoimage.impl.options.useCredentials = options.useCredentials;
         }
 
-        if (typeof (options.httpTimeout) === 'undefined') {
+        if (typeof options.httpTimeout === 'undefined') {
             domtoimage.impl.options.httpTimeout = defaultOptions.httpTimeout;
         } else {
             domtoimage.impl.options.httpTimeout = options.httpTimeout;
@@ -238,7 +238,10 @@
     let sandbox = null;
 
     function cloneNode(node, filter, parentComputedStyles, ownerWindow) {
-        if (node === sandbox || (parentComputedStyles !== null && filter && !filter(node))) {
+        if (
+            node === sandbox ||
+            (parentComputedStyles !== null && filter && !filter(node))
+        ) {
             return Promise.resolve();
         }
 
@@ -260,25 +263,29 @@
         function cloneChildren(original, clone) {
             const originalChildren = original.childNodes;
             let done = Promise.resolve();
-            
+
             if (originalChildren.length !== 0) {
                 const originalComputedStyles = getComputedStyle(original);
 
-                util.asArray(originalChildren)
-                    .forEach(function (originalChild) {
-                        done = done.then(function () {
-                            return cloneNode(originalChild, filter, originalComputedStyles, ownerWindow)
-                                .then(function (clonedChild) {
-                                    if (clonedChild) {
-                                        clone.appendChild(clonedChild);
-                                    }
-                                });
+                util.asArray(originalChildren).forEach(function (originalChild) {
+                    done = done.then(function () {
+                        return cloneNode(
+                            originalChild,
+                            filter,
+                            originalComputedStyles,
+                            ownerWindow
+                        ).then(function (clonedChild) {
+                            if (clonedChild) {
+                                clone.appendChild(clonedChild);
+                            }
                         });
                     });
+                });
             }
 
-            return done
-                .then(function() { return clone; });
+            return done.then(function () {
+                return clone;
+            });
         }
 
         function processClone(original, clone) {
@@ -712,21 +719,21 @@
         }
 
         function width(node) {
-            var width = px(node, "width");
+            var width = px(node, 'width');
             if (isNaN(width)) {
-              const leftBorder = px(node, 'border-left-width');
-              const rightBorder = px(node, 'border-right-width');
-              width = node.scrollWidth + leftBorder + rightBorder;
+                const leftBorder = px(node, 'border-left-width');
+                const rightBorder = px(node, 'border-right-width');
+                width = node.scrollWidth + leftBorder + rightBorder;
             }
             return width;
         }
 
         function height(node) {
-            var height = px(node, "height");
+            var height = px(node, 'height');
             if (isNaN(height)) {
-              const topBorder = px(node, 'border-top-width');
-              const bottomBorder = px(node, 'border-bottom-width');
-              height = node.scrollHeight + topBorder + bottomBorder;
+                const topBorder = px(node, 'border-top-width');
+                const bottomBorder = px(node, 'border-bottom-width');
+                height = node.scrollHeight + topBorder + bottomBorder;
             }
             return height;
         }
@@ -734,7 +741,7 @@
         function px(node, styleProperty) {
             let value = getComputedStyle(node).getPropertyValue(styleProperty);
             if (value.slice(-2) !== 'px') {
-            	return NaN;
+                return NaN;
             }
             value = value.slice(0, -2);
             return parseFloat(value);
@@ -984,7 +991,9 @@
         util.asArray(sourceComputedStyles).forEach(function (name) {
             const sourceValue = sourceComputedStyles.getPropertyValue(name);
             const defaultValue = defaultStyle[name];
-            const parentValue = parentComputedStyles ? parentComputedStyles.getPropertyValue(name) : undefined;
+            const parentValue = parentComputedStyles
+                ? parentComputedStyles.getPropertyValue(name)
+                : undefined;
 
             // If the style does not match the default, or it does not match the parent's, set it. We don't know which
             // styles are inherited from the parent and which aren't, so we have to always check both.
@@ -1019,13 +1028,14 @@
             sandbox.contentDocument.head.appendChild(charset);
             sandbox.contentDocument.title = 'sandbox';
         }
-        const contentWindow = sandbox.contentWindow;
-        const defaultElement = contentWindow.document.createElement(tagName);
-        contentWindow.document.body.appendChild(defaultElement);
+        const sandboxWindow = sandbox.contentWindow;
+        const sandboxDocument = sandboxWindow.document;
+        const defaultElement = sandboxDocument.createElement(tagName);
+        sandboxWindow.document.body.appendChild(defaultElement);
         // Ensure that there is some content, so that properties like margin are applied.
         // we use zero-width space to handle FireFox adding a pixel
         defaultElement.textContent = '\u200b';
-        const defaultComputedStyle = contentWindow.getComputedStyle(defaultElement);
+        const defaultComputedStyle = sandboxWindow.getComputedStyle(defaultElement);
 
         const defaultStyle = {};
         // Copy styles to an object, making sure that 'width' and 'height' are given the default value of 'auto', since
@@ -1036,7 +1046,7 @@
                     ? 'auto'
                     : defaultComputedStyle.getPropertyValue(name);
         });
-        contentWindow.document.body.removeChild(defaultElement);
+        sandboxDocument.body.removeChild(defaultElement);
         tagNameDefaultStyles[tagName] = defaultStyle;
         return defaultStyle;
     }

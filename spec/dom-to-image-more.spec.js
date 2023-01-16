@@ -5,7 +5,6 @@
     const $ = global.jQuery;
     const assert = global.chai.assert;
     const domtoimage = global.domtoimage;
-    const imagediff = global.imagediff;
     const Promise = global.Promise;
     const Tesseract = global.Tesseract;
     const BASE_URL = '/base/spec/resources/';
@@ -542,7 +541,7 @@
                     .catch(done);
             });
 
-            function compareToControlImage(image, tolerance) {
+            function compareToControlImage(image) {
                 const control = controlImage();
                 const imageUrl = getImageBase64(image, 'image/png');
                 const controlUrl = getImageBase64(control, 'image/png');
@@ -618,7 +617,7 @@
                 return image;
             }
 
-            function cloneCatcher(clone){
+            function cloneCatcher(clone) {
                 clonedNode().replaceChildren(clone);
                 return clone;
             }
