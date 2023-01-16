@@ -20,13 +20,19 @@
         "karma-mocha": "^2.0.1",
         "karma-mocha-reporter": "^2.2.5",
         "mocha": "^10.2.0",
-        "prettier": "^2.8.2"
+        "prettier": "^2.8.2",
+        "semver": "^7.3.8"
     },
     "scripts": {
         "format": "eslint src --fix && prettier --write .",
         "lint": "eslint --max-warnings=0 src && prettier --check .",
         "test": "grunt test",
-        "build": "grunt"
+        "build": "grunt",
+        "beta-version-patch": "npm version $(semver $npm_package_version -i prerelease --preid beta)",
+        "beta-version-minor": "npm version $(semver $npm_package_version -i preminor --preid beta)",
+        "beta-version-major": "npm version $(semver $npm_package_version -i premajor --preid beta)",
+        "rc-version": "npm version $(semver $npm_package_version -i prerelease --preid rc)",
+        "final-release": "npm version $(semver $npm_package_version -i)"
     },
     "repository": {
         "type": "git",
