@@ -1,6 +1,12 @@
 # DOM to Image
 
-[![Build Status](https://travis-ci.org/1904labs/dom-to-image-more.svg?branch=master)](https://travis-ci.org/1904labs/dom-to-image-more)
+[![Version](https://img.shields.io/npm/v/dom-to-image-more.svg?style=flat-square)](https://npmjs.com/package/dom-to-image-more)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/dom-to-image-more?style=flat-square)](https://bundlephobia.com/result?p=dom-to-image-more)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/1904labs/dom-to-image-more/verify.yml?branch=master&style=flat-square)](https://github.com/1904labs/dom-to-image-more/actions/workflows/verify.yml)
+[![Coverage Status](https://img.shields.io/coveralls/github/1904labs/dom-to-image-more/master?style=flat-square)](https://coveralls.io/github/1904labs/dom-to-image-more?branch=master)
+[![Open Issues](https://img.shields.io/github/issues/1904labs/dom-to-image-more?style=flat-square)](https://github.com/1904labs/dom-to-image-more/issues)
+[![GitHub Repo stars](https://img.shields.io/github/stars/1904labs/dom-to-image-more?style=social)](https://github.com/1904labs/dom-to-image-more)
+[![Twitter](https://img.shields.io/twitter/follow/idisposable.svg?style=social&label=Follow)](https://www.twitter.com/idisposable)
 
 ## Breaking Change Notice
 
