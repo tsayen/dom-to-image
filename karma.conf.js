@@ -1,29 +1,31 @@
-module.exports = function(config) {
+module.exports = function (config) {
     config.set({
         basePath: '',
         frameworks: ['mocha', 'chai'],
         concurrency: 1,
 
-        files: [{
+        files: [
+            {
                 pattern: 'spec/resources/**/*',
                 included: false,
-                served: true
-            }, {
+                served: true,
+            },
+            {
                 pattern: 'test-lib/fontawesome/webfonts/*.*',
                 included: false,
-                served: true
-            }, {
+                served: true,
+            },
+            {
                 pattern: 'test-lib/fontawesome/css/*.*',
                 included: false,
-                served: true
+                served: true,
             },
 
             'test-lib/jquery/dist/jquery.js',
-            'node_modules/imagediff/imagediff.js',
             'test-lib/tesseract-1.0.19.js',
 
             'src/dom-to-image-more.js',
-            'spec/dom-to-image-more.spec.js'
+            'spec/dom-to-image-more.spec.js',
         ],
 
         exclude: [],
@@ -33,7 +35,7 @@ module.exports = function(config) {
         colors: true,
         logLevel: config.LOG_INFO,
         client: {
-            captureConsole: true
+            captureConsole: true,
         },
         autoWatch: true,
         browsers: ['chrome'],
@@ -41,11 +43,11 @@ module.exports = function(config) {
             chrome: {
                 base: 'Chrome',
                 flags: ['--no-sandbox --remote-debugging-port=9876'],
-                debug: true
-            }
+                debug: true,
+            },
         },
 
         singleRun: false,
-        browserNoActivityTimeout: 300000
+        browserNoActivityTimeout: 300000,
     });
 };

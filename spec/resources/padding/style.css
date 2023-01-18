@@ -1,0 +1,17 @@
+th,
+td {
+    padding: 0px;
+    border: 2px solid #585c5c;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+.wrapper {
+    display: inline-block;
+}

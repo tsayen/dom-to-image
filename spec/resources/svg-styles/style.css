@@ -5,8 +5,8 @@
     background-color: lightgrey;
     text-align: center;
     padding: 1em;
-  }
-  
-  a[href="#dom-node"] {
+}
+
+a[href='#dom-node'] {
     color: #000000;
-  }
+}
