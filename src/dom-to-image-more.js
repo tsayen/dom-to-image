@@ -1014,25 +1014,61 @@
 
     const ascentStoppers = [
         // these come from https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
-        'ADDRESS', 'ARTICLE', 'ASIDE', 'BLOCKQUOTE', 'DETAILS', 'DIALOG', 'DD', 'DIV', 'DL', 'DT', 'FIELDSET',
-        'FIGCAPTION', 'FIGURE', 'FOOTER', 'FORM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HEADER', 'HGROUP',
-        'HR', 'LI', 'MAIN', 'NAV', 'OL', 'P', 'PRE', 'SECTION', 'SVG', 'TABLE', 'UL',
+        'ADDRESS',
+        'ARTICLE',
+        'ASIDE',
+        'BLOCKQUOTE',
+        'DETAILS',
+        'DIALOG',
+        'DD',
+        'DIV',
+        'DL',
+        'DT',
+        'FIELDSET',
+        'FIGCAPTION',
+        'FIGURE',
+        'FOOTER',
+        'FORM',
+        'H1',
+        'H2',
+        'H3',
+        'H4',
+        'H5',
+        'H6',
+        'HEADER',
+        'HGROUP',
+        'HR',
+        'LI',
+        'MAIN',
+        'NAV',
+        'OL',
+        'P',
+        'PRE',
+        'SECTION',
+        'SVG',
+        'TABLE',
+        'UL',
         // these are ultimate stoppers in case something drastic changes in how the DOM works
-        'BODY', 'HEAD', 'HTML'
+        'BODY',
+        'HEAD',
+        'HTML',
     ];
 
     function getDefaultStyle(sourceElement) {
         const tagHierarchy = computeTagHierarchy(sourceElement);
-        const tagKey = tagHierarchy.join('>');  // it's like CSS
+        const tagKey = tagHierarchy.join('>'); // it's like CSS
         if (tagNameDefaultStyles[tagKey]) {
             return tagNameDefaultStyles[tagKey];
         }
 
         // We haven't cached the answer for that hierachy yet, build a
-        // sandbox (if not yet created), fill it with the hierarchy that 
+        // sandbox (if not yet created), fill it with the hierarchy that
         // matters, and grab the default styles associated
         const sandboxWindow = ensureSandboxWindow();
-        const defaultElement = constructElementHierachy(sandboxWindow.document, tagHierarchy);
+        const defaultElement = constructElementHierachy(
+            sandboxWindow.document,
+            tagHierarchy
+        );
         const defaultStyle = computeStyleForDefaults(sandboxWindow, defaultElement);
         destroyElementHierarchy(defaultElement);
 
