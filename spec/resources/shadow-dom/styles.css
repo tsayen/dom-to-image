@@ -1,0 +1,14 @@
+summary-display {
+    display: block;
+    width: 600px;
+}
+p {
+    margin: 0;
+}
+li {
+    background-color: #ffffff;
+    cursor: pointer;
+}
+li.selected {
+    background-color: #bad0e4;
+}

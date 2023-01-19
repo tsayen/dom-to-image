@@ -541,6 +541,28 @@
                     .catch(done);
             });
 
+            it('should render open shadow DOM roots with assigned nodes intact', function (done) {
+                this.timeout(4000);
+                loadTestPage(
+                    'shadow-dom/dom-node.html',
+                    'shadow-dom/styles.css',
+                    'shadow-dom/control-image'
+                )
+                    .then(renderAndCheck)
+                    .then(done);
+            });
+
+            it('should render open shadow DOM roots with assigned nodes intact', function (done) {
+                this.timeout(4000);
+                loadTestPage(
+                    'shadow-dom/dom-node.html',
+                    'shadow-dom/styles.css',
+                    'shadow-dom/control-image'
+                )
+                    .then(renderAndCheck)
+                    .then(done);
+            });
+
             function compareToControlImage(image) {
                 const control = controlImage();
                 const imageUrl = getImageBase64(image, 'image/png');
