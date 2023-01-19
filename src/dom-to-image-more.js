@@ -240,6 +240,7 @@
     function cloneNode(node, filter, parentComputedStyles, ownerWindow) {
         if (
             node === sandbox ||
+            util.isHTMLScriptElement(node) ||
             (parentComputedStyles !== null && filter && !filter(node))
         ) {
             return Promise.resolve();
@@ -506,6 +507,7 @@
             isShadowSlotElement: isShadowSlotElement,
             isHTMLInputElement: isHTMLInputElement,
             isHTMLImageElement: isHTMLImageElement,
+            isHTMLScriptElement: isHTMLScriptElement,
             isHTMLTextAreaElement: isHTMLTextAreaElement,
             isSVGElement: isSVGElement,
             isSVGRectElement: isSVGRectElement,
@@ -554,6 +556,10 @@
 
         function isHTMLInputElement(value) {
             return value instanceof getWindow(value).HTMLInputElement;
+        }
+
+        function isHTMLScriptElement(value) {
+            return value instanceof getWindow(value).HTMLScriptElement;
         }
 
         function isSVGElement(value) {
