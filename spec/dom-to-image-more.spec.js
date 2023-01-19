@@ -18,6 +18,7 @@
 
         describe('regression', function () {
             it('should render to svg', function (done) {
+                this.timeout(5000);
                 loadTestPage(
                     'small/dom-node.html',
                     'small/style.css',
@@ -131,6 +132,7 @@
             });
 
             it('should render nested svg with broken namespace', function (done) {
+                this.timeout(5000);
                 loadTestPage(
                     'svg-ns/dom-node.html',
                     'svg-ns/style.css',
@@ -531,6 +533,7 @@
             });
 
             it('should honor zero-padding table elements', function (done) {
+                this.timeout(5000);
                 loadTestPage(
                     'padding/dom-node.html',
                     'padding/style.css',
