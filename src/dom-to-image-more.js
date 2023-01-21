@@ -16,6 +16,8 @@
         useCredentials: false,
         // Default resolve timeout
         httpTimeout: 30000,
+        // Style computation cache tag rules (options are strict, relaxed)
+        styleCaching: 'strict',
     };
 
     const domtoimage = {
@@ -62,6 +64,7 @@
      * @param {Number} options.scale - a Number multiplier to scale up the canvas before rendering to reduce fuzzy images, defaults to 1.0.
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
+     * @param {String} options.styleCaching - set to 'strict', 'relaxed' to select style caching rules
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
@@ -70,7 +73,7 @@
         copyOptions(options);
         return Promise.resolve(node)
             .then(function (clonee) {
-                return cloneNode(clonee, options.filter, null, ownerWindow);
+                return cloneNode(clonee, options, null, ownerWindow);
             })
             .then(embedFonts)
             .then(inlineImages)
@@ -99,7 +102,6 @@
             if (options.height) {
                 clone.style.height = `${options.height}px`;
             }
-
             if (options.style) {
                 Object.keys(options.style).forEach(function (property) {
                     clone.style[property] = options.style[property];
@@ -199,6 +201,12 @@
         } else {
             domtoimage.impl.options.httpTimeout = options.httpTimeout;
         }
+
+        if (typeof options.styleCaching === 'undefined') {
+            domtoimage.impl.options.styleCaching = defaultOptions.styleCaching;
+        } else {
+            domtoimage.impl.options.styleCaching = options.styleCaching;
+    }
     }
 
     function draw(domNode, options) {
@@ -237,7 +245,8 @@
 
     let sandbox = null;
 
-    function cloneNode(node, filter, parentComputedStyles, ownerWindow) {
+    function cloneNode(node, options, parentComputedStyles, ownerWindow) {
+        const filter = options.filter;
         if (
             node === sandbox ||
             (parentComputedStyles !== null && filter && !filter(node))
@@ -271,7 +280,7 @@
                     done = done.then(function () {
                         return cloneNode(
                             originalChild,
-                            filter,
+                            options,
                             originalComputedStyles,
                             ownerWindow
                         ).then(function (clonedChild) {
@@ -329,6 +338,7 @@
                         copyFont(sourceComputedStyles, targetElement.style); // here we re-assign the font props.
                     } else {
                         copyUserComputedStyleFast(
+                            options,
                             sourceElement,
                             sourceComputedStyles,
                             parentComputedStyles,
@@ -721,6 +731,7 @@
 
         function width(node) {
             var width = px(node, 'width');
+
             if (isNaN(width)) {
                 const leftBorder = px(node, 'border-left-width');
                 const rightBorder = px(node, 'border-right-width');
@@ -731,6 +742,7 @@
 
         function height(node) {
             var height = px(node, 'height');
+
             if (isNaN(height)) {
                 const topBorder = px(node, 'border-top-width');
                 const bottomBorder = px(node, 'border-bottom-width');
@@ -871,8 +883,8 @@
                                 cssRules.push.bind(cssRules)
                             );
                         } catch (e) {
-                            console.log(
-                                `Error while reading CSS rules from ${sheet.href}`,
+                            console.error(
+                                `domtoimage: Error while reading CSS rules from ${sheet.href}`,
                                 e.toString()
                             );
                         }
@@ -982,12 +994,13 @@
     }
 
     function copyUserComputedStyleFast(
+        options,
         sourceElement,
         sourceComputedStyles,
         parentComputedStyles,
         targetElement
     ) {
-        const defaultStyle = getDefaultStyle(sourceElement);
+        const defaultStyle = getDefaultStyle(options, sourceElement);
         const targetStyle = targetElement.style;
 
         util.asArray(sourceComputedStyles).forEach(function (name) {
@@ -1045,18 +1058,18 @@
         'P',
         'PRE',
         'SECTION',
-        'SVG',
         'TABLE',
         'UL',
         // these are ultimate stoppers in case something drastic changes in how the DOM works
+        'SVG',
         'BODY',
         'HEAD',
         'HTML',
     ];
 
-    function getDefaultStyle(sourceElement) {
+    function getDefaultStyle(options, sourceElement) {
         const tagHierarchy = computeTagHierarchy(sourceElement);
-        const tagKey = tagHierarchy.join('>'); // it's like CSS
+        const tagKey = computeTagKey(tagHierarchy);
         if (tagNameDefaultStyles[tagKey]) {
             return tagNameDefaultStyles[tagKey];
         }
@@ -1093,6 +1106,15 @@
             } while (sourceNode);
 
             return tagNames;
+        }
+
+        function computeTagKey(tagHierarchy) {
+            if (options.styleCaching === 'relaxed') {
+                // pick up only the ascent-stopping element tag and the element tag itsel
+                return tagHierarchy.filter((e, i, a) => i === 0 || i === a.length - 1).join('>');
+            }
+            // for all other cases, fall back the the entire path
+            return tagHierarchy.join('>'); // it's like CSS
         }
 
         function ensureSandboxWindow() {
