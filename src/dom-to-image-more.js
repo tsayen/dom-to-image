@@ -1091,7 +1091,7 @@
         return defaultStyle;
 
         function computeTagHierarchy(sourceNode) {
-            const ELEMENT_NODE = 1;
+            const ELEMENT_NODE = Node.ELEMENT_NODE || 1;
             const tagNames = [];
 
             do {
