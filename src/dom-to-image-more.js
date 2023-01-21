@@ -313,9 +313,8 @@
         }
 
         function processClone(original, clone) {
-            if (!util.isElement(clone)) { return Promise.resolve(clone); }
             if (!util.isElement(clone) || util.isShadowSlotElement(original)) {
-                return clone;
+                return Promise.resolve(clone);
             }
 
             return Promise.resolve()
