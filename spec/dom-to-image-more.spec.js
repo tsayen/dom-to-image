@@ -564,20 +564,20 @@
             });
 
             function compareToControlImage(image) {
-                const control = controlImage();
-                const imageUrl = getImageBase64(image, 'image/png');
-                const controlUrl = getImageBase64(control, 'image/png');
-                assert.equal(
-                    imageUrl,
-                    controlUrl,
-                    'rendered and control images should be same'
-                );
+                const imageUrl = getImageDataURL(image, 'image/png');
+                const controlUrl = getImageDataURL(controlImage(), 'image/png');
+
                 if (imageUrl !== controlUrl) {
                     console.log(`        image: ${image.src}`);
                     console.log(`  imageBase64: ${imageUrl}`);
                     console.log(`controlBase64: ${controlUrl}`);
                 }
-            }
+                assert.equal(
+                    imageUrl,
+                    controlUrl,
+                    'rendered and control images should be same'
+                );
+                }
 
             function getImageBase64(image, mimetype) {
                 return canvas().toDataURL(image, mimetype);
