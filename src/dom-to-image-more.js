@@ -1060,6 +1060,8 @@
         'SECTION',
         'TABLE',
         'UL',
+        // this is some non-standard ones
+        'math', // intentionally lowercase, thanks Safari
         // these are ultimate stoppers in case something drastic changes in how the DOM works
         'SVG',
         'BODY',
