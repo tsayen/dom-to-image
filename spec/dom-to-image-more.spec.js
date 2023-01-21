@@ -545,7 +545,7 @@
                     .catch(done);
             });
 
-            it.only('should not get fooled by math elements', function (done) {
+            it('should not get fooled by math elements', function (done) {
                 this.timeout(5000);
                 loadTestPage(
                     'math/dom-node.html',
