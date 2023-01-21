@@ -16,6 +16,8 @@
         useCredentials: false,
         // Default resolve timeout
         httpTimeout: 30000,
+        // Style computation cache tag rules (options are strict, relaxed)
+        styleCaching: 'strict',
     };
 
     const domtoimage = {
@@ -62,6 +64,7 @@
      * @param {Number} options.scale - a Number multiplier to scale up the canvas before rendering to reduce fuzzy images, defaults to 1.0.
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
+     * @param {String} options.styleCaching - set to 'strict', 'relaxed' to select style caching rules
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
@@ -70,7 +73,7 @@
         copyOptions(options);
         return Promise.resolve(node)
             .then(function (clonee) {
-                return cloneNode(clonee, options.filter, null, ownerWindow);
+                return cloneNode(clonee, options, null, ownerWindow);
             })
             .then(embedFonts)
             .then(inlineImages)
@@ -99,7 +102,6 @@
             if (options.height) {
                 clone.style.height = `${options.height}px`;
             }
-
             if (options.style) {
                 Object.keys(options.style).forEach(function (property) {
                     clone.style[property] = options.style[property];
@@ -199,6 +201,12 @@
         } else {
             domtoimage.impl.options.httpTimeout = options.httpTimeout;
         }
+
+        if (typeof options.styleCaching === 'undefined') {
+            domtoimage.impl.options.styleCaching = defaultOptions.styleCaching;
+        } else {
+            domtoimage.impl.options.styleCaching = options.styleCaching;
+    }
     }
 
     function draw(domNode, options) {
@@ -237,7 +245,8 @@
 
     let sandbox = null;
 
-    function cloneNode(node, filter, parentComputedStyles, ownerWindow) {
+    function cloneNode(node, options, parentComputedStyles, ownerWindow) {
+        const filter = options.filter;
         if (
             node === sandbox ||
             (parentComputedStyles !== null && filter && !filter(node))
@@ -271,7 +280,7 @@
                     done = done.then(function () {
                         return cloneNode(
                             originalChild,
-                            filter,
+                            options,
                             originalComputedStyles,
                             ownerWindow
                         ).then(function (clonedChild) {
@@ -329,6 +338,8 @@
                         copyFont(sourceComputedStyles, targetElement.style); // here we re-assign the font props.
                     } else {
                         copyUserComputedStyleFast(
+                            options,
+                            sourceElement,
                             sourceComputedStyles,
                             parentComputedStyles,
                             targetElement
@@ -720,6 +731,7 @@
 
         function width(node) {
             var width = px(node, 'width');
+
             if (isNaN(width)) {
                 const leftBorder = px(node, 'border-left-width');
                 const rightBorder = px(node, 'border-right-width');
@@ -730,6 +742,7 @@
 
         function height(node) {
             var height = px(node, 'height');
+
             if (isNaN(height)) {
                 const topBorder = px(node, 'border-top-width');
                 const bottomBorder = px(node, 'border-bottom-width');
@@ -870,8 +883,8 @@
                                 cssRules.push.bind(cssRules)
                             );
                         } catch (e) {
-                            console.log(
-                                `Error while reading CSS rules from ${sheet.href}`,
+                            console.error(
+                                `domtoimage: Error while reading CSS rules from ${sheet.href}`,
                                 e.toString()
                             );
                         }
@@ -981,11 +994,13 @@
     }
 
     function copyUserComputedStyleFast(
+        options,
+        sourceElement,
         sourceComputedStyles,
         parentComputedStyles,
         targetElement
     ) {
-        const defaultStyle = getDefaultStyle(targetElement.tagName);
+        const defaultStyle = getDefaultStyle(options, sourceElement);
         const targetStyle = targetElement.style;
 
         util.asArray(sourceComputedStyles).forEach(function (name) {
@@ -1010,45 +1025,158 @@
     let removeDefaultStylesTimeoutId = null;
     let tagNameDefaultStyles = {};
 
-    function getDefaultStyle(tagName) {
-        if (tagNameDefaultStyles[tagName]) {
-            return tagNameDefaultStyles[tagName];
-        }
-        if (!sandbox) {
-            // Create a hidden sandbox <iframe> element within we can create default HTML elements and query their
-            // computed styles. Elements must be rendered in order to query their computed styles. The <iframe> won't
-            // render at all with `display: none`, so we have to use `visibility: hidden` with `position: fixed`.
-            sandbox = document.createElement('iframe');
-            sandbox.style.visibility = 'hidden';
-            sandbox.style.position = 'fixed';
-            document.body.appendChild(sandbox);
-            // Ensure that the iframe is rendered in standard mode
-            const charset = document.createElement('meta');
-            charset.setAttribute('charset', document.characterSet || 'UTF-8');
-            sandbox.contentDocument.head.appendChild(charset);
-            sandbox.contentDocument.title = 'sandbox';
-        }
-        const sandboxWindow = sandbox.contentWindow;
-        const sandboxDocument = sandboxWindow.document;
-        const defaultElement = sandboxDocument.createElement(tagName);
-        sandboxWindow.document.body.appendChild(defaultElement);
-        // Ensure that there is some content, so that properties like margin are applied.
-        // we use zero-width space to handle FireFox adding a pixel
-        defaultElement.textContent = '\u200b';
-        const defaultComputedStyle = sandboxWindow.getComputedStyle(defaultElement);
+    const ascentStoppers = [
+        // these come from https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
+        'ADDRESS',
+        'ARTICLE',
+        'ASIDE',
+        'BLOCKQUOTE',
+        'DETAILS',
+        'DIALOG',
+        'DD',
+        'DIV',
+        'DL',
+        'DT',
+        'FIELDSET',
+        'FIGCAPTION',
+        'FIGURE',
+        'FOOTER',
+        'FORM',
+        'H1',
+        'H2',
+        'H3',
+        'H4',
+        'H5',
+        'H6',
+        'HEADER',
+        'HGROUP',
+        'HR',
+        'LI',
+        'MAIN',
+        'NAV',
+        'OL',
+        'P',
+        'PRE',
+        'SECTION',
+        'TABLE',
+        'UL',
+        // this is some non-standard ones
+        'math', // intentionally lowercase, thanks Safari
+        // these are ultimate stoppers in case something drastic changes in how the DOM works
+        'SVG',
+        'BODY',
+        'HEAD',
+        'HTML',
+    ];
 
-        const defaultStyle = {};
-        // Copy styles to an object, making sure that 'width' and 'height' are given the default value of 'auto', since
-        // their initial value is always 'auto' despite that the default computed value is sometimes an absolute length.
-        util.asArray(defaultComputedStyle).forEach(function (name) {
-            defaultStyle[name] =
-                name === 'width' || name === 'height'
-                    ? 'auto'
-                    : defaultComputedStyle.getPropertyValue(name);
-        });
-        sandboxDocument.body.removeChild(defaultElement);
-        tagNameDefaultStyles[tagName] = defaultStyle;
+    function getDefaultStyle(options, sourceElement) {
+        const tagHierarchy = computeTagHierarchy(sourceElement);
+        const tagKey = computeTagKey(tagHierarchy);
+        if (tagNameDefaultStyles[tagKey]) {
+            return tagNameDefaultStyles[tagKey];
+        }
+
+        // We haven't cached the answer for that hierachy yet, build a
+        // sandbox (if not yet created), fill it with the hierarchy that
+        // matters, and grab the default styles associated
+        const sandboxWindow = ensureSandboxWindow();
+        const defaultElement = constructElementHierachy(
+            sandboxWindow.document,
+            tagHierarchy
+        );
+        const defaultStyle = computeStyleForDefaults(sandboxWindow, defaultElement);
+        destroyElementHierarchy(defaultElement);
+
+        tagNameDefaultStyles[tagKey] = defaultStyle;
         return defaultStyle;
+
+        function computeTagHierarchy(sourceNode) {
+            const ELEMENT_NODE = 1;
+            const tagNames = [];
+
+            do {
+                if (sourceNode.nodeType === ELEMENT_NODE) {
+                    const tagName = sourceNode.tagName;
+                    tagNames.push(tagName);
+
+                    if (ascentStoppers.includes(tagName)) {
+                        break;
+                    }
+                }
+
+                sourceNode = sourceNode.parentNode;
+            } while (sourceNode);
+
+            return tagNames;
+        }
+
+        function computeTagKey(tagHierarchy) {
+            if (options.styleCaching === 'relaxed') {
+                // pick up only the ascent-stopping element tag and the element tag itsel
+                return tagHierarchy.filter((e, i, a) => i === 0 || i === a.length - 1).join('>');
+            }
+            // for all other cases, fall back the the entire path
+            return tagHierarchy.join('>'); // it's like CSS
+        }
+
+        function ensureSandboxWindow() {
+            if (!sandbox) {
+                // Create a hidden sandbox <iframe> element within we can create default HTML elements and query their
+                // computed styles. Elements must be rendered in order to query their computed styles. The <iframe> won't
+                // render at all with `display: none`, so we have to use `visibility: hidden` with `position: fixed`.
+                sandbox = document.createElement('iframe');
+                sandbox.style.visibility = 'hidden';
+                sandbox.style.position = 'fixed';
+                document.body.appendChild(sandbox);
+                // Ensure that the iframe is rendered in standard mode
+                const charset = document.createElement('meta');
+                charset.setAttribute('charset', document.characterSet || 'UTF-8');
+                sandbox.contentDocument.head.appendChild(charset);
+                sandbox.contentDocument.title = 'sandbox';
+            }
+
+            return sandbox.contentWindow;
+        }
+
+        function constructElementHierachy(sandboxDocument, tagHierarchy) {
+            let element = sandboxDocument.body;
+            do {
+                const childTagName = tagHierarchy.pop();
+                const childElement = sandboxDocument.createElement(childTagName);
+                element.appendChild(childElement);
+                element = childElement;
+            } while (tagHierarchy.length > 0);
+
+            // Ensure that there is some content, so that properties like margin are applied.
+            // we use zero-width space to handle FireFox adding a pixel
+            element.textContent = '\u200b';
+            return element;
+        }
+
+        function computeStyleForDefaults(sandboxWindow, defaultElement) {
+            const defaultStyle = {};
+            const defaultComputedStyle = sandboxWindow.getComputedStyle(defaultElement);
+
+            // Copy styles to an object, making sure that 'width' and 'height' are given the default value of 'auto', since
+            // their initial value is always 'auto' despite that the default computed value is sometimes an absolute length.
+            util.asArray(defaultComputedStyle).forEach(function (name) {
+                defaultStyle[name] =
+                    name === 'width' || name === 'height'
+                        ? 'auto'
+                        : defaultComputedStyle.getPropertyValue(name);
+            });
+            return defaultStyle;
+        }
+
+        function destroyElementHierarchy(element) {
+            do {
+                const parentElement = element.parentElement;
+                if (parentElement !== null) {
+                    parentElement.removeChild(element);
+                }
+                element = parentElement;
+            } while (element && element.tagName !== 'BODY');
+        }
     }
 
     function removeSandbox() {

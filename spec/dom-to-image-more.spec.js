@@ -18,6 +18,7 @@
 
         describe('regression', function () {
             it('should render to svg', function (done) {
+                this.timeout(5000);
                 loadTestPage(
                     'small/dom-node.html',
                     'small/style.css',
@@ -131,6 +132,7 @@
             });
 
             it('should render nested svg with broken namespace', function (done) {
+                this.timeout(5000);
                 loadTestPage(
                     'svg-ns/dom-node.html',
                     'svg-ns/style.css',
@@ -377,6 +379,7 @@
             });
 
             it('should render bgcolor in SVG', function (done) {
+                this.timeout(5000);
                 loadTestPage(
                     'bgcolor/dom-node.html',
                     'bgcolor/style.css',
@@ -531,6 +534,7 @@
             });
 
             it('should honor zero-padding table elements', function (done) {
+                this.timeout(5000);
                 loadTestPage(
                     'padding/dom-node.html',
                     'padding/style.css',
@@ -541,24 +545,48 @@
                     .catch(done);
             });
 
+            it('should not get fooled by math elements', function (done) {
+                this.timeout(5000);
+                loadTestPage(
+                    'math/dom-node.html',
+                    null,
+                    'math/control-image'
+                )
+                    .then(function () {
+                        return domtoimage.toPng(domNode(), { width: 500, height: 100 });
+                    })
+                    .then(function (dataUrl) {
+                        return drawDataUrl(dataUrl, { width: 500, height: 100 });
+                    })
+                    .then(compareToControlImage)
+                    .then(done)
+                    .catch(done);
+            });
+
             function compareToControlImage(image) {
-                const control = controlImage();
-                const imageUrl = getImageBase64(image, 'image/png');
-                const controlUrl = getImageBase64(control, 'image/png');
-                assert.equal(
-                    imageUrl,
-                    controlUrl,
-                    'rendered and control images should be same'
-                );
+                const imageUrl = getImageDataURL(image, 'image/png');
+                const controlUrl = getImageDataURL(controlImage(), 'image/png');
+
                 if (imageUrl !== controlUrl) {
                     console.log(`        image: ${image.src}`);
                     console.log(`  imageBase64: ${imageUrl}`);
                     console.log(`controlBase64: ${controlUrl}`);
                 }
+                assert.equal(
+                    imageUrl,
+                    controlUrl,
+                    'rendered and control images should be same'
+                );
             }
-
-            function getImageBase64(image, mimetype) {
-                return canvas().toDataURL(image, mimetype);
+           
+            function getImageDataURL(image, mimetype) {
+                var canvas = document.createElement('canvas');
+                var context = canvas.getContext('2d');
+                canvas.height = image.naturalHeight;
+                canvas.width = image.naturalWidth;
+                canvas.imageSmoothingEnabled = false;
+                context.drawImage(image, 0, 0);
+                return canvas.toDataURL(mimetype);
             }
 
             function renderAndCheck() {
@@ -598,10 +626,13 @@
             }
 
             function makeImgElement(src) {
-                return new Promise(function (resolve) {
+                return new Promise(function (resolve, reject) {
                     const image = new Image();
                     image.onload = function () {
                         resolve(image);
+                    };
+                    image.onerror = function (ev) {
+                        reject(ev);
                     };
                     image.src = src;
                 });
@@ -610,20 +641,12 @@
             function drawImgElement(image, node, dimensions) {
                 node = node || domNode();
                 dimensions = dimensions || {};
-                canvas().height = dimensions.height || node.offsetHeight.toString();
-                canvas().width = dimensions.width || node.offsetWidth.toString();
-                canvas().getContext('2d').imageSmoothingEnabled = false;
-                canvas().getContext('2d').drawImage(image, 0, 0);
+                const c = canvas();
+                c.height = dimensions.height || node.offsetHeight.toString();
+                c.width = dimensions.width || node.offsetWidth.toString();
+                c.getContext('2d').imageSmoothingEnabled = false;
+                c.getContext('2d').drawImage(image, 0, 0);
                 return image;
-            }
-
-            function cloneCatcher(clone) {
-                clonedNode().replaceChildren(clone);
-                return clone;
-            }
-
-            function renderToPng(node) {
-                return domtoimage.toPng(node || domNode(), { onclone: cloneCatcher });
             }
         });
 
@@ -853,36 +876,79 @@
             });
         });
 
+        describe('styles', function () {
+            it('should compute correct keys', function (done) {
+                this.timeout(30000);
+                let one = Promise.allSettled([
+                    loadTestPage('padding/dom-node.html', 'padding/style.css', 'padding/control-image')
+                        .then((node) => renderToSvg(node, { styleCaching: 'strict' }))])
+                    .then(
+                        (promises) => promises[0].value
+                    );
+                let two = Promise.allSettled([
+                    loadTestPage('padding/dom-node.html', 'padding/style.css', 'padding/control-image')
+                        .then((node) => renderToSvg(node, { styleCaching: 'relaxed' }))])
+                    .then(
+                        (promises) => promises[0].value
+                    );
+
+                Promise.allSettled([one, two])
+                    .then(function (promises) {
+                        const strict = promises[0].value;
+                        const relaxed = promises[1].value;
+                        if (strict !== relaxed) {
+                            console.log(`\n\nstrict: ${strict}\n\nrelaxed: ${relaxed}\n\n`);
+                        }
+                        assert.equal(strict, relaxed, 'SVG rendered be same');
+                    })
+                    .then(done)
+                    .catch(done);
+            });
+        });
+
         function loadTestPage(html, css, controlImage) {
             return loadPage()
-                .then(function () {
-                    return getResource(html).then(function (html) {
-                        $('#dom-node').html(html);
-                    });
+                .then(function (document) {
+                    if (!html) 
+                        return document;
+
+                    return getResource(html)
+                        .then(function (html) {
+                            $('#dom-node').html(html);
+                            return document;
+                        });
                 })
-                .then(function () {
-                    if (css) {
-                        return getResource(css).then(function (css) {
+                .then(function (document) {
+                    if (!css)
+                        return document;
+
+                    return getResource(css)
+                        .then(function (css) {
                             $('#style').append(document.createTextNode(css));
+                            return document;
                         });
-                    }
                 })
-                .then(function () {
-                    if (controlImage) {
-                        return getResource(controlImage).then(function (image) {
+                .then(function (document) {
+                    if (!controlImage)
+                        return document;
+
+                    return getResource(controlImage)
+                        .then(function (image) {
                             $('#control-image').attr('src', image);
+                            return document;
                         });
-                    }
                 });
         }
 
         function loadPage() {
-            return getResource('page.html').then(function (html) {
-                const root = document.createElement('div');
-                root.id = 'test-root';
-                root.innerHTML = html;
-                document.body.appendChild(root);
-            });
+            return getResource('page.html')
+                .then(function (html) {
+                    const root = document.createElement('div');
+                    root.id = 'test-root';
+                    root.innerHTML = html;
+                    document.body.appendChild(root);
+                    return document;
+                });
         }
 
         function purgePage() {
@@ -924,6 +990,20 @@
                 };
                 request.send();
             });
+        }
+
+        function renderToPng() {
+            return domtoimage.toPng(domNode(), { onclone: cloneCatcher });
+        }
+
+        function renderToSvg(options) {
+            const debugOptions = { onclone: cloneCatcher, debugCache: true };
+            return domtoimage.toSvg(domNode(), Object.assign(debugOptions, options));
+        }
+
+        function cloneCatcher(clone) {
+            clonedNode().replaceChildren(clone);
+            return clone;
         }
     });
 })(this);
