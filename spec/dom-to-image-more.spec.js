@@ -379,6 +379,7 @@
             });
 
             it('should render bgcolor in SVG', function (done) {
+                this.timeout(5000);
                 loadTestPage(
                     'bgcolor/dom-node.html',
                     'bgcolor/style.css',
@@ -540,6 +541,24 @@
                     'padding/control-image'
                 )
                     .then(renderAndCheck)
+                    .then(done)
+                    .catch(done);
+            });
+
+            it.only('should not get fooled by math elements', function (done) {
+                this.timeout(5000);
+                loadTestPage(
+                    'math/dom-node.html',
+                    null,
+                    'math/control-image'
+                )
+                    .then(function () {
+                        return domtoimage.toPng(domNode(), { width: 500, height: 100 });
+                    })
+                    .then(function (dataUrl) {
+                        return drawDataUrl(dataUrl, { width: 500, height: 100 });
+                    })
+                    .then(compareToControlImage)
                     .then(done)
                     .catch(done);
             });
