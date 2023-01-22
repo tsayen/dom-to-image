@@ -310,7 +310,7 @@
                 if (util.isShadowRoot(original)) {
                     return original.host; // jump up from #shadow-root to its parent <element>
                 }
-                return original.childNodes;
+                return original;
             }
 
             function getRenderedChildren(original) {
@@ -527,7 +527,6 @@
             isHTMLImageElement: isHTMLImageElement,
             isHTMLScriptElement: isHTMLScriptElement,
             isHTMLTextAreaElement: isHTMLTextAreaElement,
-            isSameOriginIFrame: isSameOriginIFrame,
             isShadowSlotElement: isShadowSlotElement,
             isSVGElement: isSVGElement,
             isSVGRectElement: isSVGRectElement,

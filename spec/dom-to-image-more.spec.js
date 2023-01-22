@@ -554,6 +554,7 @@
                 )
                     .then(renderAndCheck)
                     .then(done);
+            });
 
             it('should not get fooled by math elements', function (done) {
                 this.timeout(5000);
