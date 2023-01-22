@@ -258,7 +258,7 @@
         return Promise.resolve(node)
             .then(makeNodeCopy)
             .then(function (clone) {
-                return cloneChildren(util.hasOpenShadowRoot(node) ? node.shadowRoot : node, clone);
+                return cloneChildren(getParentOfChildren(node), clone);
             })
             .then(function (clone) {
                 return processClone(node, clone);
@@ -268,28 +268,23 @@
             if (util.isHTMLCanvasElement(original)) {
                 return util.makeImage(original.toDataURL());
             }
-            if (util.isInShadowRoot(original)) {
-                return cloneShadowNode(original);
-            }
             return original.cloneNode(false);
         }
 
-        function cloneShadowNode(original) {
-            const nextSibling = original.nextSibling;
-            const parentNode = original.parentNode;
-            // Bypass element encapsulation, by detaching from shadow node then restoring.
-            parentNode.removeChild(original);
-            const clone = original.cloneNode(false);
-            parentNode.insertBefore(original, nextSibling);
-            return clone;
+
+        function getParentOfChildren(original) {
+            if (util.hasOpenShadowRoot(original)) {
+                return original.shadowRoot; // jump "down" to #shadow-root
+            }
+            return original;
         }
 
         function cloneChildren(original, clone) {
-            const originalChildren = util.isShadowSlotElement(original) ? original.assignedNodes() : original.childNodes;
+            const originalChildren = getRenderedChildren(original);
             let done = Promise.resolve();
 
             if (originalChildren.length !== 0) {
-                const originalComputedStyles = getComputedStyle(util.isShadowRoot(original) ? original.host : original);
+                const originalComputedStyles = getComputedStyle(getRenderedParent(original));
 
                 util.asArray(originalChildren).forEach(function (originalChild) {
                     done = done.then(function () {
@@ -310,6 +305,20 @@
             return done.then(function () {
                 return clone;
             });
+
+            function getRenderedParent(original) {
+                if (util.isShadowRoot(original)) {
+                    return original.host; // jump up from #shadow-root to its parent <element>
+                }
+                return original.childNodes;
+            }
+
+            function getRenderedChildren(original) {
+                if (util.isShadowSlotElement(original)) {
+                    return original.assignedNodes(); // shadow DOM <slot> has "assigned nodes" as rendered children
+                }
+                return original.childNodes;
+            }
         }
 
         function processClone(original, clone) {
@@ -514,11 +523,12 @@
             isInShadowRoot: isInShadowRoot,
             isHTMLElement: isHTMLElement,
             isHTMLCanvasElement: isHTMLCanvasElement,
-            isShadowSlotElement: isShadowSlotElement,
             isHTMLInputElement: isHTMLInputElement,
             isHTMLImageElement: isHTMLImageElement,
             isHTMLScriptElement: isHTMLScriptElement,
             isHTMLTextAreaElement: isHTMLTextAreaElement,
+            isSameOriginIFrame: isSameOriginIFrame,
+            isShadowSlotElement: isShadowSlotElement,
             isSVGElement: isSVGElement,
             isSVGRectElement: isSVGRectElement,
         };
@@ -541,11 +551,7 @@
         }
 
         function isInShadowRoot(value) {
-            return value !== null && value.getRootNode && isShadowRoot(value.getRootNode());
-        }
-
-        function isShadowSlotElement(value) {
-            return isInShadowRoot(value) && value instanceof getWindow(value).HTMLSlotElement;
+            return value != null && value.hasOwnProperty('getRootNode') && isShadowRoot(value.getRootNode());
         }
 
         function isElement(value) {
@@ -572,16 +578,20 @@
             return value instanceof getWindow(value).HTMLScriptElement;
         }
 
+        function isHTMLTextAreaElement(value) {
+            return value instanceof getWindow(value).HTMLTextAreaElement;
+        }
+
+        function isShadowSlotElement(value) {
+            return isInShadowRoot(value) && value instanceof getWindow(value).HTMLSlotElement;
+        }
+
         function isSVGElement(value) {
             return value instanceof getWindow(value).SVGElement;
         }
 
         function isSVGRectElement(value) {
             return value instanceof getWindow(value).SVGRectElement;
-        }
-
-        function isHTMLTextAreaElement(value) {
-            return value instanceof getWindow(value).HTMLTextAreaElement;
         }
 
         function isDataUrl(url) {
