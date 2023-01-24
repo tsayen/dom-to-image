@@ -18,10 +18,8 @@ jobs:
         with:
           node-version: '18.x'
       - name: Setup Chrome 
-      - uses: browser-actions/setup-chrome@v1
-      - run: chrome --version
+        uses: browser-actions/setup-chrome@v1
       - name: Install dependencies
         run: npm ci --dry-run
-      - run: npm ci
       - name: Run tests
-      - run: npm run test
+        run: npm run test
