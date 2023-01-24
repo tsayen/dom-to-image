@@ -18,6 +18,6 @@ jobs:
         with:
           node-version: '18.x'
       - name: Install dependencies
-        run: npm --dry-run
+        run: npm ci --dry-run
       - run: npm ci
       - run: npm run test
