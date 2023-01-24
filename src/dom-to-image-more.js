@@ -249,6 +249,9 @@
         const filter = options.filter;
         if (
             node === sandbox ||
+            util.isHTMLScriptElement(node) ||
+            util.isHTMLStyleElement(node) ||
+            util.isHTMLLinkElement(node) ||
             (parentComputedStyles !== null && filter && !filter(node))
         ) {
             return Promise.resolve();
@@ -257,24 +260,32 @@
         return Promise.resolve(node)
             .then(makeNodeCopy)
             .then(function (clone) {
-                return cloneChildren(node, clone);
+                return cloneChildren(getParentOfChildren(node), clone);
             })
             .then(function (clone) {
                 return processClone(node, clone);
             });
 
         function makeNodeCopy(original) {
-            return util.isHTMLCanvasElement(original)
-                ? util.makeImage(original.toDataURL())
-                : original.cloneNode(false);
+            if (util.isHTMLCanvasElement(original)) {
+                return util.makeImage(original.toDataURL());
+            }
+            return original.cloneNode(false);
+        }
+
+        function getParentOfChildren(original) {
+            if (util.isElementHostForOpenShadowRoot(original)) {
+                return original.shadowRoot; // jump "down" to #shadow-root
+            }
+            return original;
         }
 
         function cloneChildren(original, clone) {
-            const originalChildren = original.childNodes;
+            const originalChildren = getRenderedChildren(original);
             let done = Promise.resolve();
 
             if (originalChildren.length !== 0) {
-                const originalComputedStyles = getComputedStyle(original);
+                const originalComputedStyles = getComputedStyle(getRenderedParent(original));
 
                 util.asArray(originalChildren).forEach(function (originalChild) {
                     done = done.then(function () {
@@ -295,11 +306,25 @@
             return done.then(function () {
                 return clone;
             });
+
+            function getRenderedParent(original) {
+                if (util.isShadowRoot(original)) {
+                    return original.host; // jump up from #shadow-root to its parent <element>
+                }
+                return original;
+            }
+
+            function getRenderedChildren(original) {
+                if (util.isShadowSlotElement(original)) {
+                    return original.assignedNodes(); // shadow DOM <slot> has "assigned nodes" as rendered children
+                }
+                return original.childNodes;
+            }
         }
 
         function processClone(original, clone) {
-            if (!util.isElement(clone)) {
-                return clone;
+            if (!util.isElement(clone) || util.isShadowSlotElement(original)) {
+                return Promise.resolve(clone);
             }
 
             return Promise.resolve()
@@ -494,11 +519,18 @@
             height: height,
             getWindow: getWindow,
             isElement: isElement,
+            isElementHostForOpenShadowRoot: isElementHostForOpenShadowRoot,
+            isShadowRoot: isShadowRoot,
+            isInShadowRoot: isInShadowRoot,
             isHTMLElement: isHTMLElement,
             isHTMLCanvasElement: isHTMLCanvasElement,
             isHTMLInputElement: isHTMLInputElement,
             isHTMLImageElement: isHTMLImageElement,
+            isHTMLLinkElement: isHTMLLinkElement,
+            isHTMLScriptElement: isHTMLScriptElement,
+            isHTMLStyleElement: isHTMLStyleElement,
             isHTMLTextAreaElement: isHTMLTextAreaElement,
+            isShadowSlotElement: isShadowSlotElement,
             isSVGElement: isSVGElement,
             isSVGRectElement: isSVGRectElement,
         };
@@ -510,6 +542,18 @@
                 global ||
                 window
             );
+        }
+
+        function isElementHostForOpenShadowRoot(value) {
+            return isElement(value) && value.shadowRoot !== null;
+        }
+
+        function isShadowRoot(value) {
+            return value instanceof getWindow(value).ShadowRoot;
+        }
+
+        function isInShadowRoot(value) {
+            return value != null && value.hasOwnProperty('getRootNode') && isShadowRoot(value.getRootNode());
         }
 
         function isElement(value) {
@@ -532,16 +576,32 @@
             return value instanceof getWindow(value).HTMLInputElement;
         }
 
+        function isHTMLLinkElement(value) {
+            return value instanceof getWindow(value).HTMLLinkElement;
+        }
+
+        function isHTMLScriptElement(value) {
+            return value instanceof getWindow(value).HTMLScriptElement;
+        }
+
+        function isHTMLStyleElement(value) {
+            return value instanceof getWindow(value).HTMLStyleElement;
+        }
+
+        function isHTMLTextAreaElement(value) {
+            return value instanceof getWindow(value).HTMLTextAreaElement;
+        }
+
+        function isShadowSlotElement(value) {
+            return isInShadowRoot(value) && value instanceof getWindow(value).HTMLSlotElement;
+        }
+
         function isSVGElement(value) {
             return value instanceof getWindow(value).SVGElement;
         }
 
         function isSVGRectElement(value) {
             return value instanceof getWindow(value).SVGRectElement;
-        }
-
-        function isHTMLTextAreaElement(value) {
-            return value instanceof getWindow(value).HTMLTextAreaElement;
         }
 
         function isDataUrl(url) {
