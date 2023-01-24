@@ -273,7 +273,6 @@
             return original.cloneNode(false);
         }
 
-
         function getParentOfChildren(original) {
             if (util.hasOpenShadowRoot(original)) {
                 return original.shadowRoot; // jump "down" to #shadow-root
