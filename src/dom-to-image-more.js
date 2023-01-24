@@ -274,7 +274,7 @@
         }
 
         function getParentOfChildren(original) {
-            if (util.hasOpenShadowRoot(original)) {
+            if (util.isElementHostForOpenShadowRoot(original)) {
                 return original.shadowRoot; // jump "down" to #shadow-root
             }
             return original;
@@ -519,7 +519,7 @@
             height: height,
             getWindow: getWindow,
             isElement: isElement,
-            hasOpenShadowRoot: hasOpenShadowRoot,
+            isElementHostForOpenShadowRoot: isElementHostForOpenShadowRoot,
             isShadowRoot: isShadowRoot,
             isInShadowRoot: isInShadowRoot,
             isHTMLElement: isHTMLElement,
@@ -544,7 +544,7 @@
             );
         }
 
-        function hasOpenShadowRoot(value) {
+        function isElementHostForOpenShadowRoot(value) {
             return isElement(value) && value.shadowRoot !== null;
         }
 
