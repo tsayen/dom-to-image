@@ -250,6 +250,8 @@
         if (
             node === sandbox ||
             util.isHTMLScriptElement(node) ||
+            util.isHTMLStyleElement(node) ||
+            util.isHTMLLinkElement(node) ||
             (parentComputedStyles !== null && filter && !filter(node))
         ) {
             return Promise.resolve();
@@ -525,7 +527,9 @@
             isHTMLCanvasElement: isHTMLCanvasElement,
             isHTMLInputElement: isHTMLInputElement,
             isHTMLImageElement: isHTMLImageElement,
+            isHTMLLinkElement: isHTMLLinkElement,
             isHTMLScriptElement: isHTMLScriptElement,
+            isHTMLStyleElement: isHTMLStyleElement,
             isHTMLTextAreaElement: isHTMLTextAreaElement,
             isShadowSlotElement: isShadowSlotElement,
             isSVGElement: isSVGElement,
@@ -573,8 +577,16 @@
             return value instanceof getWindow(value).HTMLInputElement;
         }
 
+        function isHTMLLinkElement(value) {
+            return value instanceof getWindow(value).HTMLLinkElement;
+        }
+
         function isHTMLScriptElement(value) {
             return value instanceof getWindow(value).HTMLScriptElement;
+        }
+
+        function isHTMLStyleElement(value) {
+            return value instanceof getWindow(value).HTMLStyleElement;
         }
 
         function isHTMLTextAreaElement(value) {
