@@ -1,0 +1,23 @@
+name: build
+
+on:
+  push:
+    branches: [ master, v2.x ]
+  pull_request:
+    branches: [ master, v2.x ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      - name: Install dependencies
+        run: npm --dry-run
+      - run: npm ci
+      - run: npm run test
