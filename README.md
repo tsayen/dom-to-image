@@ -260,7 +260,7 @@ for you, following steps are taken:
 
     ```javascript
     declare module 'dom-to-image-more' {
-     import domToImage = require('dom-to-image');
+     import domToImage = require('dom-to-image-more');
      export = domToImage;
     }
     ```
