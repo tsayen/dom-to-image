@@ -10,12 +10,16 @@ jobs:
     build:
         runs-on: ubuntu-latest
 
+        strategy:
+          matrix:
+            node-version: [18.x]
+  
         steps:
             - uses: actions/checkout@v3
             - name: Use Node.js
               uses: actions/setup-node@v3
               with:
-                  node-version: '18.x'
+                  node-version: ${{ matrix.node-version }}
             - name: Setup Chrome
               uses: browser-actions/setup-chrome@v1
             - name: Check dependencies
@@ -26,7 +30,3 @@ jobs:
               run: npm run build:ci
             - name: Run tests (Linux)
               run: xvfb-run -a npm run test
-              if: ${{ matrix.os == 'ubuntu-latest' }}
-            - name: Run tests (Windows/Mac)
-              run: npm run test
-              if: ${{ matrix.os != 'ubuntu-latest' }}
