@@ -569,14 +569,10 @@
                 };
             }
             */
-           
+
             it('should not get fooled by math elements', function (done) {
                 this.timeout(5000);
-                loadTestPage(
-                    'math/dom-node.html',
-                    null,
-                    'math/control-image'
-                )
+                loadTestPage('math/dom-node.html', null, 'math/control-image')
                     .then(function () {
                         return domtoimage.toPng(domNode(), { width: 500, height: 100 });
                     })
@@ -603,7 +599,7 @@
                     'rendered and control images should be same'
                 );
             }
-           
+
             function getImageDataURL(image, mimetype) {
                 var canvas = document.createElement('canvas');
                 var context = canvas.getContext('2d');
@@ -905,24 +901,28 @@
             it('should compute correct keys', function (done) {
                 this.timeout(30000);
                 let one = Promise.allSettled([
-                    loadTestPage('padding/dom-node.html', 'padding/style.css', 'padding/control-image')
-                        .then((node) => renderToSvg(node, { styleCaching: 'strict' }))])
-                    .then(
-                        (promises) => promises[0].value
-                    );
+                    loadTestPage(
+                        'padding/dom-node.html',
+                        'padding/style.css',
+                        'padding/control-image'
+                    ).then((node) => renderToSvg(node, { styleCaching: 'strict' })),
+                ]).then((promises) => promises[0].value);
                 let two = Promise.allSettled([
-                    loadTestPage('padding/dom-node.html', 'padding/style.css', 'padding/control-image')
-                        .then((node) => renderToSvg(node, { styleCaching: 'relaxed' }))])
-                    .then(
-                        (promises) => promises[0].value
-                    );
+                    loadTestPage(
+                        'padding/dom-node.html',
+                        'padding/style.css',
+                        'padding/control-image'
+                    ).then((node) => renderToSvg(node, { styleCaching: 'relaxed' })),
+                ]).then((promises) => promises[0].value);
 
                 Promise.allSettled([one, two])
                     .then(function (promises) {
                         const strict = promises[0].value;
                         const relaxed = promises[1].value;
                         if (strict !== relaxed) {
-                            console.log(`\n\nstrict: ${strict}\n\nrelaxed: ${relaxed}\n\n`);
+                            console.log(
+                                `\n\nstrict: ${strict}\n\nrelaxed: ${relaxed}\n\n`
+                            );
                         }
                         assert.equal(strict, relaxed, 'SVG rendered be same');
                     })
@@ -934,46 +934,39 @@
         function loadTestPage(html, css, controlImage) {
             return loadPage()
                 .then(function (document) {
-                    if (!html) 
-                        return document;
+                    if (!html) return document;
 
-                    return getResource(html)
-                        .then(function (html) {
-                            $('#dom-node').html(html);
-                            return document;
-                        });
+                    return getResource(html).then(function (html) {
+                        $('#dom-node').html(html);
+                        return document;
+                    });
                 })
                 .then(function (document) {
-                    if (!css)
-                        return document;
+                    if (!css) return document;
 
-                    return getResource(css)
-                        .then(function (css) {
-                            $('#style').append(document.createTextNode(css));
-                            return document;
-                        });
+                    return getResource(css).then(function (css) {
+                        $('#style').append(document.createTextNode(css));
+                        return document;
+                    });
                 })
                 .then(function (document) {
-                    if (!controlImage)
-                        return document;
+                    if (!controlImage) return document;
 
-                    return getResource(controlImage)
-                        .then(function (image) {
-                            $('#control-image').attr('src', image);
-                            return document;
-                        });
+                    return getResource(controlImage).then(function (image) {
+                        $('#control-image').attr('src', image);
+                        return document;
+                    });
                 });
         }
 
         function loadPage() {
-            return getResource('page.html')
-                .then(function (html) {
-                    const root = document.createElement('div');
-                    root.id = 'test-root';
-                    root.innerHTML = html;
-                    document.body.appendChild(root);
-                    return document;
-                });
+            return getResource('page.html').then(function (html) {
+                const root = document.createElement('div');
+                root.id = 'test-root';
+                root.innerHTML = html;
+                document.body.appendChild(root);
+                return document;
+            });
         }
 
         function purgePage() {

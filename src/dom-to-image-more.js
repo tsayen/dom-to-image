@@ -206,7 +206,7 @@
             domtoimage.impl.options.styleCaching = defaultOptions.styleCaching;
         } else {
             domtoimage.impl.options.styleCaching = options.styleCaching;
-    }
+        }
     }
 
     function draw(domNode, options) {
@@ -285,7 +285,9 @@
             let done = Promise.resolve();
 
             if (originalChildren.length !== 0) {
-                const originalComputedStyles = getComputedStyle(getRenderedParent(original));
+                const originalComputedStyles = getComputedStyle(
+                    getRenderedParent(original)
+                );
 
                 util.asArray(originalChildren).forEach(function (originalChild) {
                     done = done.then(function () {
@@ -553,7 +555,11 @@
         }
 
         function isInShadowRoot(value) {
-            return value !== null && value.hasOwnProperty('getRootNode') && isShadowRoot(value.getRootNode());
+            return (
+                value !== null &&
+                Object.prototype.hasOwnProperty.call(value, 'getRootNode') &&
+                isShadowRoot(value.getRootNode())
+            );
         }
 
         function isElement(value) {
@@ -593,7 +599,9 @@
         }
 
         function isShadowSlotElement(value) {
-            return isInShadowRoot(value) && value instanceof getWindow(value).HTMLSlotElement;
+            return (
+                isInShadowRoot(value) && value instanceof getWindow(value).HTMLSlotElement
+            );
         }
 
         function isSVGElement(value) {
@@ -1123,7 +1131,7 @@
         'UL',
         // this is some non-standard ones
         'math', // intentionally lowercase, thanks Safari
-        'svg',  // in case we have an svg embedded element
+        'svg', // in case we have an svg embedded element
         // these are ultimate stoppers in case something drastic changes in how the DOM works
         'BODY',
         'HEAD',
@@ -1174,7 +1182,9 @@
         function computeTagKey(tagHierarchy) {
             if (options.styleCaching === 'relaxed') {
                 // pick up only the ascent-stopping element tag and the element tag itsel
-                return tagHierarchy.filter((_e, i, a) => i === 0 || i === a.length - 1).join('>');
+                return tagHierarchy
+                    .filter((_e, i, a) => i === 0 || i === a.length - 1)
+                    .join('>');
             }
             // for all other cases, fall back the the entire path
             return tagHierarchy.join('>'); // it's like CSS
