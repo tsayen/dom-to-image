@@ -1181,9 +1181,10 @@
 
         function computeTagKey(tagHierarchy) {
             if (options.styleCaching === 'relaxed') {
-                // pick up only the ascent-stopping element tag and the element tag itsel
+                // pick up only the ascent-stopping element tag and the element tag itself
+                /* jshint unused:true */
                 return tagHierarchy
-                    .filter((_e, i, a) => i === 0 || i === a.length - 1)
+                    .filter((_, i, a) => i === 0 || i === a.length - 1)
                     .join('>');
             }
             // for all other cases, fall back the the entire path
