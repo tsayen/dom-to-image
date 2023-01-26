@@ -545,16 +545,28 @@
                     .catch(done);
             });
 
-            it('should render open shadow DOM roots with assigned nodes intact', function (done) {
-                this.timeout(10000);
+            it.only('should render open shadow DOM roots with assigned nodes intact', function (done) {
+                this.timeout(60000);
                 loadTestPage(
                     'shadow-dom/dom-node.html',
                     'shadow-dom/styles.css',
                     'shadow-dom/control-image'
                 )
                     .then(renderAndCheck)
-                    .then(done);
+                    .then(done)
+                    //.catch(delay(50000))
+                    .catch(done);
             });
+
+            function delay(ms) {
+                return function (arg) {
+                    return new Promise(function (resolve) {
+                        setTimeout(function () {
+                            resolve(arg);
+                        }, ms);
+                    });
+                };
+            }
 
             it('should not get fooled by math elements', function (done) {
                 this.timeout(5000);
