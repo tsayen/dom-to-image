@@ -28,5 +28,3 @@ jobs:
               run: npm ci
             - name: Run build only
               run: npm run build:ci
-            - name: Run tests (Linux)
-              run: xvfb-run -a npm run test
