@@ -553,7 +553,7 @@
         }
 
         function isInShadowRoot(value) {
-            return value != null && value.hasOwnProperty('getRootNode') && isShadowRoot(value.getRootNode());
+            return value !== null && value.hasOwnProperty('getRootNode') && isShadowRoot(value.getRootNode());
         }
 
         function isElement(value) {
@@ -1174,7 +1174,7 @@
         function computeTagKey(tagHierarchy) {
             if (options.styleCaching === 'relaxed') {
                 // pick up only the ascent-stopping element tag and the element tag itsel
-                return tagHierarchy.filter((e, i, a) => i === 0 || i === a.length - 1).join('>');
+                return tagHierarchy.filter((_e, i, a) => i === 0 || i === a.length - 1).join('>');
             }
             // for all other cases, fall back the the entire path
             return tagHierarchy.join('>'); // it's like CSS

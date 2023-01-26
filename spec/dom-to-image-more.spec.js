@@ -558,6 +558,7 @@
                     .catch(done);
             });
 
+            /*
             function delay(ms) {
                 return function (arg) {
                     return new Promise(function (resolve) {
@@ -567,7 +568,8 @@
                     });
                 };
             }
-
+            */
+           
             it('should not get fooled by math elements', function (done) {
                 this.timeout(5000);
                 loadTestPage(
