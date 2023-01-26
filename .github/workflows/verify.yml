@@ -22,5 +22,7 @@ jobs:
               run: npm ci --dry-run
             - name: Install dependencies
               run: npm ci
-            - name: Build
-              run: npm run build
+            - name: Run headless build
+              uses: GabrielBB/xvfb-action@v1
+              with:
+                run: npm run build
