@@ -22,3 +22,5 @@ jobs:
               run: npm ci --dry-run
             - name: Install dependencies
               run: npm ci
+            - name: Build
+              run: npm run build
