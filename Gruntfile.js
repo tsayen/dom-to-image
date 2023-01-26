@@ -38,4 +38,5 @@ module.exports = function (grunt) {
 
     grunt.registerTask('test', ['karma']);
     grunt.registerTask('default', ['jshint', 'test', 'uglify']);
+    grunt.registerTask('ci', ['jshint', 'uglify']);
 };

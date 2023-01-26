@@ -28,6 +28,7 @@
         "lint": "eslint --max-warnings=0 src && prettier --check .",
         "test": "grunt test",
         "build": "grunt",
+        "build:ci": "grunt ci", 
         "beta-version-patch": "npm version $(semver $npm_package_version -i prerelease --preid beta)",
         "beta-version-minor": "npm version $(semver $npm_package_version -i preminor --preid beta)",
         "beta-version-major": "npm version $(semver $npm_package_version -i premajor --preid beta)",

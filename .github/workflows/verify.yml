@@ -22,7 +22,11 @@ jobs:
               run: npm ci --dry-run
             - name: Install dependencies
               run: npm ci
-            - name: Run headless build
-              uses: GabrielBB/xvfb-action@v1
-              with:
-                run: npm run build
+            - name: Run build only
+              run: npm run build:ci
+            - name: Run tests (Linux)
+              run: xvfb-run -a npm run test
+              if: ${{ matrix.os == 'ubuntu-latest' }}
+            - name: Run tests (Windows/Mac)
+              run: npm run test
+              if: ${{ matrix.os != 'ubuntu-latest' }}
