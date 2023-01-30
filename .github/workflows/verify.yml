@@ -10,15 +10,21 @@ jobs:
     build:
         runs-on: ubuntu-latest
 
+        strategy:
+          matrix:
+            node-version: [18.x]
+  
         steps:
             - uses: actions/checkout@v3
             - name: Use Node.js
               uses: actions/setup-node@v3
               with:
-                  node-version: '18.x'
+                  node-version: ${{ matrix.node-version }}
             - name: Setup Chrome
               uses: browser-actions/setup-chrome@v1
             - name: Check dependencies
               run: npm ci --dry-run
             - name: Install dependencies
               run: npm ci
+            - name: Run build only
+              run: npm run build:ci

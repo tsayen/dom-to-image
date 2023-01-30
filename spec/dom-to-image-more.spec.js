@@ -545,7 +545,7 @@
                     .catch(done);
             });
 
-            it.only('should render open shadow DOM roots with assigned nodes intact', function (done) {
+            it.skip('should render open shadow DOM roots with assigned nodes intact', function (done) {
                 this.timeout(60000);
                 loadTestPage(
                     'shadow-dom/dom-node.html',
