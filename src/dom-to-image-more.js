@@ -86,6 +86,7 @@
 
         function clearCache(result) {
             domtoimage.impl.urlCache = [];
+            removeSandbox();
             return result;
         }
 
@@ -216,7 +217,6 @@
                     ctx.scale(scale, scale);
                     ctx.drawImage(image, 0, 0);
                 }
-                removeSandbox();
                 return canvas;
             });
 
