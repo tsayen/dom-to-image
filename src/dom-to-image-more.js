@@ -8,6 +8,8 @@
 
     // Default impl options
     const defaultOptions = {
+        // Default is to copy default styles of elements
+        copyDefaultStyles: true,
         // Default is to fail on error, no placeholder
         imagePlaceholder: undefined,
         // Default cache bust is false, it will use the cache
@@ -179,6 +181,12 @@
 
     function copyOptions(options) {
         // Copy options to impl options for use in impl
+        if (typeof options.copyDefaultStyles === 'undefined') {
+            domtoimage.impl.options.copyDefaultStyles = defaultOptions.copyDefaultStyles;
+        } else {
+            domtoimage.impl.options.copyDefaultStyles = options.copyDefaultStyles;
+        }
+
         if (typeof options.imagePlaceholder === 'undefined') {
             domtoimage.impl.options.imagePlaceholder = defaultOptions.imagePlaceholder;
         } else {
@@ -1068,7 +1076,9 @@
         parentComputedStyles,
         targetElement
     ) {
-        const defaultStyle = getDefaultStyle(options, sourceElement);
+        const defaultStyle = domtoimage.impl.options.copyDefaultStyles
+            ? getDefaultStyle(options, sourceElement)
+            : {};
         const targetStyle = targetElement.style;
 
         util.asArray(sourceComputedStyles).forEach(function (name) {
