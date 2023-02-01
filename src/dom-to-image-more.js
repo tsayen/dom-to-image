@@ -1239,7 +1239,7 @@
                 // swallow exception and fall through to the simplest path
             }
 
-            // let's attempt it using srcdoc... here we're not able to set the doctype
+            // let's attempt it using contentDocument... here we're not able to set the doctype
             sandbox.contentDocument.head.appendChild(metaCharset);
             sandbox.contentDocument.title = title;
             return sandbox.contentWindow;
