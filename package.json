@@ -1,6 +1,6 @@
 {
     "name": "dom-to-image-more",
-    "version": "3.0.2-rc.0",
+    "version": "3.0.3-rc.0",
     "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
     "main": "dist/dom-to-image-more.min.js",
     "devDependencies": {
@@ -28,7 +28,7 @@
         "lint": "eslint --max-warnings=0 src && prettier --check .",
         "test": "grunt test",
         "build": "grunt",
-        "build:ci": "grunt ci", 
+        "build:ci": "grunt ci",
         "beta-version-patch": "npm version $(semver $npm_package_version -i prerelease --preid beta)",
         "beta-version-minor": "npm version $(semver $npm_package_version -i preminor --preid beta)",
         "beta-version-major": "npm version $(semver $npm_package_version -i premajor --preid beta)",
