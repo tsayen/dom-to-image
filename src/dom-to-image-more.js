@@ -67,6 +67,7 @@
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
      * @param {String} options.styleCaching - set to 'strict', 'relaxed' to select style caching rules
+     * @param {Boolean} options.copyDefaultStyles - set to false to disable use of default styles of elements
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
