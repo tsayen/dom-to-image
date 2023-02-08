@@ -42,7 +42,9 @@ module.exports = function (config) {
         customLaunchers: {
             chrome: {
                 base: 'Chrome',
-                flags: ['--no-sandbox --remote-debugging-port=9876'],
+                flags: [
+                    '--no-sandbox --remote-debugging-port=9876 --window-size=1024,768',
+                ],
                 debug: true,
             },
         },

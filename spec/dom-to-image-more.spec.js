@@ -24,9 +24,7 @@
                     'small/style.css',
                     'small/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toSvg(domNode());
-                    })
+                    .then(renderToSvg)
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -38,9 +36,7 @@
                     'small/style.css',
                     'small/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toPng(domNode());
-                    })
+                    .then(renderToPng)
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -52,7 +48,7 @@
                     'border/style.css',
                     'border/control-image'
                 )
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
                     .catch(done);
             });
@@ -63,9 +59,7 @@
                     'small/style.css',
                     'small/control-image-jpeg'
                 )
-                    .then(function () {
-                        return domtoimage.toJpeg(domNode());
-                    })
+                    .then(renderToJpeg)
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -77,9 +71,7 @@
                     'small/style.css',
                     'small/control-image-jpeg-low'
                 )
-                    .then(function () {
-                        return domtoimage.toJpeg(domNode(), { quality: 0.5 });
-                    })
+                    .then(() => renderToJpeg(null, { quality: 0.5 }))
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -91,9 +83,7 @@
                     'small/style.css',
                     'small/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toBlob(domNode());
-                    })
+                    .then(renderToBlob)
                     .then(function (blob) {
                         return global.URL.createObjectURL(blob);
                     })
@@ -115,7 +105,7 @@
                             parent.append(child.clone());
                         }
                     })
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
                     .catch(done);
             });
@@ -126,7 +116,7 @@
                     'hash/style.css',
                     'small/control-image'
                 )
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
                     .catch(done);
             });
@@ -138,7 +128,7 @@
                     'svg-ns/style.css',
                     'svg-ns/control-image'
                 )
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
                     .catch(done);
             });
@@ -149,7 +139,7 @@
                     'svg-rect/style.css',
                     'svg-rect/control-image'
                 )
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
                     .catch(done);
             });
@@ -164,9 +154,7 @@
                     .then(function () {
                         domNode = $('#scrolled')[0];
                     })
-                    .then(function () {
-                        return renderToPng(domNode);
-                    })
+                    .then(renderToPng)
                     .then(makeImgElement)
                     .then(function (image) {
                         return drawImgElement(image, domNode);
@@ -217,11 +205,7 @@
                     'filter/style.css',
                     'filter/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toPng(domNode(), {
-                            filter: filter,
-                        });
-                    })
+                    .then(() => renderToPng(domNode(), { filter: filter }))
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -240,11 +224,7 @@
                     'filter/style.css',
                     'filter/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toPng(domNode(), {
-                            filter: filter,
-                        });
-                    })
+                    .then(() => renderToPng(domNode(), { filter: filter }))
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -256,7 +236,7 @@
                     'sheet/style.css',
                     'sheet/control-image'
                 )
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
                     .catch(done);
             });
@@ -267,7 +247,7 @@
                     'fonts/style.css',
                     'fonts/control-image'
                 )
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
                     .catch(done);
             });
@@ -289,7 +269,7 @@
                     'css-bg/style.css',
                     'css-bg/control-image'
                 )
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
                     .catch(done);
             });
@@ -301,7 +281,7 @@
                     'iframe/style.css',
                     'iframe/control-image'
                 )
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
                     .catch(done);
             });
@@ -350,13 +330,11 @@
 
             it('should handle zero-width <canvas>', function (done) {
                 loadTestPage('canvas/empty-data.html', 'canvas/empty-style.css')
-                    .then(function () {
-                        const node = document.getElementById('dom-node');
-                        domtoimage.toSvg(node).then(function (dataUrl) {
-                            const img = new Image();
-                            document.getElementById('result').appendChild(img);
-                            img.src = dataUrl;
-                        });
+                    .then(renderToSvg)
+                    .then(function (dataUrl) {
+                        const img = new Image();
+                        document.getElementById('result').appendChild(img);
+                        img.src = dataUrl;
                     })
                     .then(done)
                     .catch(done);
@@ -368,11 +346,7 @@
                     'bgcolor/style.css',
                     'bgcolor/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toPng(domNode(), {
-                            bgcolor: '#ffff00',
-                        });
-                    })
+                    .then(() => renderToPng(domNode(), { bgcolor: '#ffff00' }))
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -385,11 +359,7 @@
                     'bgcolor/style.css',
                     'bgcolor/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toSvg(domNode(), {
-                            bgcolor: '#ffff00',
-                        });
-                    })
+                    .then(() => renderToSvg(domNode(), { bgcolor: '#ffff00' }))
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -398,17 +368,13 @@
             it('should not crash when loading external stylesheet causes error', function (done) {
                 loadTestPage('ext-css/dom-node.html', 'ext-css/style.css')
                     .then(renderToPng)
-                    .then(function () {
-                        done();
-                    })
+                    .then(() => done())
                     .catch(done);
             });
 
             it('should convert an element to an array of pixels', function (done) {
                 loadTestPage('pixeldata/dom-node.html', 'pixeldata/style.css')
-                    .then(function () {
-                        return domtoimage.toPixelData(domNode());
-                    })
+                    .then(renderToPixelData)
                     .then(function (pixels) {
                         for (let y = 0; y < domNode().scrollHeight; ++y) {
                             for (let x = 0; x < domNode().scrollWidth; ++x) {
@@ -448,12 +414,7 @@
                     'dimensions/style.css',
                     'dimensions/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toPng(domNode(), {
-                            width: 200,
-                            height: 200,
-                        });
-                    })
+                    .then(() => renderToPng(domNode(), { width: 200, height: 200 }))
                     .then(function (dataUrl) {
                         return drawDataUrl(dataUrl, { width: 200, height: 200 });
                     })
@@ -468,14 +429,14 @@
                     'style/style.css',
                     'style/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toPng(domNode(), {
+                    .then(() =>
+                        renderToPng(domNode(), {
                             style: {
                                 'background-color': 'red',
                                 'transform': 'scale(0.5)',
                             },
-                        });
-                    })
+                        })
+                    )
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -487,9 +448,7 @@
                     'background-clip/style.css',
                     'background-clip/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toPng(domNode());
-                    })
+                    .then(renderToPng)
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -501,16 +460,16 @@
                     'scale/style.css',
                     'scale/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toPng(domNode(), {
+                    .then(() =>
+                        renderToPng(domNode(), {
                             width: 200,
                             height: 200,
                             style: {
                                 'transform': 'scale(2)',
                                 'transform-origin': 'top left',
                             },
-                        });
-                    })
+                        })
+                    )
                     .then(function (dataUrl) {
                         return drawDataUrl(dataUrl, { width: 200, height: 200 });
                     })
@@ -525,9 +484,19 @@
                     'svg-styles/style.css',
                     'svg-styles/control-image'
                 )
-                    .then(function () {
-                        return domtoimage.toSvg(domNode());
-                    })
+                    .then(renderToSvg)
+                    .then(check)
+                    .then(done)
+                    .catch(done);
+            });
+
+            it('should render defaults styles when reset', function (done) {
+                loadTestPage(
+                    'defaultStyles/defaultStyles.html',
+                    'defaultStyles/style.css',
+                    'defaultStyles/control-image'
+                )
+                    .then(renderToSvg)
                     .then(check)
                     .then(done)
                     .catch(done);
@@ -540,7 +509,7 @@
                     'padding/style.css',
                     'padding/control-image'
                 )
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
                     .catch(done);
             });
@@ -552,30 +521,15 @@
                     'shadow-dom/styles.css',
                     'shadow-dom/control-image'
                 )
-                    .then(renderAndCheck)
+                    .then(renderToPngAndCheck)
                     .then(done)
-                    //.catch(delay(50000))
                     .catch(done);
             });
-
-            /*
-            function delay(ms) {
-                return function (arg) {
-                    return new Promise(function (resolve) {
-                        setTimeout(function () {
-                            resolve(arg);
-                        }, ms);
-                    });
-                };
-            }
-            */
 
             it('should not get fooled by math elements', function (done) {
                 this.timeout(5000);
                 loadTestPage('math/dom-node.html', null, 'math/control-image')
-                    .then(function () {
-                        return domtoimage.toPng(domNode(), { width: 500, height: 100 });
-                    })
+                    .then(() => renderToPng(domNode(), { width: 500, height: 100 }))
                     .then(function (dataUrl) {
                         return drawDataUrl(dataUrl, { width: 500, height: 100 });
                     })
@@ -602,15 +556,17 @@
 
             function getImageDataURL(image, mimetype) {
                 var canvas = document.createElement('canvas');
-                var context = canvas.getContext('2d');
                 canvas.height = image.naturalHeight;
                 canvas.width = image.naturalWidth;
-                canvas.imageSmoothingEnabled = false;
-                context.drawImage(image, 0, 0);
+                var ctx = canvas.getContext('2d');
+                ctx.mozImageSmoothingEnabled = false;
+                ctx.msImageSmoothingEnabled = false;
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(image, 0, 0);
                 return canvas.toDataURL(mimetype);
             }
 
-            function renderAndCheck() {
+            function renderToPngAndCheck() {
                 return Promise.resolve().then(renderToPng).then(check);
             }
 
@@ -665,8 +621,11 @@
                 const c = canvas();
                 c.height = dimensions.height || node.offsetHeight.toString();
                 c.width = dimensions.width || node.offsetWidth.toString();
-                c.getContext('2d').imageSmoothingEnabled = false;
-                c.getContext('2d').drawImage(image, 0, 0);
+                const ctx = c.getContext('2d');
+                ctx.mozImageSmoothingEnabled = false;
+                ctx.msImageSmoothingEnabled = false;
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(image, 0, 0);
                 return image;
             }
         });
@@ -1010,18 +969,41 @@
             });
         }
 
-        function renderToPng() {
-            return domtoimage.toPng(domNode(), { onclone: cloneCatcher });
-        }
-
-        function renderToSvg(options) {
-            const debugOptions = { onclone: cloneCatcher, debugCache: true };
-            return domtoimage.toSvg(domNode(), Object.assign(debugOptions, options));
-        }
+        const debugOptions = { onclone: cloneCatcher, debugCache: true };
 
         function cloneCatcher(clone) {
             clonedNode().replaceChildren(clone);
             return clone;
+        }
+
+        // all of these helpers completely ignore the incoming node as it usually is the test page
+
+        function renderToBlob(_node, options) {
+            /* jshint unused:false */
+            return domtoimage.toBlob(domNode(), Object.assign({}, debugOptions, options));
+        }
+
+        function renderToJpeg(_node, options) {
+            /* jshint unused:false */
+            return domtoimage.toJpeg(domNode(), Object.assign({}, debugOptions, options));
+        }
+
+        function renderToPixelData(_node, options) {
+            /* jshint unused:false */
+            return domtoimage.toPixelData(
+                domNode(),
+                Object.assign({}, debugOptions, options)
+            );
+        }
+
+        function renderToPng(_node, options) {
+            /* jshint unused:false */
+            return domtoimage.toPng(domNode(), Object.assign({}, debugOptions, options));
+        }
+
+        function renderToSvg(_node, options) {
+            /* jshint unused:false */
+            return domtoimage.toSvg(domNode(), Object.assign({}, debugOptions, options));
         }
     });
 })(this);
