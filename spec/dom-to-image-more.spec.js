@@ -2,7 +2,6 @@
 (function (global) {
     'use strict';
 
-    const $ = global.jQuery;
     const assert = global.chai.assert;
     const domtoimage = global.domtoimage;
     const Promise = global.Promise;
@@ -99,10 +98,10 @@
                     'bigger/control-image'
                 )
                     .then(function () {
-                        const parent = $('#dom-node');
-                        const child = $('.dom-child-node');
+                        const parent = domNode();
+                        const child = parent.children[0];
                         for (let i = 0; i < 10; i++) {
-                            parent.append(child.clone());
+                            parent.append(child.cloneNode(true));
                         }
                     })
                     .then(renderToPngAndCheck)
@@ -152,7 +151,7 @@
                     'scroll/control-image'
                 )
                     .then(function () {
-                        domNode = $('#scrolled')[0];
+                        domNode = document.querySelectorAll('#scrolled')[0];
                     })
                     .then(renderToPng)
                     .then(makeImgElement)
@@ -165,7 +164,7 @@
             });
 
             it('should render text nodes', function (done) {
-                this.timeout(20000);
+                this.timeout(10000);
                 loadTestPage('text/dom-node.html', 'text/style.css')
                     .then(renderToPng)
                     .then(drawDataUrl)
@@ -242,6 +241,7 @@
             });
 
             it('should render web fonts', function (done) {
+                this.timeout(5000);
                 loadTestPage(
                     'fonts/dom-node.html',
                     'fonts/style.css',
@@ -896,7 +896,7 @@
                     if (!html) return document;
 
                     return getResource(html).then(function (html) {
-                        $('#dom-node').html(html);
+                        document.querySelector('#dom-node').innerHTML = html;
                         return document;
                     });
                 })
@@ -904,7 +904,7 @@
                     if (!css) return document;
 
                     return getResource(css).then(function (css) {
-                        $('#style').append(document.createTextNode(css));
+                        document.querySelector('#style').append(document.createTextNode(css));
                         return document;
                     });
                 })
@@ -912,7 +912,7 @@
                     if (!controlImage) return document;
 
                     return getResource(controlImage).then(function (image) {
-                        $('#control-image').attr('src', image);
+                        document.querySelector('#control-image').setAttribute('src', image);
                         return document;
                     });
                 });
@@ -929,26 +929,26 @@
         }
 
         function purgePage() {
-            const root = $('#test-root');
+            const root = document.querySelector('#test-root');
             if (root) {
                 root.remove();
             }
         }
 
         function domNode() {
-            return $('#dom-node')[0];
+            return document.querySelectorAll('#dom-node')[0];
         }
 
         function clonedNode() {
-            return $('#cloned-node')[0];
+            return document.querySelectorAll('#cloned-node')[0];
         }
 
         function controlImage() {
-            return $('#control-image')[0];
+            return document.querySelectorAll('#control-image')[0];
         }
 
         function canvas() {
-            return $('#canvas')[0];
+            return document.querySelectorAll('#canvas')[0];
         }
 
         function getResource(fileName) {
