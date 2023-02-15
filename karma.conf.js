@@ -21,7 +21,7 @@ module.exports = function (config) {
                 served: true,
             },
 
-            'test-lib/tesseract-1.0.19.js',
+            'test-lib/tesseract-4.0.2.min.js',
 
             'src/dom-to-image-more.js',
             'spec/dom-to-image-more.spec.js',
@@ -49,6 +49,6 @@ module.exports = function (config) {
         },
 
         singleRun: false,
-        browserNoActivityTimeout: 10000,
+        browserNoActivityTimeout: 60000,
     });
 };

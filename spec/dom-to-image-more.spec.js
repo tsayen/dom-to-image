@@ -9,8 +9,6 @@
     const BASE_URL = '/base/spec/resources/';
 
     describe('domtoimage', function () {
-        this.timeout(30000);
-
         afterEach(purgePage);
 
         it('should load', function () {
@@ -164,6 +162,7 @@
             });
 
             it('should render text nodes', function (done) {
+                this.timeout(30000);
                 loadTestPage('text/dom-node.html', 'text/style.css')
                     .then(renderToPng)
                     .then(drawDataUrl)
@@ -173,6 +172,7 @@
             });
 
             it('should render bare text nodes not wrapped in an element', function (done) {
+                this.timeout(30000);
                 loadTestPage('bare-text-nodes/dom-node.html', 'bare-text-nodes/style.css')
                     // NOTE: Using first child node of domNode()!
                     .then((node) => renderChildToPng(node)) //, { width: 200, height: 200 }))
@@ -183,6 +183,7 @@
             });
 
             it('should preserve content of ::before and ::after pseudo elements', function (done) {
+                this.timeout(30000);
                 loadTestPage('pseudo/dom-node.html', 'pseudo/style.css', undefined)
                     .then(renderToPng)
                     .then(drawDataUrl)
@@ -260,6 +261,7 @@
             });
 
             it('should render images', function (done) {
+                this.timeout(30000);
                 loadTestPage('images/dom-node.html', 'images/style.css')
                     .then(renderToPng)
                     .then(drawDataUrl)
@@ -495,6 +497,7 @@
             });
 
             it('should render defaults styles when reset', function (done) {
+                this.timeout(30000);
                 loadTestPage(
                     'defaultStyles/defaultStyles.html',
                     'defaultStyles/style.css',
@@ -517,7 +520,7 @@
                     .catch(done);
             });
 
-            it.skip('should render open shadow DOM roots with assigned nodes intact', function (done) {
+            it('should render open shadow DOM roots with assigned nodes intact', function (done) {
                 this.timeout(60000);
                 loadTestPage(
                     'shadow-dom/dom-node.html',
@@ -545,9 +548,15 @@
                 const controlUrl = getImageDataURL(controlImage(), 'image/png');
 
                 if (imageUrl !== controlUrl) {
-                    console.debug(`    image.src: ${image.src}`);
-                    console.debug(`  imageBase64: ${imageUrl}`);
-                    console.debug(`controlBase64: ${controlUrl}`);
+                    console.debug(`
+                    <html>
+                        <body>
+                            <h2>Source</h2>\n<img src='${image.src}'/>
+                            <h2>Output</h2>\n<img src='${imageUrl}'/>
+                            <h2>Control</h2>\n<img src='${controlUrl}'/>
+                        </body>
+                    </html>
+                    `);
                 }
                 assert.equal(
                     imageUrl,
@@ -589,17 +598,17 @@
             function assertTextRendered(lines) {
                 return function () {
                     return new Promise(function (resolve, reject) {
-                        Tesseract.recognize(canvas()).then(function (result) {
+                        Tesseract.recognize(canvas(), 'eng').then((data) => {
                             lines.forEach(function (line) {
                                 try {
-                                    assert.include(result.text, line);
+                                    assert.include(data.text, line);
                                 } catch (e) {
-                                    console.log(result.text);
+                                    console.debug(data.text);
                                     reject(e);
                                 }
                             });
-                            resolve();
                         });
+                        resolve();
                     });
                 };
             }
