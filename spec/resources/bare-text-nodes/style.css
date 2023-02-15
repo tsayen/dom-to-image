@@ -1,0 +1,16 @@
+* {
+    color: black;
+    background-color: white;
+    font-family: monospace;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: bold;
+    font-variant: normal;
+}
+
+#dom-node {
+    text-align: center;
+    width: 500px;
+    padding: 20px;
+    background-color: brown;
+}

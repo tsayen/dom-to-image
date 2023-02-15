@@ -9,6 +9,8 @@
     const BASE_URL = '/base/spec/resources/';
 
     describe('domtoimage', function () {
+        this.timeout(30000);
+
         afterEach(purgePage);
 
         it('should load', function () {
@@ -17,7 +19,6 @@
 
         describe('regression', function () {
             it('should render to svg', function (done) {
-                this.timeout(5000);
                 loadTestPage(
                     'small/dom-node.html',
                     'small/style.css',
@@ -121,7 +122,6 @@
             });
 
             it('should render nested svg with broken namespace', function (done) {
-                this.timeout(5000);
                 loadTestPage(
                     'svg-ns/dom-node.html',
                     'svg-ns/style.css',
@@ -132,7 +132,7 @@
                     .catch(done);
             });
 
-            it('should render svg <rect> with width and heigth', function (done) {
+            it('should render svg <rect> with width and height', function (done) {
                 loadTestPage(
                     'svg-rect/dom-node.html',
                     'svg-rect/style.css',
@@ -164,7 +164,6 @@
             });
 
             it('should render text nodes', function (done) {
-                this.timeout(10000);
                 loadTestPage('text/dom-node.html', 'text/style.css')
                     .then(renderToPng)
                     .then(drawDataUrl)
@@ -173,8 +172,17 @@
                     .catch(done);
             });
 
+            it('should render bare text nodes not wrapped in an element', function (done) {
+                loadTestPage('bare-text-nodes/dom-node.html', 'bare-text-nodes/style.css')
+                    // NOTE: Using first child node of domNode()!
+                    .then((node) => renderChildToPng(node)) //, { width: 200, height: 200 }))
+                    .then(drawDataUrl)
+                    .then(assertTextRendered(['BARE TEXT']))
+                    .then(done)
+                    .catch(done);
+            });
+
             it('should preserve content of ::before and ::after pseudo elements', function (done) {
-                this.timeout(10000);
                 loadTestPage('pseudo/dom-node.html', 'pseudo/style.css', undefined)
                     .then(renderToPng)
                     .then(drawDataUrl)
@@ -241,7 +249,6 @@
             });
 
             it('should render web fonts', function (done) {
-                this.timeout(5000);
                 loadTestPage(
                     'fonts/dom-node.html',
                     'fonts/style.css',
@@ -253,7 +260,6 @@
             });
 
             it('should render images', function (done) {
-                this.timeout(10000);
                 loadTestPage('images/dom-node.html', 'images/style.css')
                     .then(renderToPng)
                     .then(drawDataUrl)
@@ -263,7 +269,6 @@
             });
 
             it('should render background images', function (done) {
-                this.timeout(10000);
                 loadTestPage(
                     'css-bg/dom-node.html',
                     'css-bg/style.css',
@@ -353,7 +358,6 @@
             });
 
             it('should render bgcolor in SVG', function (done) {
-                this.timeout(5000);
                 loadTestPage(
                     'bgcolor/dom-node.html',
                     'bgcolor/style.css',
@@ -503,7 +507,6 @@
             });
 
             it('should honor zero-padding table elements', function (done) {
-                this.timeout(5000);
                 loadTestPage(
                     'padding/dom-node.html',
                     'padding/style.css',
@@ -527,7 +530,6 @@
             });
 
             it('should not get fooled by math elements', function (done) {
-                this.timeout(5000);
                 loadTestPage('math/dom-node.html', null, 'math/control-image')
                     .then(() => renderToPng(domNode(), { width: 500, height: 100 }))
                     .then(function (dataUrl) {
@@ -543,9 +545,9 @@
                 const controlUrl = getImageDataURL(controlImage(), 'image/png');
 
                 if (imageUrl !== controlUrl) {
-                    console.log(`        image: ${image.src}`);
-                    console.log(`  imageBase64: ${imageUrl}`);
-                    console.log(`controlBase64: ${controlUrl}`);
+                    console.debug(`    image.src: ${image.src}`);
+                    console.debug(`  imageBase64: ${imageUrl}`);
+                    console.debug(`controlBase64: ${controlUrl}`);
                 }
                 assert.equal(
                     imageUrl,
@@ -858,7 +860,6 @@
 
         describe('styles', function () {
             it('should compute correct keys', function (done) {
-                this.timeout(30000);
                 let one = Promise.allSettled([
                     loadTestPage(
                         'padding/dom-node.html',
@@ -904,7 +905,9 @@
                     if (!css) return document;
 
                     return getResource(css).then(function (css) {
-                        document.querySelector('#style').append(document.createTextNode(css));
+                        document
+                            .querySelector('#style')
+                            .append(document.createTextNode(css));
                         return document;
                     });
                 })
@@ -912,7 +915,9 @@
                     if (!controlImage) return document;
 
                     return getResource(controlImage).then(function (image) {
-                        document.querySelector('#control-image').setAttribute('src', image);
+                        document
+                            .querySelector('#control-image')
+                            .setAttribute('src', image);
                         return document;
                     });
                 });
@@ -999,6 +1004,12 @@
         function renderToPng(_node, options) {
             /* jshint unused:false */
             return domtoimage.toPng(domNode(), Object.assign({}, debugOptions, options));
+        }
+
+        function renderChildToPng(_node, options) {
+            /* jshint unused:false */
+            const firstChild = domNode().childNodes[0];
+            return domtoimage.toPng(firstChild, Object.assign({}, debugOptions, options));
         }
 
         function renderToSvg(_node, options) {
