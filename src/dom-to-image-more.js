@@ -5,6 +5,7 @@
     const inliner = newInliner();
     const fontFaces = newFontFaces();
     const images = newImages();
+    const ELEMENT_NODE = Node.ELEMENT_NODE || 1;
 
     // Default impl options
     const defaultOptions = {
@@ -74,21 +75,45 @@
         const ownerWindow = domtoimage.impl.util.getWindow(node);
         options = options || {};
         copyOptions(options);
+        let restorations = [];
         return Promise.resolve(node)
+            .then(ensureElement)
             .then(function (clonee) {
                 return cloneNode(clonee, options, null, ownerWindow);
             })
             .then(embedFonts)
             .then(inlineImages)
             .then(applyOptions)
-            .then(function (clone) {
-                return makeSvgDataUri(
-                    clone,
-                    options.width || util.width(node),
-                    options.height || util.height(node)
-                );
-            })
+            .then(makeSvgDataUri)
+            .then(restoreWrappers)
             .then(clearCache);
+
+        function ensureElement(node) {
+            if (node.nodeType === ELEMENT_NODE) return node;
+
+            const originalChild = node;
+            const originalParent = node.parentNode;
+            const wrappingSpan = document.createElement('span');
+            originalParent.replaceChild(wrappingSpan, originalChild);
+            wrappingSpan.append(node);
+            restorations.push({
+                parent: originalParent,
+                child: originalChild,
+                wrapper: wrappingSpan,
+            });
+            return wrappingSpan;
+        }
+
+        function restoreWrappers(result) {
+            // put the original children back where the wrappers were inserted
+            while (restorations.length > 0) {
+                const restoration = restorations.pop();
+                //console.log(`parent: ${restoration.parent}\nchild: ${restoration.child}\nwrapper: ${restoration.wrapper}`);
+                restoration.parent.replaceChild(restoration.child, restoration.wrapper);
+            }
+
+            return result;
+        }
 
         function clearCache(result) {
             domtoimage.impl.urlCache = [];
@@ -121,6 +146,34 @@
             return Promise.resolve(onCloneResult).then(function () {
                 return clone;
             });
+        }
+
+        function makeSvgDataUri(node) {
+            let width = options.width || util.width(node);
+            let height = options.height || util.height(node);
+
+            return Promise.resolve(node)
+                .then(function (svg) {
+                    svg.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+                    return new XMLSerializer().serializeToString(svg);
+                })
+                .then(util.escapeXhtml)
+                .then(function (xhtml) {
+                    const foreignObjectSizing =
+                        (util.isDimensionMissing(width)
+                            ? ' width="100%"'
+                            : ` width="${width}"`) +
+                        (util.isDimensionMissing(height)
+                            ? ' height="100%"'
+                            : ` height="${height}"`);
+                    const svgSizing =
+                        (util.isDimensionMissing(width) ? '' : ` width="${width}"`) +
+                        (util.isDimensionMissing(height) ? '' : ` height="${height}"`);
+                    return `<svg xmlns="http://www.w3.org/2000/svg"${svgSizing}><foreignObject${foreignObjectSizing}>${xhtml}</foreignObject></svg>`;
+                })
+                .then(function (svg) {
+                    return `data:image/svg+xml;charset=utf-8,${svg}`;
+                });
         }
     }
 
@@ -238,9 +291,22 @@
             });
 
         function newCanvas(node, scale) {
+            let width = options.width || util.width(node);
+            let height = options.height || util.height(node);
+
+            // per https://www.w3.org/TR/CSS2/visudet.html#inline-replaced-width the default width should be 300px if height
+            // not set, otherwise should be 2:1 aspect ratio for whatever height is specified
+            if (util.isDimensionMissing(width)) {
+                width = util.isDimensionMissing(height) ? 300 : height * 2.0;
+            }
+
+            if (util.isDimensionMissing(height)) {
+                height = width / 2.0;
+            }
+
             const canvas = document.createElement('canvas');
-            canvas.width = (options.width || util.width(node)) * scale;
-            canvas.height = (options.height || util.height(node)) * scale;
+            canvas.width = width * scale;
+            canvas.height = height * scale;
 
             if (options.bgcolor) {
                 const ctx = canvas.getContext('2d');
@@ -269,10 +335,10 @@
         return Promise.resolve(node)
             .then(makeNodeCopy)
             .then(function (clone) {
-                return cloneChildren(getParentOfChildren(node), clone);
+                return cloneChildren(clone, getParentOfChildren(node));
             })
             .then(function (clone) {
-                return processClone(node, clone);
+                return processClone(clone, node);
             });
 
         function makeNodeCopy(original) {
@@ -289,7 +355,7 @@
             return original;
         }
 
-        function cloneChildren(original, clone) {
+        function cloneChildren(clone, original) {
             const originalChildren = getRenderedChildren(original);
             let done = Promise.resolve();
 
@@ -333,7 +399,7 @@
             }
         }
 
-        function processClone(original, clone) {
+        function processClone(clone, original) {
             if (!util.isElement(clone) || util.isShadowSlotElement(original)) {
                 return Promise.resolve(clone);
             }
@@ -493,25 +559,6 @@
             return node;
         });
     }
-
-    function makeSvgDataUri(node, width, height) {
-        return Promise.resolve(node)
-            .then(function (svg) {
-                svg.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-                return new XMLSerializer().serializeToString(svg);
-            })
-            .then(util.escapeXhtml)
-            .then(function (xhtml) {
-                return `<foreignObject width="${width}" height="${height}">${xhtml}</foreignObject>`;
-            })
-            .then(function (foreignObject) {
-                return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${foreignObject}</svg>`;
-            })
-            .then(function (svg) {
-                return `data:image/svg+xml;charset=utf-8,${svg}`;
-            });
-    }
-
     function newUtil() {
         let uid_index = 0;
 
@@ -544,6 +591,7 @@
             isShadowSlotElement: isShadowSlotElement,
             isSVGElement: isSVGElement,
             isSVGRectElement: isSVGRectElement,
+            isDimensionMissing: isDimensionMissing,
         };
 
         function getWindow(node) {
@@ -623,6 +671,10 @@
 
         function isDataUrl(url) {
             return url.search(/^(data:)/) !== -1;
+        }
+
+        function isDimensionMissing(value) {
+            return isNaN(value) || value <= 0;
         }
 
         function asBlob(canvas) {
@@ -807,34 +859,35 @@
         }
 
         function width(node) {
-            var width = px(node, 'width');
+            const width = px(node, 'width');
 
-            if (isNaN(width)) {
-                const leftBorder = px(node, 'border-left-width');
-                const rightBorder = px(node, 'border-right-width');
-                width = node.scrollWidth + leftBorder + rightBorder;
-            }
-            return width;
+            if (!isNaN(width)) return width;
+
+            const leftBorder = px(node, 'border-left-width');
+            const rightBorder = px(node, 'border-right-width');
+            return node.scrollWidth + leftBorder + rightBorder;
         }
 
         function height(node) {
-            var height = px(node, 'height');
+            const height = px(node, 'height');
 
-            if (isNaN(height)) {
-                const topBorder = px(node, 'border-top-width');
-                const bottomBorder = px(node, 'border-bottom-width');
-                height = node.scrollHeight + topBorder + bottomBorder;
-            }
-            return height;
+            if (!isNaN(height)) return height;
+
+            const topBorder = px(node, 'border-top-width');
+            const bottomBorder = px(node, 'border-bottom-width');
+            return node.scrollHeight + topBorder + bottomBorder;
         }
 
         function px(node, styleProperty) {
-            let value = getComputedStyle(node).getPropertyValue(styleProperty);
-            if (value.slice(-2) !== 'px') {
-                return NaN;
+            if (node.nodeType === ELEMENT_NODE) {
+                let value = getComputedStyle(node).getPropertyValue(styleProperty);
+                if (value.slice(-2) === 'px') {
+                    value = value.slice(0, -2);
+                    return parseFloat(value);
+                }
             }
-            value = value.slice(0, -2);
-            return parseFloat(value);
+
+            return NaN;
         }
     }
 
@@ -1171,7 +1224,6 @@
         return defaultStyle;
 
         function computeTagHierarchy(sourceNode) {
-            const ELEMENT_NODE = Node.ELEMENT_NODE || 1;
             const tagNames = [];
 
             do {
