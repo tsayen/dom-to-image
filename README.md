@@ -155,6 +155,11 @@ Set to true to append the current time as a query string to URL requests to enab
 
 A data URL for a placeholder image that will be used when fetching an image fails. Defaults to undefined and will throw an error on failed images
 
+#### skipFonts
+
+Whether to skip downloading and embedding fonts. This should not be used if
+you use icon fonts or other fonts you need to show in the image. Defaults to false.
+
 ## Browsers
 
 It's tested on latest Chrome and Firefox (49 and 45 respectively at the time

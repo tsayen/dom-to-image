@@ -48,6 +48,7 @@
                 defaults to 1.0.
      * @param {String} options.imagePlaceholder - dataURL to use as a placeholder for failed images, default behaviour is to fail fast on images we can't fetch
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
+     * @param {Boolean} options.skipFonts - Whether to skip downloading fonts (default: false)
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
     function toSvg(node, options) {
@@ -57,7 +58,12 @@
             .then(function (node) {
                 return cloneNode(node, options.filter, true);
             })
-            .then(embedFonts)
+            .then(function(node) {
+                if (!options || !options.skipFonts){
+                    return embedFonts(node);
+                }
+                return node;
+            })
             .then(inlineImages)
             .then(applyOptions)
             .then(function (clone) {
