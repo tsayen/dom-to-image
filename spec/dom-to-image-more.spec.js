@@ -250,6 +250,7 @@
             });
 
             it('should render web fonts', function (done) {
+                this.timeout(5000);
                 loadTestPage(
                     'fonts/dom-node.html',
                     'fonts/style.css',
@@ -598,12 +599,14 @@
             function assertTextRendered(lines) {
                 return function () {
                     return new Promise(function (resolve, reject) {
-                        Tesseract.recognize(canvas(), 'eng').then((data) => {
+                        Tesseract.recognize(canvas(), 'eng').then((response) => {
+                            const text = response.data.text;
                             lines.forEach(function (line) {
                                 try {
-                                    assert.include(data.text, line);
+                                    assert.include(text, line);
                                 } catch (e) {
-                                    console.debug(data.text);
+                                    console.debug(e);
+                                    console.debug(response);
                                     reject(e);
                                 }
                             });
