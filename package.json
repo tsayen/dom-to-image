@@ -1,12 +1,12 @@
 {
     "name": "dom-to-image-more",
-    "version": "3.0.3-rc.1",
+    "version": "3.1.0",
     "description": "Generates an image from a DOM node using HTML5 canvas and SVG",
     "main": "dist/dom-to-image-more.min.js",
     "devDependencies": {
         "chai": "^4.3.7",
-        "eslint": "^8.31.0",
-        "grunt": "^1.5.3",
+        "eslint": "^8.36.0",
+        "grunt": "^1.6.1",
         "grunt-cli": "^1.4.3",
         "grunt-contrib-jshint": "^3.2.0",
         "grunt-contrib-uglify": "^5.2.2",
@@ -20,7 +20,7 @@
         "karma-mocha": "^2.0.1",
         "karma-mocha-reporter": "^2.2.5",
         "mocha": "^10.2.0",
-        "prettier": "^2.8.2",
+        "prettier": "^2.8.4",
         "semver": "^7.3.8"
     },
     "scripts": {
