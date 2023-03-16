@@ -40,6 +40,18 @@ and it will make the `domtoimage` variable available in the global scope.
 </script>
 ```
 
+### Browser
+
+Include the JavaScript bundle from an online CDN store such as [CDNjs](https://cdnjs.com/libraries/dom-to-image):
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js" integrity="sha512-01CJ9/g7e8cUmY0DFTMcUw/ikS799FHiOA0eyHsUWfOetgbx/t6oV4otQ5zXKQyIrQGTHSmRVPIgrgLcZi/WMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+  domtoimage.toPng(node)
+  //...
+</script>
+```
+
 ## Usage
 
 All the top level functions accept DOM node and rendering options,
