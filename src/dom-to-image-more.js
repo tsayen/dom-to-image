@@ -738,7 +738,11 @@
                     image.crossOrigin = 'use-credentials';
                 }
                 image.onload = function () {
-                    resolve(image);
+                    // In order to work around a Firefox bug (webcompat/web-bugs#119834) we
+                    // need to wait one extra frame before it's safe to read the image data.
+                    window.requestAnimationFrame(function() {
+                        resolve(image);
+                    });
                 };
                 image.onerror = reject;
                 image.src = uri;
