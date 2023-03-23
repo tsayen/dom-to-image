@@ -280,7 +280,6 @@
                 const scale = typeof options.scale !== 'number' ? 1 : options.scale;
                 const canvas = newCanvas(domNode, scale);
                 const ctx = canvas.getContext('2d');
-                ctx.mozImageSmoothingEnabled = false;
                 ctx.msImageSmoothingEnabled = false;
                 ctx.imageSmoothingEnabled = false;
                 if (image) {
@@ -738,18 +737,16 @@
                     image.crossOrigin = 'use-credentials';
                 }
                 image.onload = function () {
-                    if(typeof window === "undefined" || !window.requestAnimationFrame) {
-                        // NodeJS doesn't have a requestAnimationFrame function and may not have a window object.
-                        // NodeJS also presumably doesn't exhibit this Firefox bug though, so in this case we can proceed immediately.
+                    if (window && window.requestAnimationFrame) {
+                        // In order to work around a Firefox bug (webcompat/web-bugs#119834) we
+                        // need to wait one extra frame before it's safe to read the image data.
+                        window.requestAnimationFrame(function () {
+                            resolve(image);
+                        });
+                    } else {
+                        // If we don't have a window or requestAnimationFrame function proceed immediately.
                         resolve(image);
-                        return;
                     }
-
-                    // In order to work around a Firefox bug (webcompat/web-bugs#119834) we
-                    // need to wait one extra frame before it's safe to read the image data.
-                    window.requestAnimationFrame(function() {
-                        resolve(image);
-                    });
                 };
                 image.onerror = reject;
                 image.src = uri;

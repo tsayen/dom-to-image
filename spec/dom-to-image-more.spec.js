@@ -571,7 +571,6 @@
                 canvas.height = image.naturalHeight;
                 canvas.width = image.naturalWidth;
                 var ctx = canvas.getContext('2d');
-                ctx.mozImageSmoothingEnabled = false;
                 ctx.msImageSmoothingEnabled = false;
                 ctx.imageSmoothingEnabled = false;
                 ctx.drawImage(image, 0, 0);
@@ -636,7 +635,6 @@
                 c.height = dimensions.height || node.offsetHeight.toString();
                 c.width = dimensions.width || node.offsetWidth.toString();
                 const ctx = c.getContext('2d');
-                ctx.mozImageSmoothingEnabled = false;
                 ctx.msImageSmoothingEnabled = false;
                 ctx.imageSmoothingEnabled = false;
                 ctx.drawImage(image, 0, 0);
