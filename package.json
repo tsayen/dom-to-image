@@ -35,10 +35,7 @@
         "rc-version": "npm version $(semver $npm_package_version -i prerelease --preid rc)",
         "final-release": "npm version $(semver $npm_package_version -i)"
     },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/1904labs/dom-to-image-more.git"
-    },
+    "repository": "github:1904labs/dom-to-image-more",
     "keywords": [
         "dom",
         "image",
@@ -48,7 +45,7 @@
         "canvas",
         "svg"
     ],
-    "author": "Marc Brooks <idisposable@gmail.com>",
+    "author": "Marc Brooks <idisposable@gmail.com> (https://about.me/IDisposable)",
     "contributors": [
         "Anatolii Saienko <anatoly.sayenko@gmail.com>",
         "Marc Brooks <idisposable@gmail.com>",
@@ -60,7 +57,7 @@
         "Phani Rithvij @phanirithvij",
         "David DOLCIMASCOLO @ddolcimascolo",
         "Nikita Staroseltsev @Nikitozz13",
-        "Zee (ZM) @zm-cttae",
+        "Zee @zm-cttae",
         "Andoni Zubimendi @AndoniZubimendi",
         "Joshua Walsh @JoshuaWalsh"
     ],
@@ -68,5 +65,8 @@
     "bugs": {
         "url": "https://github.com/1904labs/dom-to-image-more/issues"
     },
-    "homepage": "https://github.com/1904labs/dom-to-image-more#readme"
+    "homepage": "https://github.com/1904labs/dom-to-image-more#readme",
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    }
 }
