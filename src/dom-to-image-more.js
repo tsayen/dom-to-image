@@ -738,6 +738,13 @@
                     image.crossOrigin = 'use-credentials';
                 }
                 image.onload = function () {
+                    if(typeof window === "undefined" || !window.requestAnimationFrame) {
+                        // NodeJS doesn't have a requestAnimationFrame function and may not have a window object.
+                        // NodeJS also presumably doesn't exhibit this Firefox bug though, so in this case we can proceed immediately.
+                        resolve(image);
+                        return;
+                    }
+
                     // In order to work around a Firefox bug (webcompat/web-bugs#119834) we
                     // need to wait one extra frame before it's safe to read the image data.
                     window.requestAnimationFrame(function() {
