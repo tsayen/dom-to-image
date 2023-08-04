@@ -552,15 +552,11 @@
         }
 
         function width(node) {
-            var leftBorder = px(node, 'border-left-width');
-            var rightBorder = px(node, 'border-right-width');
-            return node.scrollWidth + leftBorder + rightBorder;
+           return node.getBoundingClientRect().width || 0;
         }
 
         function height(node) {
-            var topBorder = px(node, 'border-top-width');
-            var bottomBorder = px(node, 'border-bottom-width');
-            return node.scrollHeight + topBorder + bottomBorder;
+            return node.getBoundingClientRect().height || 0;
         }
 
         function px(node, styleProperty) {
