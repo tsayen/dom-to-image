@@ -88,7 +88,7 @@
      * @return {Promise} - A promise that is fulfilled with a Uint8Array containing RGBA pixel data.
      * */
     function toPixelData(node, options) {
-        return draw(node, options || {})
+        return draw(node, options || {},loadfonts || true)
             .then(function (canvas) {
                 return canvas.getContext('2d').getImageData(
                     0,
@@ -118,7 +118,7 @@
      * */
     function toJpeg(node, options) {
         options = options || {};
-        return draw(node, options)
+        return draw(node, options,loadfonts || true)
             .then(function (canvas) {
                 return canvas.toDataURL('image/jpeg', options.quality || 1.0);
             });
@@ -130,7 +130,7 @@
      * @return {Promise} - A promise that is fulfilled with a PNG image blob
      * */
     function toBlob(node, options) {
-        return draw(node, options || {})
+        return draw(node, options || {},loadfonts || true)
             .then(util.canvasToBlob);
     }
 
