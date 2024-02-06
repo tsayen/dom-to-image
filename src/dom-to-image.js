@@ -310,7 +310,8 @@
     }
 
     function embedFonts(node) {
-        return fontFaces.resolveAll()
+
+        return fontFaces.resolveAll(node)
             .then(function (cssText) {
                 var styleNode = document.createElement('style');
                 node.appendChild(styleNode);
@@ -643,8 +644,8 @@
             }
         };
 
-        function resolveAll() {
-            return readAll(document)
+        function resolveAll(node) {
+            return readAll(node)
                 .then(function (webFonts) {
                     return Promise.all(
                         webFonts.map(function (webFont) {
@@ -657,14 +658,19 @@
                 });
         }
 
-        function readAll() {
-            return Promise.resolve(util.asArray(document.styleSheets))
+        function readAll(node) {
+            return  Promise.resolve(util.asArray(document.styleSheets))
                 .then(getCssRules)
                 .then(selectWebFontRules)
                 .then(function (rules) {
-                    return rules.map(newWebFont);
-                });
+                    return Promise.resolve(getAllFontFamilies(node)).then(function (nodeFonts){
+                        return rules.filter(function (rule) {
+                            return nodeFonts.includes(rule.style.fontFamily);
+                        }).map(newWebFont);
 
+                    })
+                });
+        }
             function selectWebFontRules(cssRules) {
                 return cssRules
                     .filter(function (rule) {
@@ -688,17 +694,38 @@
             }
 
             function newWebFont(webFontRule) {
-                return {
-                    resolve: function resolve() {
-                        var baseUrl = (webFontRule.parentStyleSheet || {}).href;
-                        return inliner.inlineAll(webFontRule.cssText, baseUrl);
-                    },
-                    src: function () {
-                        return webFontRule.style.getPropertyValue('src');
-                    }
-                };
+                    return {
+                        resolve: function resolve() {
+                            var baseUrl = (webFontRule.parentStyleSheet || {}).href;
+                            return inliner.inlineAll(webFontRule.cssText, baseUrl);
+                        },
+                        src: function () {
+                            return webFontRule.style.getPropertyValue('src');
+                        }
+                    };
             }
-        }
+
+            function getAllFontFamilies(node) {
+                const fontFamilies = new Set();
+
+            // Recursive function to traverse the node's descendants
+                function traverse(node) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const fontFamily = node.style.fontFamily
+                        if (fontFamily) {
+                        // Split the font-family property to handle multiple fonts in a declaration
+                        const families = fontFamily.split(',').map(family => family.trim().replace(/['"]/g, ''));
+                        families.forEach(family => fontFamilies.add(family));
+                        }
+                        // Recursively call the function for child nodes
+                        for (let i = 0; i < node.childNodes.length; i++) {
+                        traverse(node.childNodes[i]);
+                        }
+                    }
+                }
+                traverse(node);
+                return Array.from(fontFamilies);
+            }
     }
 
     function newImages() {
