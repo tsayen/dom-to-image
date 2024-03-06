@@ -150,6 +150,7 @@
     }
 
     function draw(domNode, options, loadfonts) {
+        console.log(domNode,"DOM TO IMAGE DRAW DOMNODE")
         return toSvg(domNode, options, loadfonts)
             .then(util.makeImage)
             .then(util.delay(100))
