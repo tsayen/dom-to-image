@@ -50,14 +50,14 @@
      * @param {Boolean} options.cacheBust - set to true to cache bust by appending the time to the request url
      * @return {Promise} - A promise that is fulfilled with a SVG image data URL
      * */
-    function toSvg(node, options) {
+    function toSvg(node, options, loadfonts) {
         options = options || {};
         copyOptions(options);
         return Promise.resolve(node)
             .then(function (node) {
                 return cloneNode(node, options.filter, true);
             })
-            .then(embedFonts)
+            .then(loadfonts && embedFonts)
             .then(inlineImages)
             .then(applyOptions)
             .then(function (clone) {
@@ -88,7 +88,7 @@
      * @return {Promise} - A promise that is fulfilled with a Uint8Array containing RGBA pixel data.
      * */
     function toPixelData(node, options) {
-        return draw(node, options || {})
+        return draw(node, options || {},loadfonts || true)
             .then(function (canvas) {
                 return canvas.getContext('2d').getImageData(
                     0,
@@ -104,8 +104,8 @@
      * @param {Object} options - Rendering options, @see {@link toSvg}
      * @return {Promise} - A promise that is fulfilled with a PNG image data URL
      * */
-    function toPng(node, options) {
-        return draw(node, options || {})
+    function toPng(node, options, loadfonts) {
+        return draw(node, options || {}, loadfonts || true)
             .then(function (canvas) {
                 return canvas.toDataURL();
             });
@@ -118,7 +118,7 @@
      * */
     function toJpeg(node, options) {
         options = options || {};
-        return draw(node, options)
+        return draw(node, options,loadfonts || true)
             .then(function (canvas) {
                 return canvas.toDataURL('image/jpeg', options.quality || 1.0);
             });
@@ -130,7 +130,7 @@
      * @return {Promise} - A promise that is fulfilled with a PNG image blob
      * */
     function toBlob(node, options) {
-        return draw(node, options || {})
+        return draw(node, options || {},loadfonts || true)
             .then(util.canvasToBlob);
     }
 
@@ -149,8 +149,8 @@
         }
     }
 
-    function draw(domNode, options) {
-        return toSvg(domNode, options)
+    function draw(domNode, options, loadfonts) {
+        return toSvg(domNode, options, loadfonts)
             .then(util.makeImage)
             .then(util.delay(100))
             .then(function (image) {
